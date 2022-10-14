@@ -6,7 +6,7 @@ import Foundation
 import Swallow
 
 /// An encapsulation of all known metadata of a persistently identifiable type.
-public struct PersistableTypeIdentity: Codable, Hashable {
+public struct _PersistentTypeRepresentation: Codable, Hashable {
     public enum Version: String, Codable, Hashable {
         case v0_0_1 = "0.0.1"
     }
@@ -20,8 +20,7 @@ public struct PersistableTypeIdentity: Codable, Hashable {
     public let objCClassName: String?
     
     /// The persistent type identifier of the type (if any).
-    public let persistentTypeIdentifier: AnyCodable?
-    public let persistentTypeIdentifierDescription: String?
+    public let typeRepresentation: AnyCodable?
     
     public init(from type: Any.Type) {
         self.version = .v0_0_1
@@ -31,17 +30,15 @@ public struct PersistableTypeIdentity: Codable, Hashable {
         self._swift_mangledTypeName = _mangledTypeName(type)
         self.objCClassName = (type as? AnyObject.Type).map(NSStringFromClass)
         
-        if let type = type as? (any PersistentlyIdentifiableType.Type) {
-            self.persistentTypeIdentifier = .init(type.persistentTypeIdentifier as Codable)
-            self.persistentTypeIdentifierDescription = type.persistentTypeIdentifier.description
+        if let type = type as? (any PersistentlyRepresentableType.Type) {
+            self.typeRepresentation = try? AnyCodable(type.persistentTypeRepresentation)
         } else {
-            self.persistentTypeIdentifier = nil
-            self.persistentTypeIdentifierDescription = nil
+            self.typeRepresentation = nil
         }
     }
 }
 
-extension PersistableTypeIdentity {
+extension _PersistentTypeRepresentation {
     public func resolveType() throws -> Any.Type {
         if let _resolvedType = _resolvedType {
             return _resolvedType
