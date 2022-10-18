@@ -6,7 +6,7 @@ import Swift
 import UniformTypeIdentifiers
 
 /// A declarative description of the identity of something.
-public protocol IdentityRepresentation: Codable {
+public protocol IdentityRepresentation {
     associatedtype Body: IdentityRepresentation
     
     var body: Body { get }

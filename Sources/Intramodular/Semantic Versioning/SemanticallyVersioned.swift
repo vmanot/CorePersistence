@@ -5,9 +5,9 @@
 import Swallow
 import Foundation
 
-/// A type whose _instances_ are semantically versioned.
+/// A type whose instances are semantically versioned.
 public protocol SemanticallyVersioned {
-    associatedtype Version: SemanticVersionProtocol
+    associatedtype InstanceVersion: SemanticVersionProtocol
     
-    var version: Version? { get }
+    var instanceVersion: InstanceVersion? { get }
 }
