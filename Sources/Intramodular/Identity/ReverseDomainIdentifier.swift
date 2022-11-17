@@ -24,6 +24,12 @@ public struct ReverseDomainIdentifier: Codable, Hashable, Identifier {
     }
 }
 
+extension ReverseDomainIdentifier {
+    public init(_ name: String, domain: Domain) {
+        self.rawValue = "\(domain.rawValue).\(name)"
+    }
+}
+
 // MARK: - Conformances -
 
 extension ReverseDomainIdentifier: ExpressibleByStringLiteral {
@@ -35,5 +41,17 @@ extension ReverseDomainIdentifier: ExpressibleByStringLiteral {
 extension ReverseDomainIdentifier: IdentityRepresentation {
     public var body: some IdentityRepresentation {
         _StringIdentityRepresentation(rawValue)
+    }
+}
+
+// MARK: - Auxiliary Implementation -
+
+extension ReverseDomainIdentifier {
+    public struct Domain: RawRepresentable {
+        public let rawValue: String
+        
+        public init(rawValue: String) {
+            self.rawValue = rawValue
+        }
     }
 }
