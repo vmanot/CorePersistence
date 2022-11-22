@@ -44,7 +44,7 @@ extension ReverseDomainIdentifier: IdentityRepresentation {
     }
 }
 
-// MARK: - Auxiliary Implementation -
+// MARK: - Auxiliary -
 
 extension ReverseDomainIdentifier {
     public struct Domain: RawRepresentable {
