@@ -6,7 +6,7 @@ import Swallow
 import SwiftUI
 import UniformTypeIdentifiers
 
-public struct WebLocationDocument: Hashable {
+public struct WebLocationDocument: Hashable, Sendable {
     public var url: URL
     
     public init(url: URL) {
@@ -24,6 +24,26 @@ extension WebLocationDocument: Codable {
     public enum CodingKeys: String, CodingKey {
         case url = "URL"
     }
+    
+    public init(from decoder: Decoder) throws {
+        let url: Result<URL, Error> = try Result.from {
+            try URL(from: decoder)
+        } or: {
+            try URL(string: try String(from: decoder)).unwrap()
+        } or: {
+            try URL(string: try _WebLocationFilePayload1(from: decoder).url).unwrap()
+        } or: {
+            try _WebLocationFilePayload2(from: decoder).url
+        } or: {
+            try _RelativeURL(from: decoder).url
+        }
+        
+        self.url = try url.get()
+    }
+    
+    public func encode(to encoder: Encoder) throws {
+        try url.encode(to: encoder)
+    }
 }
 
 extension WebLocationDocument: FileDocumentX {
@@ -37,27 +57,53 @@ extension WebLocationDocument: FileDocumentX {
         do {
             self = try PropertyListDecoder().decode(Self.self, from: data)
         } catch {
-            let payload = try PropertyListDecoder().decode(_WebLocationFilePayload.self, from: data)
+            let payload = try PropertyListDecoder().decode(_WebLocationFilePayload1.self, from: data)
             
             self.init(url: try URL(string: payload.url).unwrap())
         }
     }
     
     public func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper {
-        let data = try PropertyListEncoder().encode(_WebLocationFilePayload(url: url.absoluteString))
+        let data = try PropertyListEncoder().encode(_WebLocationFilePayload1(url: url.absoluteString))
         
-        return .init(regularFileWithContents: data)
+        return FileWrapper(regularFileWithContents: data)
     }
 }
 
 // MARK: - Auxiliary
 
 extension WebLocationDocument {
-    struct _WebLocationFilePayload: Codable, Hashable, Sendable {
+    struct _WebLocationFilePayload1: Codable, Hashable, Sendable {
         enum CodingKeys: String, CodingKey {
             case url = "URL"
         }
         
         let url: String
+    }
+    
+    struct _WebLocationFilePayload2: Codable, Hashable, Sendable {
+        enum CodingKeys: String, CodingKey {
+            case url = "URL"
+        }
+        
+        let url: URL
+    }
+    
+    struct _RelativeURL: Codable, Hashable, Sendable {
+        enum CodingKeys: String, CodingKey {
+            case _url = "URL"
+        }
+        
+        private let _url: [String: String]
+        
+        public var url: URL {
+            get throws {
+                guard try _url.keys.toCollectionOfOne().value == "relative" else {
+                    throw Never.Reason.unexpected
+                }
+                
+                return try URL(string: _url["relative"]!).unwrap()
+            }
+        }
     }
 }

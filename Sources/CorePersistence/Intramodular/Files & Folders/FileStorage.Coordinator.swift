@@ -134,7 +134,7 @@ public class _FileStorageCoordinator<Value>: ObservableObject, @unchecked Sendab
             }
             .store(in: cancellables)
     }
-
+    
     convenience init(
         initialValue: Value?,
         file: any _FileOrFolderRepresenting,
