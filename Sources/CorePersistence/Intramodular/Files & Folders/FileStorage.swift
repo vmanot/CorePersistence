@@ -35,7 +35,7 @@ public final class FileStorage<Value> {
             self.readErrorRecoveryStrategy = .fatalError
         }
     }
-        
+    
     private let coordinator: Coordinator
     private var objectWillChangeConduit: AnyCancellable?
     
@@ -125,7 +125,7 @@ public final class FileStorage<Value> {
     ) where Value: Codable {
         let directoryURL = location.deletingLastPathComponent()
         let url = FileURL(location)
-
+        
         try! FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
         
         assert(FileManager.default.directoryExists(at: directoryURL))
@@ -145,7 +145,7 @@ public final class FileStorage<Value> {
         options: FileStorage.Options
     ) where Value: Codable {
         let url = FileURL(location())
-
+        
         self.init(
             coordinator: .init(
                 initialValue: wrappedValue,
@@ -186,11 +186,28 @@ public final class FileStorage<Value> {
     }
 }
 
+// MARK: - Extensions
+
 extension FileStorage {
     public func commit() {
         coordinator.commit()
     }
 }
+
+// MARK: - Implemented Conformances
+
+extension FileStorage: Publisher {
+    public typealias Output = Value
+    public typealias Failure = Never
+    
+    public func receive<S: Subscriber<Value, Never>>(subscriber: S) {
+        coordinator.objectWillChange
+            .compactMap({ [weak coordinator] in coordinator?.value })
+            .receive(subscriber: subscriber)
+    }
+}
+
+// MARK: - Auxiliary
 
 extension FileStorage {
     public typealias ReadErrorRecoveryStrategy = _FileStorageReadErrorRecoveryStrategy
