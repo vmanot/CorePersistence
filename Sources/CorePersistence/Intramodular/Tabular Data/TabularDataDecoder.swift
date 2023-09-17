@@ -16,7 +16,7 @@ public final class TabularDataDecoder: TopLevelDecoder {
     
     public func decode<T: Decodable>(
         _ type: T.Type,
-        from input: Input
+        from input: DataFrame
     ) throws -> T {
         let decoder = _TabularDataDecoder(
             owner: .topLevel,
