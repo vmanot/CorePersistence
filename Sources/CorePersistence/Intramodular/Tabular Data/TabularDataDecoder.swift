@@ -14,6 +14,7 @@ public final class TabularDataDecoder: TopLevelDecoder {
         
     }
     
+    /// Decodes a type from a data frame.
     public func decode<T: Decodable>(
         _ type: T.Type,
         from input: DataFrame
