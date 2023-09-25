@@ -7,6 +7,11 @@ import Merge
 import Swallow
 
 @available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
+extension FileBundle {
+    public typealias File<Contents> = _FileBundle_KeyedFileProperty<Self, Contents>
+}
+
+@available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
 class _KeyedFileBundleChildFile<Contents>: _KeyedFileBundleChildGenericBase<Contents>, _FileOrFolderRepresenting, ObservableObject {
     private var wantsCreation: Bool = false
     private let configuration: () throws -> _RelativeFileConfiguration<Contents>

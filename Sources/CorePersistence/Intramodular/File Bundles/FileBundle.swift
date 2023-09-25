@@ -33,12 +33,3 @@ extension FileBundle {
         // do nothing
     }
 }
-
-// MARK: - Supplementary
-
-@available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
-extension FileBundle {
-    public typealias File<Contents> = _FileBundle_KeyedFileProperty<Self, Contents>
-    public typealias ChildBundle<Contents: FileBundle> = _FileBundle_BundleProperty<Self, Contents>
-    public typealias Children<Key: StringRepresentable, Value> = _FileBundle_KeyedChildrenProperty<Key, Value>
-}
