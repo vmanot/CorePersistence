@@ -8,7 +8,7 @@ import Merge
 import Swallow
 import UniformTypeIdentifiers
 
-public final class _AnyFileDocument: ObservableObject {
+public final class _AnyReferenceFileDocument: ObservableObject {
     private enum _Error: Error {
         case unsupportedInitialization(from: Any)
         case unsupportedTypeCast(to: Any.Type)
@@ -31,7 +31,7 @@ public final class _AnyFileDocument: ObservableObject {
 
 // MARK: - Initializers
 
-extension _AnyFileDocument {
+extension _AnyReferenceFileDocument {
     public convenience init(configuration: ReadConfiguration) throws {
         self.init(base: try _FileWrapperDocument(configuration: configuration))
     }
@@ -63,7 +63,7 @@ extension _AnyFileDocument {
 
 // MARK: - Extensions
 
-extension _AnyFileDocument {
+extension _AnyReferenceFileDocument {
     public var regularFileContents: Data {
         get throws {
             if let base = base as? _FileWrapperDocument {
@@ -77,7 +77,7 @@ extension _AnyFileDocument {
     }
 }
 
-extension _AnyFileDocument {
+extension _AnyReferenceFileDocument {
     public func _typedAccessor<T>(_ type: T.Type) -> _NonAsyncAndAsyncAccessor<Void, T> {
         func _setSynchronously(_ newValue: T) throws {
             if let newValue = newValue as? _FileDocumentLike {
@@ -106,7 +106,7 @@ extension _AnyFileDocument {
     }
 }
 
-extension _AnyFileDocument {
+extension _AnyReferenceFileDocument {
     public func cast<T>(
         to type: T.Type
     ) async throws -> T {
@@ -172,7 +172,7 @@ extension _AnyFileDocument {
     }
 }
 
-extension _AnyFileDocument {
+extension _AnyReferenceFileDocument {
     public func _loadSynchronously<T>(
         _ type: T.Type
     ) throws -> T {
@@ -230,7 +230,7 @@ extension _AnyFileDocument {
 
 // MARK: - Conformances
 
-extension _AnyFileDocument: ReferenceFileDocumentX {
+extension _AnyReferenceFileDocument: ReferenceFileDocumentX {
     public enum Snapshot {
         case data(Data)
         case document(any FileDocumentX)

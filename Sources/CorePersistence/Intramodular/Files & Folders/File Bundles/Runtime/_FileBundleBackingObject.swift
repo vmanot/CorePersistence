@@ -6,6 +6,7 @@ import Diagnostics
 import Foundation
 import Merge
 import Swallow
+import SwiftData
 
 class _FileBundleBackingObject: _FileBundleContainerElement {
     var fileWrapper: _AsyncFileWrapper? = nil

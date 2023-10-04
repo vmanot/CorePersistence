@@ -93,9 +93,9 @@ extension _KeyedFileBundleChild {
             if parentFileWrapper.isDirectory {
                 assert(parentFileWrapper.fileWrappers.isNotNil)
             }
-
+            
             let existing = parentFileWrapper.fileWrappers![_fileName]
-
+            
             guard existing == nil else {
                 assert(existing!.preferredFileName == fileWrapper.preferredFileName)
                 

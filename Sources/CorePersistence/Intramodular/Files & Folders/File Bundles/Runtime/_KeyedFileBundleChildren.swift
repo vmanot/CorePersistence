@@ -8,7 +8,7 @@ import Runtime
 import Swallow
 
 @available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
-final class _KeyedFileBundleChildren<Key: StringRepresentable, Value>: ObservableObject, _KeyedFileBundleChild, _FileBundleContainerElement {
+extension _KeyedFileBundleChildren {
     struct ChildConfiguration {
         weak var enclosingInstance: (any FileBundle)?
         
@@ -34,7 +34,10 @@ final class _KeyedFileBundleChildren<Key: StringRepresentable, Value>: Observabl
             self.initialValue = initialValue
         }
     }
-    
+}
+
+@available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
+final class _KeyedFileBundleChildren<Key: StringRepresentable, Value, WrappedValue>: ObservableObject, _KeyedFileBundleChild, _FileBundleContainerElement {
     typealias Contents = [Key: Value]
     typealias MakeChild = (ChildConfiguration) throws -> (any _KeyedFileBundleChild<Value>)?
     
@@ -303,22 +306,5 @@ final class _KeyedFileBundleChildren<Key: StringRepresentable, Value>: Observabl
     
     func refresh() throws {
         
-    }
-}
-
-struct _HashableOrObjectIdentifier: Hashable {
-    let type: ObjectIdentifier
-    let base: AnyHashable
-    
-    init?(from base: Any) {
-        self.type = ObjectIdentifier(Swift.type(of: base))
-        
-        if let base = base as? any Hashable {
-            self.base = base.erasedAsAnyHashable
-        } else if isClass(Swift.type(of: base)) {
-            self.base = ObjectIdentifier(try! cast(base, to: AnyObject.self))
-        } else {
-            return nil
-        }
     }
 }

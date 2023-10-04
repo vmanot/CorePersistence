@@ -6,7 +6,7 @@ import FoundationX
 import Swift
 
 /// A type whose instances are semantically versioned.
-public protocol SemanticallyVersioned {
+public protocol SemanticallyVersionedInstance {
     associatedtype InstanceVersion: SemanticVersionProtocol = Optional<FoundationX.Version>
     
     var instanceVersion: InstanceVersion? { get }
@@ -14,7 +14,7 @@ public protocol SemanticallyVersioned {
 
 // MARK: - Implementation -
 
-extension SemanticallyVersioned where InstanceVersion == Optional<FoundationX.Version> {
+extension SemanticallyVersionedInstance where InstanceVersion == Optional<FoundationX.Version> {
     var instanceVersion: InstanceVersion? {
         nil
     }

@@ -5,7 +5,7 @@
 import FoundationX
 import Swallow
 
-/// A semantically versioned type.
+/// A semantically versioned _type_ (this is not to be confused with a semantically versioned _instance_).
 public protocol SemanticallyVersionedType {
     associatedtype TypeVersion: SemanticVersionProtocol = Optional<FoundationX.Version>
     

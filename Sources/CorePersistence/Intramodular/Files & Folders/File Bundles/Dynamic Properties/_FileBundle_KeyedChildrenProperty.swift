@@ -8,17 +8,17 @@ import Swallow
 
 @available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
 extension FileBundle {
-    public typealias Children<Key: StringRepresentable, Value> = _FileBundle_KeyedChildrenProperty<Key, Value>
+    public typealias Children<Key: StringRepresentable, Value, WrappedValue> = _FileBundle_KeyedChildrenProperty<Key, Value, WrappedValue>
 }
 
 @available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
 @propertyWrapper
-public final class _FileBundle_KeyedChildrenProperty<Key: StringRepresentable, Value>: _FileBundle_DynamicProperty {
-    public typealias _SelfType = _FileBundle_KeyedChildrenProperty<Key, Value>
+public final class _FileBundle_KeyedChildrenProperty<Key: StringRepresentable, Value, WrappedValue>: _FileBundle_DynamicProperty {
+    public typealias _SelfType = _FileBundle_KeyedChildrenProperty<Key, Value, WrappedValue>
     
-    typealias Configuration = _KeyedFileBundleChildren<Key, Value>.Configuration
-    typealias Base = _KeyedFileBundleChildren<Key, Value>
-    
+    typealias Configuration = Base.Configuration
+    typealias Base = _KeyedFileBundleChildren<Key, Value, WrappedValue>
+
     private let configuration: Configuration
     private var base: Base?
     
@@ -65,7 +65,7 @@ extension _FileBundle_KeyedChildrenProperty {
     convenience public init(
         wrappedValue: [Key: Value]? = nil,
         _ path: String
-    ) where Value: FileBundle {
+    ) where Value: FileBundle, WrappedValue == [Key: Value] {
         self.init(
             configuration: .init(
                 folderConfiguration: .init(path: path, initialValue: nil),

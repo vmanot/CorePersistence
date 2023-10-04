@@ -8,7 +8,7 @@ import Swallow
 
 public final class _AsyncFileWrapper {
     private let lock = OSUnfairLock()
-    public var base: FileWrapper 
+    public var base: FileWrapper
     
     public var isDirectory: Bool {
         get {
@@ -64,7 +64,7 @@ public final class _AsyncFileWrapper {
     
     public func removeFileWrapper(_ wrapper: _AsyncFileWrapper) {
         assert(contains(wrapper)) // TODO: Investigate
-
+        
         lock.withCriticalScope {
             base.removeFileWrapper(wrapper.base)
         }
@@ -101,7 +101,7 @@ extension _AsyncFileWrapper: Equatable {
     public static func === (lhs: _AsyncFileWrapper, rhs: _AsyncFileWrapper) -> Bool {
         fatalError()
     }
-
+    
     public static func !== (lhs: _AsyncFileWrapper, rhs: _AsyncFileWrapper) -> Bool {
         fatalError()
     }
