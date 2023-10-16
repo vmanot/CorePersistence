@@ -93,10 +93,10 @@ extension _FileBundle_KeyedFileProperty {
     convenience public init(
         wrappedValue: Contents,
         _ path: String,
-        options: FileStorage<Contents>.Options = nil
-    ) where Contents: _FileDocumentLike {
+        options: FileStorageOptions = nil
+    ) where Contents: _FileDocumentProtocol {
         self.init(
-            configuration: .init(
+            configuration: try! _RelativeFileConfiguration(
                 path: path,
                 coder: .init(Contents.self),
                 readWriteOptions: options,
@@ -108,12 +108,12 @@ extension _FileBundle_KeyedFileProperty {
     
     convenience public init(
         _ path: String,
-        options: FileStorage<Contents>.Options = nil
-    ) where Contents: _FileDocumentLike & Initiable {
+        options: FileStorageOptions = nil
+    ) where Contents: _FileDocumentProtocol & Initiable {
         let initialValue = Contents()
         
         self.init(
-            configuration: .init(
+            configuration: try! _RelativeFileConfiguration(
                 path: path,
                 coder: .init(Contents.self),
                 readWriteOptions: options,
@@ -126,10 +126,10 @@ extension _FileBundle_KeyedFileProperty {
     convenience public init(
         wrappedValue: Contents? = nil,
         _ path: String,
-        options: FileStorage<Contents>.Options = nil
-    ) where Contents: Initiable, Contents: _FileDocumentLike {
+        options: FileStorageOptions = nil
+    ) where Contents: Initiable, Contents: _FileDocumentProtocol {
         self.init(
-            configuration: .init(
+            configuration: try! _RelativeFileConfiguration(
                 path: path,
                 coder: .init(Contents.self),
                 readWriteOptions: options,
@@ -142,10 +142,10 @@ extension _FileBundle_KeyedFileProperty {
     convenience public init(
         wrappedValue: Contents = .init(nilLiteral: ()),
         _ path: String,
-        options: FileStorage<Contents>.Options = nil
-    ) where Contents: OptionalProtocol, Contents.Wrapped: _FileDocumentLike {
+        options: FileStorageOptions = nil
+    ) where Contents: OptionalProtocol, Contents.Wrapped: _FileDocumentProtocol {
         self.init(
-            configuration: .init(
+            configuration: try! _RelativeFileConfiguration(
                 path: path,
                 coder: .init(Contents.Wrapped.self),
                 readWriteOptions: options,
@@ -159,10 +159,10 @@ extension _FileBundle_KeyedFileProperty {
         wrappedValue: Contents,
         _ path: String,
         coder: Coder,
-        options: FileStorage<Contents>.Options = nil
+        options: FileStorageOptions = nil
     ) where Contents: Codable {
         self.init(
-            configuration: .init(
+            configuration: try! _RelativeFileConfiguration(
                 path: path,
                 coder: .init(.topLevelDataCoder(coder, forType: Contents.self)),
                 readWriteOptions: options,
@@ -175,12 +175,12 @@ extension _FileBundle_KeyedFileProperty {
     convenience public init<Coder: TopLevelDataCoder>(
         _ path: String,
         coder: Coder,
-        options: FileStorage<Contents>.Options = nil
+        options: FileStorageOptions = nil
     ) where Contents: Codable & Initiable {
         let initialValue = Contents()
         
         self.init(
-            configuration: .init(
+            configuration: try! _RelativeFileConfiguration(
                 path: path,
                 coder: .init(.topLevelDataCoder(coder, forType: Contents.self)),
                 readWriteOptions: options,
@@ -193,10 +193,10 @@ extension _FileBundle_KeyedFileProperty {
     convenience public init(
         wrappedValue: Contents,
         _ path: String,
-        options: FileStorage<Contents>.Options = nil
+        options: FileStorageOptions = nil
     ) where Contents: Codable {
         self.init(
-            configuration: .init(
+            configuration: try! _RelativeFileConfiguration(
                 path: path,
                 readWriteOptions: options,
                 initialValue: wrappedValue
@@ -207,12 +207,12 @@ extension _FileBundle_KeyedFileProperty {
     
     convenience public init(
         _ path: String,
-        options: FileStorage<Contents>.Options = nil
+        options: FileStorageOptions = nil
     ) where Contents: Codable & Initiable {
         let initialValue = Contents()
         
         self.init(
-            configuration: .init(
+            configuration: try! _RelativeFileConfiguration(
                 path: path,
                 readWriteOptions: options,
                 initialValue: initialValue
@@ -223,12 +223,12 @@ extension _FileBundle_KeyedFileProperty {
     
     convenience public init(
         _ path: String,
-        options: FileStorage<Contents>.Options = nil
+        options: FileStorageOptions = nil
     ) where Contents: Codable & ExpressibleByNilLiteral {
         let initialValue = Contents(nilLiteral: ())
         
         self.init(
-            configuration: .init(
+            configuration: try! _RelativeFileConfiguration(
                 path: path,
                 readWriteOptions: options,
                 initialValue: initialValue

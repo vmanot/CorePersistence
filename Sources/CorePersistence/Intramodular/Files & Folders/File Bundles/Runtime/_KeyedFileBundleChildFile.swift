@@ -16,17 +16,17 @@ class _KeyedFileBundleChildFile<Contents>: _KeyedFileBundleChildGenericBase<Cont
     private var wantsCreation: Bool = false
     private let configuration: () throws -> _RelativeFileConfiguration<Contents>
     
-    private var coordinator: FileStorage<Contents>.Coordinator?
+    private var coordinator: FileStorage<MutableValueBox<Contents>, Contents>.Coordinator?
     private let coordinatorObjectWillChangeRelay = ObjectWillChangePublisherRelay()
     
     override var contents: Contents {
         get {
-            try! getFileCoordinator().value
+            try! getFileCoordinator().wrappedValue
         }
     }
     
     override func setContents(_ contents: Contents) throws {
-        try getFileCoordinator().value = contents
+        try getFileCoordinator().wrappedValue = contents
     }
     
     override var knownFileURL: URL? {
@@ -50,14 +50,15 @@ class _KeyedFileBundleChildFile<Contents>: _KeyedFileBundleChildGenericBase<Cont
     }
     
     @discardableResult
-    private func  acquireFileWrapper(
+    private func acquireFileWrapper(
         readOptions: Set<FileDocumentReadOption>
     ) throws -> Bool {
-        let configuration = try self.configuration()
+        var configuration = try self.configuration()
+        let relativeFilePath = try? configuration.consumePath()
         
-        self.fileWrapper = try parent.unwrap().fileWrapper?.fileWrappers.unwrap()[configuration.path ?? key]
+        self.fileWrapper = try parent.unwrap().fileWrapper?.fileWrappers.unwrap()[relativeFilePath ?? key]
         
-        preferredFileName = configuration.path
+        preferredFileName = relativeFilePath
         
         if self.fileWrapper == nil, wantsCreation {
             let initialValue: Contents
@@ -92,25 +93,29 @@ class _KeyedFileBundleChildFile<Contents>: _KeyedFileBundleChildGenericBase<Cont
         _assertParentChildFileWrapperConsistency()
     }
     
-    func getFileCoordinator() throws -> FileStorage<Contents>.Coordinator {
+    func getFileCoordinator() throws -> FileStorage<MutableValueBox<Contents>, Contents>.Coordinator {
         try coordinator ?? _refreshFileCoordinator()
     }
     
     @discardableResult
-    func _refreshFileCoordinator() throws -> FileStorage<Contents>.Coordinator {
+    func _refreshFileCoordinator() throws -> FileStorage<MutableValueBox<Contents>, Contents>.Coordinator {
         var latestConfiguration = try configuration()
         
         latestConfiguration.readWriteOptions.readErrorRecoveryStrategy = .fatalError
-        
+
+        let relativeFilePath = try? latestConfiguration.consumePath()
+
+        preferredFileName = relativeFilePath
+                
         if let existingCoordinator = coordinator {
             guard existingCoordinator.configuration.isNotEqual(to: latestConfiguration) == true else {
                 return existingCoordinator
             }
         }
         
-        coordinator = FileStorage<Contents>.Coordinator(
-            file: self,
-            configuration: try configuration(),
+        coordinator = try _NaiveFileStorageCoordinator(
+            fileSystemResource: self,
+            configuration: latestConfiguration,
             cache: InMemorySingleValueCache()
         )
         

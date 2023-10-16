@@ -4,7 +4,7 @@
 
 import UniformTypeIdentifiers
 
-public protocol _FileDocumentLike {
+public protocol _FileDocumentProtocol {
     static var readableContentTypes: [UTType] { get }
     static var writableContentTypes: [UTType] { get }
     

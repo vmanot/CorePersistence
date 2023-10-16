@@ -21,29 +21,17 @@ public enum _FileStorageReadErrorRecoveryStrategy: String, Codable, Hashable, Se
 ///
 /// Writing is done asynchronously on a high-priority background thread, and synchronously on the deinitialization of the internal storage of this property wrapper.
 @propertyWrapper
-public final class FileStorage<Value> {
-    public struct Options: Codable, ExpressibleByNilLiteral, Hashable {
-        public var readErrorRecoveryStrategy: ReadErrorRecoveryStrategy
-        
-        public init(
-            readErrorRecoveryStrategy: ReadErrorRecoveryStrategy
-        ) {
-            self.readErrorRecoveryStrategy = readErrorRecoveryStrategy
-        }
-        
-        public init(nilLiteral: ()) {
-            self.readErrorRecoveryStrategy = .fatalError
-        }
-    }
+public final class FileStorage<ValueType, UnwrappedType> {
+    public typealias Coordinator = _AnyFileStorageCoordinator<ValueType, UnwrappedType>
     
     private let coordinator: Coordinator
     private var objectWillChangeConduit: AnyCancellable?
     
-    public var wrappedValue: Value {
+    public var wrappedValue: UnwrappedType {
         get {
-            coordinator.value
+            coordinator.wrappedValue
         } set {
-            coordinator.value = newValue
+            coordinator.wrappedValue = newValue
         }
     }
     
@@ -51,11 +39,17 @@ public final class FileStorage<Value> {
         self
     }
     
+    public var url: URL {
+        get throws {
+            try coordinator.fileSystemResource._toURL()
+        }
+    }
+    
     public static subscript<EnclosingSelf: ObservableObject>(
         _enclosingInstance object: EnclosingSelf,
-        wrapped wrappedKeyPath: ReferenceWritableKeyPath<EnclosingSelf, Value>,
+        wrapped wrappedKeyPath: ReferenceWritableKeyPath<EnclosingSelf, UnwrappedType>,
         storage storageKeyPath: ReferenceWritableKeyPath<EnclosingSelf, FileStorage>
-    ) -> Value where EnclosingSelf.ObjectWillChangePublisher: _opaque_VoidSender {
+    ) -> UnwrappedType where EnclosingSelf.ObjectWillChangePublisher: _opaque_VoidSender {
         get {
             object[keyPath: storageKeyPath].setUpObjectWillChangeConduitIfNecessary(_enclosingInstance: object)
             
@@ -69,7 +63,7 @@ public final class FileStorage<Value> {
         }
     }
     
-    private func setUpObjectWillChangeConduitIfNecessary<EnclosingSelf: ObservableObject>(
+    fileprivate func setUpObjectWillChangeConduitIfNecessary<EnclosingSelf: ObservableObject>(
         _enclosingInstance object: EnclosingSelf
     ) {
         guard objectWillChangeConduit == nil else {
@@ -85,44 +79,38 @@ public final class FileStorage<Value> {
         }
     }
     
-    // MARK: - Initializers
-    
     init(coordinator: FileStorage.Coordinator) {
         self.coordinator = coordinator
     }
-    
-    public convenience init(
-        wrappedValue: Value,
-        _ location: CanonicalFileDirectory,
-        path: String,
-        options: FileStorage.Options
-    ) where Value: DataCodableWithDefaultStrategies {
-        let url = try! FileURL(location.toURL().appendingPathComponent(path, isDirectory: false))
+}
+
+// MARK: - Initializers
+
+extension FileStorage {
+    public convenience init<Coder: TopLevelDataCoder>(
+        wrappedValue: UnwrappedType,
+        location: () -> URL,
+        coder: Coder,
+        options: FileStorageOptions
+    ) where UnwrappedType: Codable, ValueType == MutableValueBox<UnwrappedType> {
+        let url = FileURL(location())
         
         self.init(
-            coordinator: .init(
+            coordinator: try! _NaiveFileStorageCoordinator(
                 initialValue: wrappedValue,
                 file: url,
-                coder: .init(
-                    .dataCodableType(
-                        Value.self,
-                        strategy: (
-                            decoding: Value.defaultDataDecodingStrategy,
-                            encoding: Value.defaultDataEncodingStrategy
-                        )
-                    )
-                ),
+                coder: .init(.topLevelDataCoder(coder, forType: UnwrappedType.self)),
                 options: options
             )
         )
     }
     
-    public init<Coder: TopLevelDataCoder>(
-        wrappedValue: Value,
+    public convenience init<Coder: TopLevelDataCoder>(
+        wrappedValue: UnwrappedType,
         location: URL,
         coder: Coder,
-        options: FileStorage.Options
-    ) where Value: Codable {
+        options: FileStorageOptions
+    ) where UnwrappedType: Codable, ValueType == MutableValueBox<UnwrappedType> {
         let directoryURL = location.deletingLastPathComponent()
         let url = FileURL(location)
         
@@ -130,39 +118,23 @@ public final class FileStorage<Value> {
         
         assert(FileManager.default.directoryExists(at: directoryURL))
         
-        self.coordinator = .init(
-            initialValue: wrappedValue,
-            file: url,
-            coder: .init(.topLevelDataCoder(coder, forType: Value.self)),
-            options: options
-        )
-    }
-    
-    public convenience init<Coder: TopLevelDataCoder>(
-        wrappedValue: Value,
-        location: () -> URL,
-        coder: Coder,
-        options: FileStorage.Options
-    ) where Value: Codable {
-        let url = FileURL(location())
-        
         self.init(
-            coordinator: .init(
+            coordinator: try! _NaiveFileStorageCoordinator(
                 initialValue: wrappedValue,
                 file: url,
-                coder: .init(.topLevelDataCoder(coder, forType: Value.self)),
+                coder: .init(.topLevelDataCoder(coder, forType: UnwrappedType.self)),
                 options: options
             )
         )
     }
     
     public convenience init<Coder: TopLevelDataCoder>(
-        wrappedValue: Value,
+        wrappedValue: UnwrappedType,
         _ location: CanonicalFileDirectory,
         path: String,
         coder: Coder,
-        options: FileStorage.Options
-    ) where Value: Codable {
+        options: FileStorageOptions
+    ) where UnwrappedType: Codable, ValueType == MutableValueBox<UnwrappedType> {
         self.init(
             wrappedValue: wrappedValue,
             location: try! location.toURL().appendingPathComponent(path, isDirectory: false),
@@ -171,17 +143,174 @@ public final class FileStorage<Value> {
         )
     }
     
+    public convenience init(
+        wrappedValue: UnwrappedType,
+        _ location: CanonicalFileDirectory,
+        path: String,
+        options: FileStorageOptions
+    ) where UnwrappedType: DataCodableWithDefaultStrategies {
+        let url = try! FileURL(location.toURL().appendingPathComponent(path, isDirectory: false))
+        
+        self.init(
+            coordinator: try! _NaiveFileStorageCoordinator(
+                initialValue: wrappedValue,
+                file: url,
+                coder: _AnyConfiguredFileCoder(
+                    .dataCodableType(
+                        UnwrappedType.self,
+                        strategy: (
+                            decoding: UnwrappedType.defaultDataDecodingStrategy,
+                            encoding: UnwrappedType.defaultDataEncodingStrategy
+                        )
+                    )
+                ),
+                options: options
+            )
+        )
+    }
+    
     public convenience init<Coder: TopLevelDataCoder>(
         _ location: CanonicalFileDirectory,
         path: String,
         coder: Coder,
-        options: FileStorage.Options
-    ) where Value: Codable & Initiable {
+        options: FileStorageOptions
+    ) where UnwrappedType: Codable & Initiable, ValueType == MutableValueBox<UnwrappedType> {
         self.init(
             wrappedValue: .init(),
             location: try! location.toURL().appendingPathComponent(path, isDirectory: false),
             coder: coder,
             options: options
+        )
+    }
+}
+
+extension FileStorage {
+    public convenience init<Item, ID>(
+        directory: () throws -> URL,
+        file: @escaping (FolderStorageElement<Item>) -> _RelativeFileConfiguration<Item>,
+        id: KeyPath<Item, ID>
+    ) where ValueType == FolderContents<Item, ID>, UnwrappedType == ValueType.WrappedValue {
+        self.init(
+            coordinator: try! FolderContents.FileStorageCoordinator(
+                base: .init(
+                    folder: try! directory().toFileURL(),
+                    fileConfiguration: file,
+                    id: { $0[keyPath: id] }
+                )
+            )
+        )
+    }
+    
+    public convenience init<Item, ID, Coder: TopLevelDataCoder>(
+        directory: @escaping () throws -> URL,
+        filename: KeyPath<Item, FilenameProvider>,
+        coder: Coder,
+        id: KeyPath<Item, ID>
+    ) where Item: Codable, ValueType == FolderContents<Item, ID>, UnwrappedType == ValueType.WrappedValue {
+        self.init(
+            coordinator: try! FolderContents.FileStorageCoordinator(
+                base: .init(
+                    folder: try! directory().toFileURL(),
+                    fileConfiguration: { element in
+                        switch element {
+                            case .url(let fileURL):
+                                try _RelativeFileConfiguration(
+                                    fileURL: fileURL,
+                                    coder: .init(coder, for: Item.self),
+                                    readWriteOptions: nil,
+                                    initialValue: nil
+                                )
+                            case .inMemory(let element):
+                                try _RelativeFileConfiguration(
+                                    path: element[keyPath: filename].filename(inDirectory: try directory()),
+                                    coder: .init(coder, for: Item.self),
+                                    readWriteOptions: nil,
+                                    initialValue: nil
+                                )
+                        }
+                    },
+                    id: { $0[keyPath: id] }
+                )
+            )
+        )
+    }
+    
+    public convenience init<Item, ID, Coder: TopLevelDataCoder>(
+        directory: URL,
+        filename: KeyPath<Item, FilenameProvider>,
+        coder: Coder,
+        id: KeyPath<Item, ID>
+    ) where Item: Codable, ValueType == FolderContents<Item, ID>, UnwrappedType == ValueType.WrappedValue {
+        self.init(
+            directory: { directory },
+            filename: filename,
+            coder: coder,
+            id: id
+        )
+    }
+    
+    public convenience init<Item, ID, Coder: TopLevelDataCoder>(
+        location: @escaping () throws -> URL,
+        directory: String,
+        coder: Coder
+    ) where Item: Codable & Identifiable, Item.ID: CustomFilenameConvertible, ID == Item.ID, ValueType == FolderContents<Item, ID>, UnwrappedType == ValueType.WrappedValue {
+        self.init(
+            directory: { try location().appendingPathComponent(directory) },
+            filename: \.id.filenameProvider,
+            coder: coder,
+            id: \.id
+        )
+    }
+    
+    public convenience init<Item, ID, Coder: TopLevelDataCoder>(
+        directory: @escaping () throws -> URL,
+        coder: Coder
+    ) where Item: Codable & PersistentIdentifierConvertible, Item.PersistentID: CustomFilenameConvertible, ID == Item.PersistentID, ValueType == FolderContents<Item, ID>, UnwrappedType == ValueType.WrappedValue {
+        self.init(
+            directory: directory,
+            filename: \.persistentID.filenameProvider,
+            coder: coder,
+            id: \.persistentID
+        )
+    }
+
+    public convenience init<Item, ID, Coder: TopLevelDataCoder>(
+        directory: @escaping () throws -> URL,
+        coder: Coder
+    ) where Item: Codable & Identifiable, Item.ID: CustomFilenameConvertible, ID == Item.ID, ValueType == FolderContents<Item, ID>, UnwrappedType == ValueType.WrappedValue {
+        self.init(
+            directory: directory,
+            filename: \.id.filenameProvider,
+            coder: coder,
+            id: \.id
+        )
+    }
+    
+    public convenience init<Item, ID, Coder: TopLevelDataCoder>(
+        _ location: CanonicalFileDirectory,
+        directory: String,
+        coder: Coder
+    ) where Item: Codable & Identifiable, Item.ID: CustomFilenameConvertible, ID == Item.ID, ValueType == FolderContents<Item, ID>, UnwrappedType == ValueType.WrappedValue {
+        self.init(
+            directory: { try location.toURL().appendingPathComponent(directory, isDirectory: true) },
+            filename: \.id.filenameProvider,
+            coder: coder,
+            id: \.id
+        )
+    }
+
+    public convenience init<Item, ID>(
+        _ location: CanonicalFileDirectory,
+        directory: String,
+        file: @escaping (FolderStorageElement<Item>) -> _RelativeFileConfiguration<Item>,
+        id: KeyPath<Item, ID>
+    ) where ValueType == FolderContents<Item, ID>, UnwrappedType == ValueType.WrappedValue {
+        self.init(
+            directory: {
+                try location.toURL().appendingPathComponent(directory, isDirectory: true)
+            },
+            file: file,
+            id: id
         )
     }
 }
@@ -197,12 +326,12 @@ extension FileStorage {
 // MARK: - Implemented Conformances
 
 extension FileStorage: Publisher {
-    public typealias Output = Value
+    public typealias Output = UnwrappedType
     public typealias Failure = Never
     
-    public func receive<S: Subscriber<Value, Never>>(subscriber: S) {
+    public func receive<S: Subscriber<UnwrappedType, Never>>(subscriber: S) {
         coordinator.objectWillChange
-            .compactMap({ [weak coordinator] in coordinator?.value })
+            .compactMap({ [weak coordinator] in coordinator?.wrappedValue })
             .receive(subscriber: subscriber)
     }
 }
@@ -211,4 +340,20 @@ extension FileStorage: Publisher {
 
 extension FileStorage {
     public typealias ReadErrorRecoveryStrategy = _FileStorageReadErrorRecoveryStrategy
+}
+
+public struct FileStorageOptions: Codable, ExpressibleByNilLiteral, Hashable {
+    public typealias ReadErrorRecoveryStrategy = _FileStorageReadErrorRecoveryStrategy
+    
+    public var readErrorRecoveryStrategy: ReadErrorRecoveryStrategy?
+    
+    public init(
+        readErrorRecoveryStrategy: ReadErrorRecoveryStrategy?
+    ) {
+        self.readErrorRecoveryStrategy = readErrorRecoveryStrategy
+    }
+    
+    public init(nilLiteral: ()) {
+        self.readErrorRecoveryStrategy = nil
+    }
 }

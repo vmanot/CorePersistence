@@ -99,7 +99,7 @@ extension FileDocumentWriteConfigurationX {
     }
 }
 
-public protocol FileDocumentX: _FileDocumentLike {
+public protocol FileDocumentX: _FileDocumentProtocol {
     typealias ReadConfiguration = FileDocumentReadConfigurationX
     typealias WriteConfiguration = FileDocumentWriteConfigurationX
     
@@ -111,7 +111,7 @@ public protocol FileDocumentX: _FileDocumentLike {
     func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper
 }
 
-public protocol ReferenceFileDocumentX: _FileDocumentLike {
+public protocol ReferenceFileDocumentX: _FileDocumentProtocol {
     associatedtype Snapshot
     
     typealias ReadConfiguration = FileDocumentReadConfigurationX
@@ -154,7 +154,7 @@ extension ReferenceFileDocumentX {
     }
 }
 
-extension _FileDocumentLike {
+extension _FileDocumentProtocol {
     static func _opaque_fileWrapper(
         for value: Any,
         configuration: FileDocumentWriteConfigurationX

@@ -8,7 +8,7 @@ import UniformTypeIdentifiers
 
 public struct _AnyConfiguredFileCoder {
     public enum RawValue {
-        case document(_FileDocumentLike.Type)
+        case document(_FileDocumentProtocol.Type)
         case topLevelData(_AnyTopLevelDataCoder)
     }
     
@@ -19,8 +19,15 @@ public struct _AnyConfiguredFileCoder {
     }
     
     public init(
-        _ documentType: any _FileDocumentLike.Type,
-        supportedTypes: [any _FileDocumentLike.Type] = []
+        _ coder: any TopLevelDataCoder,
+        for type: any Codable.Type
+    ) {
+        self.init(rawValue: .topLevelData(.topLevelDataCoder(coder, forType: type)))
+    }
+    
+    public init(
+        _ documentType: any _FileDocumentProtocol.Type,
+        supportedTypes: [any _FileDocumentProtocol.Type] = []
     ) {
         self.init(rawValue: .document(documentType))
     }
@@ -100,7 +107,7 @@ extension URL {
 }
 
 extension UTType {
-    fileprivate func _suggestedTopLevelDataCoder() -> (any TopLevelDataCoder)? {
+    public func _suggestedTopLevelDataCoder() -> (any TopLevelDataCoder)? {
         switch self {
             case .propertyList:
                 return PropertyListCoder()

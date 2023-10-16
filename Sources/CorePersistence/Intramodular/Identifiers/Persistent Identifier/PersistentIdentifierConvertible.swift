@@ -11,6 +11,12 @@ public protocol PersistentIdentifierConvertible {
     var persistentID: PersistentID { get }
 }
 
+public protocol PersistentIdentifierMutable {
+    associatedtype PersistentID: Codable, Hashable, Sendable
+    
+    var persistentID: PersistentID { get }
+}
+
 public struct CSSearchableItemID: PersistentIdentifier, Sendable {
     public let uniqueIdentifier: String
     public let domainIdentifier: String?

@@ -52,10 +52,10 @@ extension _FileBundle_ManifestProperty {
         wrappedValue: Value,
         _ path: String,
         coder: Coder,
-        options: FileStorage<Value>.Options = nil
+        options: FileStorageOptions = nil
     ) where Value: Codable {
         self.init(
-            configuration: .init(
+            configuration: try! _RelativeFileConfiguration(
                 path: path,
                 coder: .init(.topLevelDataCoder(coder, forType: Value.self)),
                 readWriteOptions: options,
@@ -67,10 +67,10 @@ extension _FileBundle_ManifestProperty {
     convenience public init(
         wrappedValue: Value,
         _ path: String,
-        options: FileStorage<Value>.Options = nil
+        options: FileStorageOptions = nil
     ) where Value: Codable {
         self.init(
-            configuration: .init(
+            configuration: try! _RelativeFileConfiguration(
                 path: path,
                 coder: .init(.topLevelDataCoder(JSONCoder(), forType: Value.self)),
                 readWriteOptions: options,
