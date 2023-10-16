@@ -14,12 +14,7 @@ protocol _UnsafelySerializedPropertyWrapperProtocol: Codable, ParameterlessPrope
 
 @propertyWrapper
 public struct _UnsafelySerialized<Value>: _UnsafelySerializedPropertyWrapperProtocol, ParameterlessPropertyWrapper {
-    public var wrappedValue: Value {
-        didSet {
-            _recomputeCachedHashValue()
-        }
-    }
-    
+    public var wrappedValue: Value 
     private var _cachedHashValue: Int?
     
     private init(wrappedValue: Value, _cachedHashValue: Int?) {
