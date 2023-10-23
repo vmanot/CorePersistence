@@ -273,7 +273,7 @@ extension FileStorage {
             id: \.persistentID
         )
     }
-
+    
     public convenience init<Item, ID, Coder: TopLevelDataCoder>(
         directory: @escaping () throws -> URL,
         coder: Coder
@@ -298,7 +298,7 @@ extension FileStorage {
             id: \.id
         )
     }
-
+    
     public convenience init<Item, ID>(
         _ location: CanonicalFileDirectory,
         directory: String,

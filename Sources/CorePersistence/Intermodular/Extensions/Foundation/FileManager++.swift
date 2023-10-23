@@ -57,7 +57,11 @@ extension FileManager {
         openPanel.prompt = "Open"
         
         if #available(macOS 12.0, *) {
+            #if os(macOS)
             openPanel.allowedContentTypes = []
+            #else
+            openPanel.allowedFileTypes = ["none"]
+            #endif
         } else {
             openPanel.allowedFileTypes = ["none"]
         }
