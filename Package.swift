@@ -24,7 +24,6 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-syntax", from: "509.0.0"),
-        .package(url: "https://github.com/vmanot/Expansions.git", branch: "main"),
         .package(url: "https://github.com/vmanot/Merge.git", branch: "master"),
         .package(url: "https://github.com/vmanot/Swallow.git", branch: "master")
     ],
@@ -45,7 +44,6 @@ let package = Package(
             name: "CorePersistence",
             dependencies: [
                 "CorePersistenceMacros",
-                "Expansions",
                 "Merge",
                 "Swallow"
             ]
