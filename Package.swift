@@ -1,5 +1,6 @@
-// swift-tools-version:5.7
+// swift-tools-version: 5.9
 
+import CompilerPluginSupport
 import PackageDescription
 
 let package = Package(
@@ -22,13 +23,29 @@ let package = Package(
         )
     ],
     dependencies: [
+        .package(url: "https://github.com/apple/swift-syntax", from: "509.0.0"),
+        .package(url: "https://github.com/vmanot/Expansions.git", branch: "main"),
         .package(url: "https://github.com/vmanot/Merge.git", branch: "master"),
         .package(url: "https://github.com/vmanot/Swallow.git", branch: "master")
     ],
     targets: [
+        .macro(
+            name: "CorePersistenceMacros",
+            dependencies: [
+                .product(name: "SwiftSyntax", package: "swift-syntax"),
+                .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
+                .product(name: "SwiftOperators", package: "swift-syntax"),
+                .product(name: "SwiftParser", package: "swift-syntax"),
+                .product(name: "SwiftParserDiagnostics", package: "swift-syntax"),
+                .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
+            ],
+            path: "Sources/CorePersistenceMacros"
+        ),
         .target(
             name: "CorePersistence",
             dependencies: [
+                "CorePersistenceMacros",
+                "Expansions",
                 "Merge",
                 "Swallow"
             ]
