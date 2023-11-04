@@ -5,14 +5,13 @@
 @testable import CorePersistence
 
 import Diagnostics
-import HadeanIdentifiers
 import FoundationX
 import XCTest
 
 final class TypeDiscriminatedCodingTests: XCTestCase {
     func testShit() throws {
         let coder = _ModularTopLevelCoder(coder: JSONCoder(outputFormatting: [.prettyPrinted, .sortedKeys]))
-                
+        
         let data = Baz(
             child1: Foo(x: 42),
             child2: Bar(x: 4.2)
@@ -24,7 +23,7 @@ final class TypeDiscriminatedCodingTests: XCTestCase {
         XCTAssertNoThrow(try JSONDecoder().decode(AnyCodable.self, from: encodedData))
         
         let decoded = try coder.decode(Baz.self, from: encodedData)
-
+        
         assert(data == decoded)
     }
 }

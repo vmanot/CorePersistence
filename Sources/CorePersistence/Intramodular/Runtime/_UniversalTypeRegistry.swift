@@ -2,7 +2,6 @@
 // Copyright (c) Vatsal Manot
 //
 
-import CorePersistence
 @_spi(Internal) import Swallow
 
 public struct _UniversalTypeRegistry {

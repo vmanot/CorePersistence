@@ -2,7 +2,6 @@
 // Copyright (c) Vatsal Manot
 //
 
-import CorePersistence
 import Swallow
 
 public protocol HadeanIdentifiable: PersistentlyRepresentableType {

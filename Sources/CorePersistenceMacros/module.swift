@@ -10,6 +10,6 @@ import SwiftSyntaxMacros
 @main
 struct module: CompilerPlugin {
     let providingMacros: [Macro.Type] = [
-        
+        HadeanIdentifierMacro.self
     ]
 }

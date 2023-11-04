@@ -5,9 +5,14 @@
 @testable import CorePersistence
 
 import Diagnostics
-import HadeanIdentifiers
 import FoundationX
 import XCTest
+
+@HadeanIdentifier("foo")
+@RuntimeDiscoverable
+private struct _Boop_ {
+    
+}
 
 final class ModularCodingTests: XCTestCase {
     func testShit() throws {

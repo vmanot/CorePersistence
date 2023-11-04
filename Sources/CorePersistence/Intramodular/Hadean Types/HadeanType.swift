@@ -2,7 +2,6 @@
 // Copyright (c) Vatsal Manot
 //
 
-import CorePersistence
 import Proquint
 import Swallow
 
@@ -17,11 +16,11 @@ public struct HadeanType<T: Sendable>: Sendable {
     public var rawValue: Any.Type {
         base.first
     }
-
+    
     public var value: T {
         base.second
     }
-        
+    
     public init(_ type: T) throws {
         self.base = try _TypeCastTo2(base: type)
         

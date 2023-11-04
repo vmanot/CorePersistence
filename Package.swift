@@ -16,7 +16,6 @@ let package = Package(
             name: "CorePersistence",
             targets: [
                 "CorePersistence",
-                "HadeanIdentifiers",
                 "Proquint",
                 "UUIDv6"
             ]
@@ -24,6 +23,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-syntax", from: "509.0.0"),
+        .package(url: "https://github.com/vmanot/Expansions.git", branch: "main"),
         .package(url: "https://github.com/vmanot/Merge.git", branch: "master"),
         .package(url: "https://github.com/vmanot/Swallow.git", branch: "master")
     ],
@@ -31,6 +31,7 @@ let package = Package(
         .macro(
             name: "CorePersistenceMacros",
             dependencies: [
+                "Expansions",
                 .product(name: "SwiftSyntax", package: "swift-syntax"),
                 .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
                 .product(name: "SwiftOperators", package: "swift-syntax"),
@@ -45,20 +46,14 @@ let package = Package(
             dependencies: [
                 "CorePersistenceMacros",
                 "Merge",
+                "Proquint",
                 "Swallow"
-            ]
-        ),
-        .target(
-            name: "HadeanIdentifiers",
-            dependencies: [
-                "CorePersistence",
-                "Proquint"
             ]
         ),
         .target(
             name: "Proquint",
             dependencies: [
-                "CorePersistence"
+                "Swallow"
             ]
         ),
         .target(
@@ -70,8 +65,7 @@ let package = Package(
         .testTarget(
             name: "CorePersistenceTests",
             dependencies: [
-                "CorePersistence",
-                "HadeanIdentifiers"
+                "CorePersistence"
             ]
         ),
     ]

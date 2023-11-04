@@ -3,6 +3,7 @@
 //
 
 import Foundation
+import Proquint
 import Swift
 
 /// A persistent identifier.
@@ -44,9 +45,16 @@ public struct _DefaultPersistentIdentifierSpace<Identifier: PersistentIdentifier
     }
 }
 
+// MARK: - Implemented Conformances
+
+extension ProquintEncodedInteger: PersistentIdentifier {
+    public var body: some IdentityRepresentation {
+        _StringIdentityRepresentation(description)
+    }
+}
+
 extension UUID: PersistentIdentifier {
     public var body: some IdentityRepresentation {
         _StringIdentityRepresentation(uuidString)
     }
 }
-

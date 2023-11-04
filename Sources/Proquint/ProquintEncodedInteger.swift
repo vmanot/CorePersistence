@@ -2,11 +2,10 @@
 // Copyright (c) Vatsal Manot
 //
 
-import CorePersistence
 import Foundation
 import Swallow
 
-public struct ProquintEncodedInteger<T: Codable & BinaryInteger & Randomnable & Trivial>: PersistentIdentifier, Sendable {
+public struct ProquintEncodedInteger<T: Codable & BinaryInteger & Randomnable & Trivial>: Hashable, Sendable {
     private static var decoder: ProquintDecoder {
         ProquintDecoder()
     }
@@ -19,10 +18,6 @@ public struct ProquintEncodedInteger<T: Codable & BinaryInteger & Randomnable & 
     
     fileprivate init(rawValue: T) {
         self.rawValue = rawValue
-    }
-    
-    public var body: some IdentityRepresentation {
-        _StringIdentityRepresentation(description)
     }
 }
 
