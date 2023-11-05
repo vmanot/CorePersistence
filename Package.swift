@@ -45,6 +45,7 @@ let package = Package(
             name: "CorePersistence",
             dependencies: [
                 "CorePersistenceMacros",
+                "Expansions",
                 "Merge",
                 "Proquint",
                 "Swallow"
