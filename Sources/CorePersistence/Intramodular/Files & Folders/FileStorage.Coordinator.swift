@@ -12,6 +12,8 @@ public class _AnyFileStorageCoordinator<ValueType, UnwrappedValue>: ObservableOb
         case latestWritten
     }
     
+    weak var _enclosingInstance: AnyObject?
+    
     let cancellables = Cancellables()
     let lock = OSUnfairLock()
     
@@ -156,7 +158,11 @@ public class _NaiveFileStorageCoordinator<ValueType, UnwrappedValue>: _AnyFileSt
         )
         
         self.read = {
-            guard let contents = try fileSystemResource.decode(using: configuration.serialization.coder) else {
+            let contents = try _withLogicalParent(self._enclosingInstance) {
+                try fileSystemResource.decode(using: configuration.serialization.coder)
+            }
+            
+            guard let contents = contents else {
                 return try configuration.serialization.initialValue().unwrap()
             }
             

@@ -6,7 +6,7 @@ import Foundation
 import UniformTypeIdentifiers
 
 extension UTType {
-    public static let webInternetLocation = UTType("com.apple.web-internet-location")
+    public static let webInternetLocation = UTType("com.apple.web-internet-location")!
 }
 
 extension UTType {

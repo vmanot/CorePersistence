@@ -53,10 +53,18 @@ public final class FileStorage<ValueType, UnwrappedType> {
         get {
             object[keyPath: storageKeyPath].setUpObjectWillChangeConduitIfNecessary(_enclosingInstance: object)
             
+            if object[keyPath: storageKeyPath].coordinator._enclosingInstance == nil {
+                object[keyPath: storageKeyPath].coordinator._enclosingInstance = object
+            }
+            
             return object[keyPath: storageKeyPath].wrappedValue
         } set {
             object[keyPath: storageKeyPath].setUpObjectWillChangeConduitIfNecessary(_enclosingInstance: object)
             
+            if object[keyPath: storageKeyPath].coordinator._enclosingInstance == nil {
+                object[keyPath: storageKeyPath].coordinator._enclosingInstance = object
+            }
+
             object.objectWillChange.send()
             
             object[keyPath: storageKeyPath].wrappedValue = newValue

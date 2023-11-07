@@ -6,15 +6,28 @@ import Swallow
 import SwiftUI
 import UniformTypeIdentifiers
 
+@propertyWrapper
 public struct WebLocationDocument: Hashable, Sendable {
     public var url: URL
     
     public init(url: URL) {
         self.url = url
     }
-    
+        
     public init(url: String) throws {
         try self.init(url: URL(string: url).unwrap())
+    }
+    
+    public var wrappedValue: URL {
+        get {
+            url
+        } set {
+            self = Self(url: url)
+        }
+    }
+
+    public init(wrappedValue: URL) throws {
+        self.init(url: wrappedValue)
     }
 }
 
