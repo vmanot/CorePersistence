@@ -160,7 +160,7 @@ public final class FolderContents<Item, ID: Hashable>: MutablePropertyWrapper, O
             updatedNewValue[id: key] = element
         }
         
-        let updated = updatedNewValue.identifiers.removing(contentsOf: difference.insertions)
+        let updated = updatedNewValue._unorderedIdentifiers.removing(contentsOf: difference.insertions)
         
         for identifier in updated {
             self.storage[identifier]!.wrappedValue = newValue[id: identifier]!
@@ -170,20 +170,3 @@ public final class FolderContents<Item, ID: Hashable>: MutablePropertyWrapper, O
     }
 }
 
-public protocol SnapshottableCollection {
-    associatedtype Snapshot
-    
-    func snapshot() -> CollectionSnapshot
-}
-
-public protocol CollectionSnapshot {
-    
-}
-
-extension FileManager {
-    func regularFileExists(at url: URL) -> Bool {
-        var isDir: ObjCBool = false
-        let exists = self.fileExists(atPath: url.path, isDirectory: &isDir)
-        return exists && !isDir.boolValue
-    }
-}

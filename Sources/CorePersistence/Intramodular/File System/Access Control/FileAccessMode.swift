@@ -25,16 +25,48 @@ public protocol FileAccessModeTypeForReading: FileAccessModeType {
 
 // MARK: - Conformances
 
-public struct ReadAccess: FileAccessModeTypeForReading {
-    public static let value: FileAccessMode = .read
+public enum FileAccessModes {
+    public struct ReadAccess: FileAccessModeTypeForReading {
+        public static let value: FileAccessMode = .read
+        
+        public init() {
+            
+        }
+    }
+    
+    public struct WriteAccess: FileAccessModeTypeForWriting {
+        public static let value: FileAccessMode = .write
+        
+        public init() {
+            
+        }
+    }
+    
+    public struct UpdateAccess: FileAccessModeTypeForUpdating {
+        public static let value: FileAccessMode = .update
+        
+        public init() {
+            
+        }
+    }
 }
 
-public struct WriteAccess: FileAccessModeTypeForWriting {
-    public static let value: FileAccessMode = .write
+extension FileAccessModeType where Self == FileAccessModes.ReadAccess {
+    public static var read: Self {
+        Self()
+    }
 }
 
-public struct UpdateAccess: FileAccessModeTypeForUpdating {
-    public static let value: FileAccessMode = .update
+extension FileAccessModeType where Self == FileAccessModes.WriteAccess {
+    public static var write: Self {
+        Self()
+    }
+}
+
+extension FileAccessModeType where Self == FileAccessModes.UpdateAccess {
+    public static var update: Self {
+        Self()
+    }
 }
 
 // MARK: - Auxiliary
@@ -52,6 +84,6 @@ extension FileHandle {
     }
 }
 
-// MARK: - Helpers
+// MARK: - Auxiliary
 
 public typealias FileAccessModeTypeForUpdating = FileAccessModeTypeForReading & FileAccessModeTypeForWriting

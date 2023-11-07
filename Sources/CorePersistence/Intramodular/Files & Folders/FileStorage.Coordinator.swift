@@ -167,10 +167,14 @@ public class _NaiveFileStorageCoordinator<ValueType, UnwrappedValue>: _AnyFileSt
             try self?.fileSystemResource.encode($0, using: configuration.serialization.coder)
         }
         
-        Task.detached(priority: .high) { [weak self] in
+        let _readInitialValue: (() async -> Void) = {
             _expectNoThrow {
-                try self?.readInitialValue()
+                _ = try self.readInitialValue()
             }
+        }
+        
+        Task.detached(priority: .high) {
+            await _readInitialValue()
         }
         
         AppRunningState.EventNotificationPublisher()

@@ -100,15 +100,3 @@ public struct OnePuxExport: Codable, Hashable {
     public let attributes: OnePuxAttributes
     public let data: OnePuxData
 }
-
-public struct CompressingTopLevelEncoder<Base: TopLevelEncoder>: TopLevelEncoder where Base.Output == Data {
-    public typealias Output = Base.Output
-    
-    public let base: Base
-    
-    public func encode<T: Encodable>(
-        _ value: T
-    ) throws -> Data {
-        try (base.encode(value) as NSData).compressed(using: .zlib) as Data
-    }
-}

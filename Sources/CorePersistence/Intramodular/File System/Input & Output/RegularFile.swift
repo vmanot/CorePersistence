@@ -7,7 +7,16 @@ import POSIX
 import Swallow
 import System
 
-public class RegularFile<DataType, AccessMode: FileAccessModeType>: InputOutputResource {
+public protocol AnyRegularFile<FileAccessMode> {
+    associatedtype FileAccessMode: FileAccessModeType
+}
+
+public class RegularFile<DataType, AccessMode: FileAccessModeType>: InputOutputResource, AnyRegularFile {
+    public typealias FileAccessMode = AccessMode
+    
+    var reference: FileReference
+    var handle: FileHandle
+    
     public var location: FileLocationResolvable {
         reference
     }
@@ -16,10 +25,9 @@ public class RegularFile<DataType, AccessMode: FileAccessModeType>: InputOutputR
         FilePath(reference.url.path)
     }
     
-    var reference: FileReference
-    var handle: FileHandle
-    
-    public required init(at location: FileLocationResolvable) throws {
+    public required init(
+        at location: FileLocationResolvable
+    ) throws {
         let url = try location.resolveFileLocation().url
         
         self.reference = try FileReference(url: url).unwrap()
@@ -40,7 +48,7 @@ public class RegularFile<DataType, AccessMode: FileAccessModeType>: InputOutputR
     }
 }
 
-extension RegularFile where AccessMode == UpdateAccess {
+extension RegularFile where AccessMode == FileAccessModes.UpdateAccess {
     @_disfavoredOverload
     public convenience init(at location: FileLocationResolvable) throws {
         try self.init(at: location)
@@ -143,7 +151,7 @@ extension RegularFile where AccessMode: FileAccessModeTypeForUpdating, DataType 
             try! set(rawData: newValue.data(using: .init(encoding: .utf8, allowLossyConversion: false)))
         }
     }
-
+    
     public var utf16Data: String {
         get {
             try! data(using: .init(encoding: .utf16))
