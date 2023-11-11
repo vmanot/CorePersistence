@@ -7,7 +7,7 @@ import FoundationX
 import Swallow
 import UniformTypeIdentifiers
 
-public struct _JSONCodingDocument<Value: Codable>: FileDocumentX {
+public struct _JSONCodingDocument<Value: Codable>: _FileDocument {
     public static var readableContentTypes: [UTType] {
         [UTType.json]
     }

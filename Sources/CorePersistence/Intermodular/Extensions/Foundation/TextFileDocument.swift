@@ -8,7 +8,7 @@ import UniformTypeIdentifiers
 
 @available(tvOS, unavailable)
 @available(watchOS, unavailable)
-public struct TextFileDocument: Codable, FileDocumentX, Hashable, Initiable {
+public struct TextFileDocument: Codable, _FileDocument, Hashable, Initiable {
     public static var readableContentTypes = [UTType.plainText]
     
     public var text: String

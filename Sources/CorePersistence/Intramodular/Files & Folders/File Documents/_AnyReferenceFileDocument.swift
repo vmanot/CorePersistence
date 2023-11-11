@@ -40,7 +40,7 @@ extension _AnyReferenceFileDocument {
         try self.init(configuration: .init(url: url))
     }
     
-    public convenience init(_ document: any FileDocumentX) {
+    public convenience init(_ document: any _FileDocument) {
         self.init(base: document)
     }
     
@@ -230,19 +230,19 @@ extension _AnyReferenceFileDocument {
 
 // MARK: - Conformances
 
-extension _AnyReferenceFileDocument: ReferenceFileDocumentX {
+extension _AnyReferenceFileDocument: _ReferenceFileDocument {
     public enum Snapshot {
         case data(Data)
-        case document(any FileDocumentX)
-        case documentSnapshot(Any, document: any ReferenceFileDocumentX)
+        case document(any _FileDocument)
+        case documentSnapshot(Any, document: any _ReferenceFileDocument)
     }
     
     public func snapshot(
         configuration: SnapshotConfiguration
     ) throws -> Snapshot {
-        if let base = base as? FileDocumentX {
+        if let base = base as? _FileDocument {
             return .document(base)
-        } else if let base = base as? any ReferenceFileDocumentX {
+        } else if let base = base as? any _ReferenceFileDocument {
             let snapshot = try base.snapshot(configuration: configuration)
             
             return .documentSnapshot(snapshot, document: base)

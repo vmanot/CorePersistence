@@ -7,7 +7,7 @@ import FoundationX
 import Swallow
 import UniformTypeIdentifiers
 
-public struct _FileWrapperDocument: FileDocumentX {
+public struct _FileWrapperDocument: _FileDocument {
     public static var readableContentTypes: [UTType] {
         []
     }

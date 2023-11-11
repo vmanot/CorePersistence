@@ -10,6 +10,8 @@ public struct HadeanTopLevelCoder<EncodedRepresentation> {
     private let base: _ModularTopLevelCoder<EncodedRepresentation>
     
     private init(base: _ModularTopLevelCoder<EncodedRepresentation>) {
+        _ = _UniversalTypeRegistry.shared
+        
         var base = base
         
         base.plugins = [

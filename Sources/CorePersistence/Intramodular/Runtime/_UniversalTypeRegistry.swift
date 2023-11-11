@@ -18,12 +18,22 @@ public struct _UniversalTypeRegistry {
     static let typeToIdentifierResolver = SwiftTypeToIdentifierResolver()
     
     private init() {
-        
+        Self.register(
+            RuntimeDiscoverableTypes.enumerate(typesConformingTo: (any HadeanIdentifiable).self)
+        )
     }
     
     public static func register(_ type: Any.Type) {
         lock.withCriticalScope {
             _register(type)
+        }
+    }
+    
+    public static func register(_ types: [Any.Type]) {
+        lock.withCriticalScope {
+            for type in types {
+                _register(type)
+            }
         }
     }
     

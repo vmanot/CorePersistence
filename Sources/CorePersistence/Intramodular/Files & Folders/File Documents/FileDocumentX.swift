@@ -4,9 +4,10 @@
 
 import Merge
 import Swallow
+import SwiftUI
 import UniformTypeIdentifiers
 
-public struct FileDocumentReadConfigurationX {
+public struct _FileDocumentReadConfiguration {
     public let contentType: UTType?
     public let file: FileWrapper
     
@@ -36,7 +37,7 @@ public struct ReferenceFileDocumentSnapshotConfiguration {
     }
 }
 
-public struct FileDocumentWriteConfigurationX {
+public struct _FileDocumentWriteConfiguration {
     public let contentType: UTType?
     public let existingFile: FileWrapper?
     
@@ -49,7 +50,7 @@ public struct FileDocumentWriteConfigurationX {
     }
 }
 
-extension FileDocumentReadConfigurationX {
+extension _FileDocumentReadConfiguration {
     public init(file: FileWrapper, url: URL?) {
         self.init(
             contentType: url.flatMap({ UTType(from: $0) }),
@@ -69,7 +70,7 @@ extension FileDocumentReadConfigurationX {
     }
 }
 
-extension FileDocumentWriteConfigurationX {
+extension _FileDocumentWriteConfiguration {
     public init(
         existingFile: FileWrapper?,
         url: URL?
@@ -99,9 +100,9 @@ extension FileDocumentWriteConfigurationX {
     }
 }
 
-public protocol FileDocumentX: _FileDocumentProtocol {
-    typealias ReadConfiguration = FileDocumentReadConfigurationX
-    typealias WriteConfiguration = FileDocumentWriteConfigurationX
+public protocol _FileDocument: _FileDocumentProtocol {
+    typealias ReadConfiguration = _FileDocumentReadConfiguration
+    typealias WriteConfiguration = _FileDocumentWriteConfiguration
     
     static var readableContentTypes: [UTType] { get }
     static var writableContentTypes: [UTType] { get }
@@ -111,12 +112,12 @@ public protocol FileDocumentX: _FileDocumentProtocol {
     func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper
 }
 
-public protocol ReferenceFileDocumentX: _FileDocumentProtocol {
+public protocol _ReferenceFileDocument: _FileDocumentProtocol {
     associatedtype Snapshot
     
-    typealias ReadConfiguration = FileDocumentReadConfigurationX
+    typealias ReadConfiguration = _FileDocumentReadConfiguration
     typealias SnapshotConfiguration = ReferenceFileDocumentSnapshotConfiguration
-    typealias WriteConfiguration = FileDocumentWriteConfigurationX
+    typealias WriteConfiguration = _FileDocumentWriteConfiguration
     
     static var readableContentTypes: [UTType] { get }
     static var writableContentTypes: [UTType] { get }
@@ -133,7 +134,7 @@ public protocol ReferenceFileDocumentX: _FileDocumentProtocol {
     ) throws -> FileWrapper
 }
 
-extension FileDocumentX {
+extension _FileDocument {
     public func _fileWrapper(
         configuration: WriteConfiguration
     ) throws -> FileWrapper {
@@ -141,7 +142,7 @@ extension FileDocumentX {
     }
 }
 
-extension ReferenceFileDocumentX {
+extension _ReferenceFileDocument {
     public func _fileWrapper(
         configuration: WriteConfiguration
     ) throws -> FileWrapper {
@@ -157,13 +158,13 @@ extension ReferenceFileDocumentX {
 extension _FileDocumentProtocol {
     static func _opaque_fileWrapper(
         for value: Any,
-        configuration: FileDocumentWriteConfigurationX
+        configuration: _FileDocumentWriteConfiguration
     ) throws -> FileWrapper {
         try cast(value, to: Self.self)._fileWrapper(configuration: configuration)
     }
 }
 
-extension ReferenceFileDocumentX {
+extension _ReferenceFileDocument {
     func _opaque_fileWrapper(
         snapshot: Any,
         configuration: WriteConfiguration
@@ -174,7 +175,7 @@ extension ReferenceFileDocumentX {
     }
 }
 
-extension FileDocumentX {
+extension _FileDocument {
     public static var readableContentTypes: [UTType] {
         []
     }
@@ -184,12 +185,46 @@ extension FileDocumentX {
     }
 }
 
-extension ReferenceFileDocumentX {
+extension _ReferenceFileDocument {
     public static var readableContentTypes: [UTType] {
         []
     }
     
     public static var writableContentTypes: [UTType] {
         readableContentTypes
+    }
+}
+
+public struct _FileDocumentConfiguration<Document>: DynamicProperty {
+    @Binding public var document: Document
+    
+    public var fileURL: URL?
+    public var isEditable: Bool
+    
+    public init(
+        document: Binding<Document>,
+        fileURL: URL? = nil,
+        isEditable: Bool
+    ) {
+        self._document = document
+        self.fileURL = fileURL
+        self.isEditable = isEditable
+    }
+}
+
+public struct _ReferenceFileDocumentConfiguration<Document: ObservableObject>: DynamicProperty {
+    @ObservedObject public var document: Document
+    
+    public var fileURL: URL?
+    public var isEditable: Bool
+    
+    public init(
+        document: ObservedObject<Document>,
+        fileURL: URL? = nil,
+        isEditable: Bool
+    ) {
+        self._document = document
+        self.fileURL = fileURL
+        self.isEditable = isEditable
     }
 }

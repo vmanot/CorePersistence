@@ -19,7 +19,7 @@ public struct PDFFileDocument: Hashable, Initiable {
     }
 }
 
-extension PDFFileDocument: FileDocumentX {
+extension PDFFileDocument: _FileDocument {
     public static var readableContentTypes = [UTType.pdf]
     
     public init(configuration: ReadConfiguration) throws {
