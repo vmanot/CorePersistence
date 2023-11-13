@@ -7,6 +7,7 @@
 public struct _UniversalTypeRegistry {
     static let lock = OSUnfairLock()
     
+    @MainActor
     public static let shared = _UniversalTypeRegistry()
     
     @usableFromInline
@@ -17,9 +18,12 @@ public struct _UniversalTypeRegistry {
     static let identifierToTypeResolver = IdentifierToSwiftTypeResolver()
     static let typeToIdentifierResolver = SwiftTypeToIdentifierResolver()
     
+    @MainActor
     private init() {
         Self.register(
-            RuntimeDiscoverableTypes.enumerate(typesConformingTo: (any HadeanIdentifiable).self)
+            Self.lock.withCriticalScope {
+                RuntimeDiscoverableTypes.enumerate(typesConformingTo: (any HadeanIdentifiable).self)
+            }
         )
     }
     
