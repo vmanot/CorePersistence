@@ -47,13 +47,45 @@ extension _ModularEncoder {
         private let isBaseUnwrapped: Bool?
         private let encoderConfiguration: _ModularEncoder.Configuration
         
-        init(base: Value, isBaseUnwrapped: Bool? = nil, encoderConfiguration: _ModularEncoder.Configuration) {
+        private var _requiresUnsafeSerialization: Bool? {
+            if let wrappedType = Value.self as? any _UnsafelySerializedPropertyWrapperProtocol.Type, !(wrappedType._opaque_WrappedValue.self is any Encodable.Type) {
+                return true
+            }
+            
+            return nil
+        }
+        
+        private var _isKnownNil: Bool? {
+            if _isValueNil(base) {
+                return true
+            }
+            
+            if let base = (base as? any _UnsafelySerializedPropertyWrapperProtocol)?.wrappedValue {
+                return _isValueNil(base)
+            }
+            
+            return nil
+        }
+        
+        init(
+            base: Value,
+            isBaseUnwrapped: Bool? = nil,
+            encoderConfiguration: _ModularEncoder.Configuration
+        ) {
             self.base = base
             self.isBaseUnwrapped = isBaseUnwrapped
             self.encoderConfiguration = encoderConfiguration
         }
         
         func encode(to encoder: Encoder) throws {
+            do {
+                try _encode(to: encoder)
+            } catch {
+                throw error
+            }
+        }
+        
+        private func _encode(to encoder: Encoder) throws {
             assert(!(base is _ModularTopLevelProxyEncodableType))
             assert(!(encoder is _ModularEncoder))
             
@@ -63,13 +95,24 @@ extension _ModularEncoder {
                 context: .init(type: Value.self)
             )
             
+            let encoded: Bool
+            
             if !(base is Encodable), let base = base as? (any _UnsafeSerializationRepresentable) {
                 try base._unsafeSerializationRepresentation.encode(to: wrappedEncoder)
+                
+                encoded = true
+            } else if let base = base as? (any _UnsafelySerializedPropertyWrapperProtocol), base.wrappedValue is (any _UnsafeSerializationRepresentable)  {
+                try base._opaque_encodeUnsafeSerializationRepresentable(
+                    to: encoder,
+                    encoderConfiguration: encoderConfiguration
+                )
+                
+                encoded = true
             } else {
-                if !(isBaseUnwrapped == true) {
+                if !(isBaseUnwrapped == true) && !(_requiresUnsafeSerialization == true) {
                     let unwrappedBase = _unwrapPossiblyTypeErasedValue(base)
                     
-                    if let unwrappedBase {
+                    if let unwrappedBase, !(Value.self is any Encodable.Type) {
                         func _reifiedProxy<T>(for x: T) -> Encodable {
                             TopLevelProxyEncodable<T>(
                                 base: x,
@@ -81,9 +124,19 @@ extension _ModularEncoder {
                         let baseUnwrappedProxy = _openExistential(unwrappedBase, do: _reifiedProxy)
                         
                         try baseUnwrappedProxy.encode(to: encoder)
+                        
+                        encoded = true
                     } else {
-                        try cast(base, to: (any Encodable).self).encode(to: encoder)
+                        try cast(base, to: (any Encodable).self).encode(to: wrappedEncoder)
+                        
+Yo                        encoded = true
                     }
+                } else if _requiresUnsafeSerialization == true && _isKnownNil == true {
+                    var container = encoder.singleValueContainer()
+                    
+                    try container.encodeNil()
+                    
+                    encoded = true
                 } else {
                     if
                         let base = base as? (any _UnsafelySerializedPropertyWrapperProtocol),
@@ -91,21 +144,32 @@ extension _ModularEncoder {
                         try Self._encodeDiscriminator(for: __fixed_type(of: unwrappedBase), to: wrappedEncoder) != nil
                     {
                         try unwrappedBase.encode(to: wrappedEncoder)
+                        
+                        encoded = true
                     } else if
                         let base = base as? _TypeSerializingAnyCodable,
                         let baseUnwrapped = try base.decode(),
                         try Self._encodeDiscriminator(for: __fixed_type(of: baseUnwrapped), to: wrappedEncoder) != nil
                     {
                         try baseUnwrapped.encode(to: wrappedEncoder)
+                        
+                        encoded = true
                     } else {
                         let _base = try cast(base, to: (any Encodable).self)
                         
-                        try Self._encodeDiscriminator(for: __fixed_type(of: _base), to: wrappedEncoder)
+                        try Self._encodeDiscriminator(
+                            for: __fixed_type(of: _base),
+                            to: wrappedEncoder
+                        )
                         
                         try _base.encode(to: wrappedEncoder)
+                        
+                        encoded = true
                     }
                 }
             }
+            
+            assert(encoded)
         }
         
         @discardableResult
@@ -133,5 +197,20 @@ extension _ModularEncoder {
                 return nil
             }
         }
+    }
+}
+
+extension _UnsafelySerializedPropertyWrapperProtocol {
+    fileprivate func _opaque_encodeUnsafeSerializationRepresentable(
+        to encoder: Encoder,
+        encoderConfiguration: _ModularEncoder.Configuration
+    ) throws {
+        assert(wrappedValue is (any _UnsafeSerializationRepresentable))
+        
+        try _ModularEncoder.TopLevelProxyEncodable(
+            base: wrappedValue,
+            encoderConfiguration: encoderConfiguration
+        )
+        .encode(to: encoder)
     }
 }

@@ -3,7 +3,7 @@
 //
 
 import Foundation
-import Merge
+@_spi(Internal) import Merge
 import Runtime
 import Swallow
 
@@ -45,40 +45,40 @@ public final class FileStorage<ValueType, UnwrappedType> {
         }
     }
     
-    public static subscript<EnclosingSelf: ObservableObject>(
-        _enclosingInstance object: EnclosingSelf,
+    public static subscript<EnclosingSelf>(
+        _enclosingInstance instance: EnclosingSelf,
         wrapped wrappedKeyPath: ReferenceWritableKeyPath<EnclosingSelf, UnwrappedType>,
         storage storageKeyPath: ReferenceWritableKeyPath<EnclosingSelf, FileStorage>
-    ) -> UnwrappedType where EnclosingSelf.ObjectWillChangePublisher: _opaque_VoidSender {
+    ) -> UnwrappedType {
         get {
-            object[keyPath: storageKeyPath].setUpObjectWillChangeConduitIfNecessary(_enclosingInstance: object)
-            
-            if object[keyPath: storageKeyPath].coordinator._enclosingInstance == nil {
-                object[keyPath: storageKeyPath].coordinator._enclosingInstance = object
-            }
-            
-            return object[keyPath: storageKeyPath].wrappedValue
+            instance[keyPath: storageKeyPath]._setUpEnclosingInstance(instance)
+                        
+            return instance[keyPath: storageKeyPath].wrappedValue
         } set {
-            object[keyPath: storageKeyPath].setUpObjectWillChangeConduitIfNecessary(_enclosingInstance: object)
+            instance[keyPath: storageKeyPath]._setUpEnclosingInstance(instance)
+                        
+            _ObservableObject_objectWillChange_send(instance)
             
-            if object[keyPath: storageKeyPath].coordinator._enclosingInstance == nil {
-                object[keyPath: storageKeyPath].coordinator._enclosingInstance = object
-            }
-
-            object.objectWillChange.send()
-            
-            object[keyPath: storageKeyPath].wrappedValue = newValue
+            instance[keyPath: storageKeyPath].wrappedValue = newValue
         }
     }
     
-    fileprivate func setUpObjectWillChangeConduitIfNecessary<EnclosingSelf: ObservableObject>(
-        _enclosingInstance object: EnclosingSelf
+    fileprivate func _setUpEnclosingInstance<EnclosingSelf>(
+        _ object: EnclosingSelf
     ) {
+        guard let object = (object as? any ObservableObject) else {
+            return
+        }
+       
+        defer {
+            self.coordinator._enclosingInstance = object
+        }
+
         guard objectWillChangeConduit == nil else {
             return
         }
         
-        if let objectWillChange = object.objectWillChange as? _opaque_VoidSender {
+        if let objectWillChange = (object.objectWillChange as any Publisher) as? _opaque_VoidSender {
             objectWillChangeConduit = coordinator.objectWillChange
                 .publish(to: objectWillChange)
                 .sink()

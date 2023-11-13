@@ -8,6 +8,10 @@ import Swallow
 struct _ModularDecoder: Decoder {
     struct Configuration {
         var plugins: [any _ModularCodingPlugin] = []
+        
+        var allowsUnsafeSerialization: Bool {
+            plugins.contains(where: { $0 is _UnsafeSerializationPlugin })
+        }
     }
     
     struct Context {

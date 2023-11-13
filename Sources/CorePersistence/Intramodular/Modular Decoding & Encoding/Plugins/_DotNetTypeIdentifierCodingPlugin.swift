@@ -75,6 +75,10 @@ public struct _DotNetTypeIdentifierCodingPlugin<ID: Codable & PersistentIdentifi
                     case .typeMismatch:
                         return nil
                     default:
+                        if (try? decoder.decodeNil()) == true {
+                            return nil
+                        }
+                        
                         throw decodingError
                 }
             }

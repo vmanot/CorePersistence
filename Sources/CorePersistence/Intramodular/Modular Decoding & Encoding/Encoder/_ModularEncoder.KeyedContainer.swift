@@ -26,21 +26,26 @@ extension _ModularEncoder {
             try base.encodeNil(forKey: key)
         }
         
-        mutating func encode<T: CoderPrimitive>(_ value: T, forKey key: Key) throws {
+        mutating func encode<T: CoderPrimitive>(
+            _ value: T,
+            forKey key: Key
+        ) throws {
             try base._encode(primitive: value, forKey: key)
         }
         
-        mutating func encode<T: Encodable>(_ value: T, forKey key: Key) throws {
+        mutating func encode<T: Encodable>(
+            _ value: T,
+            forKey key: Key
+        ) throws {
             if let value = value as? (any CoderPrimitive) {
                 try base._encode(primitive: value, forKey: key)
             } else {
-                try base.encode(
-                    _ModularEncoder.TopLevelProxyEncodable(
-                        base: value,
-                        encoderConfiguration: parent.configuration
-                    ),
-                    forKey: key
+                let _value = _ModularEncoder.TopLevelProxyEncodable(
+                    base: value,
+                    encoderConfiguration: parent.configuration
                 )
+                
+                try base.encode(_value, forKey: key)
             }
         }
         

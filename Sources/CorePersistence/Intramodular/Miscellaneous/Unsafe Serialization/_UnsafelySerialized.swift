@@ -147,6 +147,12 @@ extension _UnsafelySerialized: ExpressibleByNilLiteral where Value: ExpressibleB
     }
 }
 
+extension _UnsafelySerialized: Initiable where Value: Initiable {
+    public init() {
+        self.init(Value.init())
+    }
+}
+
 // MARK: - Auxiliary
 
 extension _UnsafelySerialized {
@@ -321,7 +327,10 @@ extension KeyedDecodingContainer {
         _ type: _UnsafelySerialized<Optional<T>>.Type,
         forKey key: Key
     ) throws -> _UnsafelySerialized<Optional<T>> {
-        try decodeIfPresent(type, forKey: key) ?? .init(wrappedValue: nil)
+        try decodeIfPresent(
+            type,
+            forKey: key
+        ) ?? .init(wrappedValue: nil)
     }
 }
 
@@ -333,7 +342,10 @@ extension KeyedDecodingContainerProtocol {
         _ type: T.Type = T.self,
         forKey key: Key
     ) throws -> _UnsafelySerialized<T> {
-        try decode(_UnsafelySerialized<T>.self, forKey: key)
+        try decode(
+            _UnsafelySerialized<T>.self,
+            forKey: key
+        )
     }
     
     @_disfavoredOverload
@@ -341,7 +353,9 @@ extension KeyedDecodingContainerProtocol {
         _ type: T.Type = T.self,
         forKey key: Key
     ) throws -> _UnsafelySerialized<T?> {
-        try _UnsafelySerialized(wrappedValue: decode(_UnsafelySerialized<T?>.self, forKey: key).wrappedValue)
+        try _UnsafelySerialized(
+            wrappedValue: decode(_UnsafelySerialized<T?>.self, forKey: key).wrappedValue
+        )
     }
     
     @_disfavoredOverload
@@ -350,6 +364,9 @@ extension KeyedDecodingContainerProtocol {
         forKey key: Key,
         default defaultValue: @autoclosure () -> T
     ) throws -> _UnsafelySerialized<T> {
-        try decodeIfPresent(_UnsafelySerialized<T>.self, forKey: key) ?? _UnsafelySerialized(defaultValue())
+        try decodeIfPresent(
+            _UnsafelySerialized<T>.self,
+            forKey: key
+        ) ?? _UnsafelySerialized(defaultValue())
     }
 }
