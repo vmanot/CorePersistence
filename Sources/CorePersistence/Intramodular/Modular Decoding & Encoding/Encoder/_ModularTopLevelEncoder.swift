@@ -129,7 +129,7 @@ extension _ModularEncoder {
                     } else {
                         try cast(base, to: (any Encodable).self).encode(to: wrappedEncoder)
                         
-Yo                        encoded = true
+                        encoded = true
                     }
                 } else if _requiresUnsafeSerialization == true && _isKnownNil == true {
                     var container = encoder.singleValueContainer()
