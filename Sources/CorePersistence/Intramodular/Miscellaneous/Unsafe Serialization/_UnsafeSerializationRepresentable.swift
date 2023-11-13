@@ -93,6 +93,22 @@ extension Dictionary: _UnsafeSerializationRepresentable {
     }
 }
 
+extension _ExistentialSet: _UnsafeSerializationRepresentable {
+    typealias _UnsafeSerializationRepresentation = Set<_TypeSerializingAnyCodable>
+    
+    var _unsafeSerializationRepresentation: _UnsafeSerializationRepresentation {
+        get throws {
+            try Set(lazy.map({ try _TypeSerializingAnyCodable($0) }))
+        }
+    }
+    
+    init(
+        _unsafeSerializationRepresentation representation: _UnsafeSerializationRepresentation
+    ) throws {
+        try self.init(representation.map({ try $0.decode(Element.self) }))
+    }
+}
+
 extension _HashableExistentialArray: _UnsafeSerializationRepresentable {
     typealias _UnsafeSerializationRepresentation = Array<_TypeSerializingAnyCodable>
     
@@ -109,19 +125,19 @@ extension _HashableExistentialArray: _UnsafeSerializationRepresentable {
     }
 }
 
-extension _ExistentialSet: _UnsafeSerializationRepresentable {
-    typealias _UnsafeSerializationRepresentation = Set<_TypeSerializingAnyCodable>
-    
+extension IdentifierIndexingArray: _UnsafeSerializationRepresentable {
+    typealias _UnsafeSerializationRepresentation = Array<_TypeSerializingAnyCodable>
+
     var _unsafeSerializationRepresentation: _UnsafeSerializationRepresentation {
         get throws {
-            try Set(lazy.map({ try _TypeSerializingAnyCodable($0) }))
+            try map({ try _TypeSerializingAnyCodable($0) })
         }
     }
     
     init(
         _unsafeSerializationRepresentation representation: _UnsafeSerializationRepresentation
     ) throws {
-        try self.init(representation.map({ try $0.decode(Element.self) }))
+        throw Never.Reason.unavailable
     }
 }
 
