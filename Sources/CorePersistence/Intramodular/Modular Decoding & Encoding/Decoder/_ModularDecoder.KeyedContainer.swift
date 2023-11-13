@@ -67,10 +67,20 @@ extension _ModularDecoder {
             } catch let error as DecodingError {
                 switch error {
                     case .typeMismatch:                        
-                        throw error
+                        fallthrough
+                    case .keyNotFound:
+                        if let nilLiteral = try? _initializeNilLiteral(ofType: T.self) {
+                            return nilLiteral
+                        } else if let arrayLiteral = try? _initializeEmptyArrayLiteral(ofType: T.self) {
+                            return arrayLiteral
+                        }
+                        
+                        fallthrough
                     default:
-                        throw error
+                        break
                 }
+                
+                throw error
             }
         }
         
