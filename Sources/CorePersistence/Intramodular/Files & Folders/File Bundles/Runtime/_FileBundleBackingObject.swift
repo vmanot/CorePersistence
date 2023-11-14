@@ -13,7 +13,7 @@ class _FileBundleBackingObject: _FileBundleContainerElement {
     
     public var knownFileURL: URL? {
         get throws {
-            fatalError(reason: .abstract)
+            fatalError(.abstract)
         }
     }
     
@@ -22,7 +22,7 @@ class _FileBundleBackingObject: _FileBundleContainerElement {
     }
     
     func childDidUpdate(_ node: _FileBundleChild) {
-        fatalError(reason: .abstract)
+        fatalError(.abstract)
     }
 }
 

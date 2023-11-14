@@ -5,23 +5,19 @@
 import FoundationX
 import Swallow
 
+/// A type that has a persistent identifier.
+///
+/// This is useful for maintaining the identity of a type (even when its type name is changed).
 public protocol PersistentIdentifierConvertible {
     associatedtype PersistentID: Codable, Hashable, Sendable
     
     var persistentID: PersistentID { get }
 }
 
-public protocol PersistentIdentifierMutable {
-    associatedtype PersistentID: Codable, Hashable, Sendable
-    
-    var persistentID: PersistentID { get }
-}
+// MARK: - Implementation
 
-public struct CSSearchableItemID: PersistentIdentifier, Sendable {
-    public let uniqueIdentifier: String
-    public let domainIdentifier: String?
-    
-    public var body: some IdentityRepresentation {
-        _StringIdentityRepresentation((domainIdentifier.map({ $0 + "." }) ?? "") + uniqueIdentifier)
+extension PersistentIdentifierConvertible where Self: Identifiable, ID: PersistentIdentifier {
+    public var persistentID: Self.ID {
+        id
     }
 }

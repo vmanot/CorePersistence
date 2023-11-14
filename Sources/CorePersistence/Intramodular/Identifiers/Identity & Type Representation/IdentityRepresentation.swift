@@ -27,7 +27,13 @@ extension IdentityRepresentation where Self == UTType {
     }
 }
 
-// MARK: - Conformances
+// MARK: - Implemented Conformances
+
+extension _TypeAssociatedID: IdentityRepresentation where RawValue: IdentityRepresentation {
+    public var body: some IdentityRepresentation {
+        rawValue.body
+    }
+}
 
 public struct _StringIdentityRepresentation: Codable, Hashable, IdentityRepresentation {
     public let value: String

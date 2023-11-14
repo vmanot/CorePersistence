@@ -127,7 +127,7 @@ extension JSONNumber {
             case .float32Type, .float64Type, .floatType, .doubleType, .cgFloatType:
                 self.init(number.doubleValue)
             default:
-                fatalError(reason: .unimplemented)
+                fatalError(.unimplemented)
         }
     }
 }

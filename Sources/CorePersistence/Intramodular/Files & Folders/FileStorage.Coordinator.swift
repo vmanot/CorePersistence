@@ -27,9 +27,9 @@ public class _AnyFileStorageCoordinator<ValueType, UnwrappedValue>: ObservableOb
     
     open var wrappedValue: UnwrappedValue {
         get {
-            fatalError(reason: .abstract)
+            fatalError(.abstract)
         } set {
-            fatalError(reason: .abstract)
+            fatalError(.abstract)
         }
     }
     
@@ -42,7 +42,7 @@ public class _AnyFileStorageCoordinator<ValueType, UnwrappedValue>: ObservableOb
     }
     
     open func commit() {
-        fatalError(reason: .abstract)
+        fatalError(.abstract)
     }
     
     deinit {

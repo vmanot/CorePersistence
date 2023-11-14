@@ -4,7 +4,7 @@
 
 import Foundation
 import Proquint
-import Swift
+import Swallow
 
 /// A persistent identifier.
 public protocol PersistentIdentifier: Codable, IdentifierProtocol {
@@ -47,10 +47,23 @@ public struct _DefaultPersistentIdentifierSpace<Identifier: PersistentIdentifier
 
 // MARK: - Implemented Conformances
 
+public struct CSSearchableItemID: PersistentIdentifier, Sendable {
+    public let uniqueIdentifier: String
+    public let domainIdentifier: String?
+    
+    public var body: some IdentityRepresentation {
+        _StringIdentityRepresentation((domainIdentifier.map({ $0 + "." }) ?? "") + uniqueIdentifier)
+    }
+}
+
 extension ProquintEncodedInteger: PersistentIdentifier {
     public var body: some IdentityRepresentation {
         _StringIdentityRepresentation(description)
     }
+}
+
+extension _TypeAssociatedID: PersistentIdentifier where RawValue: PersistentIdentifier {
+    
 }
 
 extension UUID: PersistentIdentifier {

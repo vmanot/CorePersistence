@@ -139,7 +139,7 @@ public final class FolderContents<Item, ID: Hashable>: MutablePropertyWrapper, O
         
         for key in difference.insertions {
             guard renamedKeys[key] == nil else {
-                fatalError(reason: .unexpected)
+                fatalError(.unexpected)
             }
             
             let element = newValue[id: key]!

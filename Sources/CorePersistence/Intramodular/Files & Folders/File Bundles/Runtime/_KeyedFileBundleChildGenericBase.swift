@@ -40,7 +40,7 @@ class _KeyedFileBundleChildGenericBase<Contents>: Identifiable, _KeyedFileBundle
     
     var knownFileURL: URL? {
         get throws {
-            fatalError(reason: .abstract)
+            fatalError(.abstract)
         }
     }
     
@@ -49,12 +49,12 @@ class _KeyedFileBundleChildGenericBase<Contents>: Identifiable, _KeyedFileBundle
     
     var contents: Contents {
         get throws {
-            fatalError(reason: .abstract)
+            fatalError(.abstract)
         }
     }
     
     func setContents(_ contents: Contents) throws {
-        fatalError(reason: .abstract)
+        fatalError(.abstract)
     }
     
     init?(parameters: InitializationParameters) throws {

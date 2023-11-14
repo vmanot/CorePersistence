@@ -249,7 +249,7 @@ final class _KeyedFileBundleChildren<Key: StringRepresentable, Value, WrappedVal
         
         for key in difference.insertions {
             guard renamedKeys[key] == nil else {
-                fatalError(reason: .unexpected)
+                fatalError(.unexpected)
             }
             
             let value = newValue[key]!

@@ -28,7 +28,7 @@ public enum _JSONPrimitiveType: String, Codable, Hashable {
                 #if canImport(Foundation)
                 return NSNull.self
                 #else
-                fatalError(reason: .unsupported)
+                fatalError(.unsupported)
                 #endif
             case .boolean:
                 return Bool.self

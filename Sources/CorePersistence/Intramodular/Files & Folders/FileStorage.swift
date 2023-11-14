@@ -196,7 +196,8 @@ extension FileStorage {
     public convenience init<Item, ID>(
         directory: () throws -> URL,
         file: @escaping (FolderStorageElement<Item>) -> _RelativeFileConfiguration<Item>,
-        id: KeyPath<Item, ID>
+        id: KeyPath<Item, ID>,
+        options: FileStorageOptions = nil
     ) where ValueType == FolderContents<Item, ID>, UnwrappedType == ValueType.WrappedValue {
         self.init(
             coordinator: try! FolderContents.FileStorageCoordinator(
@@ -213,7 +214,8 @@ extension FileStorage {
         directory: @escaping () throws -> URL,
         filename: KeyPath<Item, FilenameProvider>,
         coder: Coder,
-        id: KeyPath<Item, ID>
+        id: KeyPath<Item, ID>,
+        options: FileStorageOptions = nil
     ) where Item: Codable, ValueType == FolderContents<Item, ID>, UnwrappedType == ValueType.WrappedValue {
         self.init(
             coordinator: try! FolderContents.FileStorageCoordinator(
@@ -225,14 +227,14 @@ extension FileStorage {
                                 try _RelativeFileConfiguration(
                                     fileURL: fileURL,
                                     coder: .init(coder, for: Item.self),
-                                    readWriteOptions: nil,
+                                    readWriteOptions: options,
                                     initialValue: nil
                                 )
                             case .inMemory(let element):
                                 try _RelativeFileConfiguration(
                                     path: element[keyPath: filename].filename(inDirectory: try directory()),
                                     coder: .init(coder, for: Item.self),
-                                    readWriteOptions: nil,
+                                    readWriteOptions: options,
                                     initialValue: nil
                                 )
                         }
@@ -247,63 +249,73 @@ extension FileStorage {
         directory: URL,
         filename: KeyPath<Item, FilenameProvider>,
         coder: Coder,
-        id: KeyPath<Item, ID>
+        id: KeyPath<Item, ID>,
+        options: FileStorageOptions = nil
     ) where Item: Codable, ValueType == FolderContents<Item, ID>, UnwrappedType == ValueType.WrappedValue {
         self.init(
             directory: { directory },
             filename: filename,
             coder: coder,
-            id: id
+            id: id,
+            options: options
         )
     }
     
     public convenience init<Item, ID, Coder: TopLevelDataCoder>(
         location: @escaping () throws -> URL,
         directory: String,
-        coder: Coder
+        coder: Coder,
+        options: FileStorageOptions = nil
     ) where Item: Codable & Identifiable, Item.ID: CustomFilenameConvertible, ID == Item.ID, ValueType == FolderContents<Item, ID>, UnwrappedType == ValueType.WrappedValue {
         self.init(
             directory: { try location().appendingPathComponent(directory) },
             filename: \.id.filenameProvider,
             coder: coder,
-            id: \.id
+            id: \.id,
+            options: options
         )
     }
     
     public convenience init<Item, ID, Coder: TopLevelDataCoder>(
         directory: @escaping () throws -> URL,
-        coder: Coder
+        coder: Coder,
+        options: FileStorageOptions = nil
     ) where Item: Codable & PersistentIdentifierConvertible, Item.PersistentID: CustomFilenameConvertible, ID == Item.PersistentID, ValueType == FolderContents<Item, ID>, UnwrappedType == ValueType.WrappedValue {
         self.init(
             directory: directory,
             filename: \.persistentID.filenameProvider,
             coder: coder,
-            id: \.persistentID
+            id: \.persistentID,
+            options: options
         )
     }
     
     public convenience init<Item, ID, Coder: TopLevelDataCoder>(
         directory: @escaping () throws -> URL,
-        coder: Coder
+        coder: Coder,
+        options: FileStorageOptions = nil
     ) where Item: Codable & Identifiable, Item.ID: CustomFilenameConvertible, ID == Item.ID, ValueType == FolderContents<Item, ID>, UnwrappedType == ValueType.WrappedValue {
         self.init(
             directory: directory,
             filename: \.id.filenameProvider,
             coder: coder,
-            id: \.id
+            id: \.id,
+            options: options
         )
     }
     
     public convenience init<Item, ID, Coder: TopLevelDataCoder>(
         _ location: CanonicalFileDirectory,
         directory: String,
-        coder: Coder
+        coder: Coder,
+        options: FileStorageOptions = nil
     ) where Item: Codable & Identifiable, Item.ID: CustomFilenameConvertible, ID == Item.ID, ValueType == FolderContents<Item, ID>, UnwrappedType == ValueType.WrappedValue {
         self.init(
             directory: { try location.toURL().appendingPathComponent(directory, isDirectory: true) },
             filename: \.id.filenameProvider,
             coder: coder,
-            id: \.id
+            id: \.id,
+            options: options
         )
     }
     
