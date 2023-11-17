@@ -63,6 +63,15 @@ let package = Package(
                 "CorePersistence"
             ]
         ),
+        .target(
+            name: "_XMLCoder",
+            dependencies: [
+                "CorePersistence",
+                "Swallow"
+            ],
+            path: "Sources/_XMLCoder",
+            swiftSettings: []
+        ),
         .testTarget(
             name: "CorePersistenceTests",
             dependencies: [

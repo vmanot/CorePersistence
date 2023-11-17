@@ -3,6 +3,7 @@
 //
 
 import CryptoKit
+import SwiftUI
 
 extension Digest {
     public var hexadecimalString: String {
