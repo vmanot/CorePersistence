@@ -6,6 +6,7 @@ import Compute
 import Merge
 import Swallow
 
+@available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *)
 public struct FolderStorageConfiguration<Item: Codable> {
     public enum Predicate: Hashable {
         case fileExtension(String)
@@ -46,6 +47,7 @@ public struct FolderStorageConfiguration<Item: Codable> {
     }
 }
 
+@available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *)
 extension AsyncStorage {
     public convenience init<Item: Codable, Coder: TopLevelDataCoder>(
         directory: URL,

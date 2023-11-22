@@ -6,12 +6,6 @@ import Merge
 import Runtime
 import Swallow
 
-extension _ConcreteFolderAsyncStorageBase {
-    public final class Projection {
-        
-    }
-}
-
 @available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *)
 final class _ConcreteFolderAsyncStorageBase<Resource: _AsyncResourceCoordinator>: _AsyncStorageBase {
     public typealias WrappedValue = [Resource.Value]
@@ -105,5 +99,12 @@ public class _AsyncFileResourceCoordinator<Value>: _AsyncMutableResourceCoordina
             try file.encode(resource, using: coder)
         }
         .value
+    }
+}
+
+@available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *)
+extension _ConcreteFolderAsyncStorageBase {
+    public final class Projection {
+        
     }
 }
