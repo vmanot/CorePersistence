@@ -108,7 +108,7 @@ class _KeyedFileBundleChildFile<Contents>: _KeyedFileBundleChildGenericBase<Cont
         preferredFileName = relativeFilePath
                 
         if let existingCoordinator = coordinator {
-            guard existingCoordinator.configuration.isNotEqual(to: latestConfiguration) == true else {
+            guard existingCoordinator.configuration.isEqual(to: latestConfiguration) == false else {
                 return existingCoordinator
             }
         }

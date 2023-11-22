@@ -141,11 +141,11 @@ extension _RelativeFileConfiguration {
 // MARK: - Conformances
 
 extension _RelativeFileConfiguration: _PartiallyEquatable {
-    public func isNotEqual(
+    public func isEqual(
         to other: Self
     ) -> Bool? {
         if (path != other.path) || (readWriteOptions != other.readWriteOptions) {
-            return true
+            return false
         } else {
             return nil
         }
