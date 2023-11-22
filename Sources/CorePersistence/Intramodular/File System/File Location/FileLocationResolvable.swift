@@ -54,7 +54,7 @@ extension BookmarkedURL: FileLocationResolvable {
 
 extension FilePath: FileLocationResolvable {
     public func resolveFileLocation() throws -> BookmarkedURL {
-        try .init(_unsafe: URL(self).unwrap())
+        try .init(_unsafe: URL(_filePath: self).unwrap())
     }
 }
 

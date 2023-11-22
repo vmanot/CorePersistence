@@ -98,10 +98,10 @@ extension String: URLReadable, URLWritable {
     }
     
     public func write(to url: URL, atomically: Bool) throws {
-#if os(tvOS)
+        #if os(tvOS) || os(visionOS)
         try write(toFile: url.path, atomically: atomically, encoding: .utf8)
-#else
+        #else
         try (self as NSString).write(to: url, atomically: atomically)
-#endif
+        #endif
     }
 }
