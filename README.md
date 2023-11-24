@@ -4,7 +4,7 @@ A protocol-oriented, batteries-included foundation for persistence in Swift.
 
 # Goals
 This library has ambitious goals:
-- Provide a protocol-oriented foundation for all the critical aspects of a typical, modern Swift application.
+- Provide a protocol-oriented foundation for all the critical aspects of a typical, modern Swift application's persistence layer.
 - Provide standard, high performance primitives for the most common data formats (`JSON`, `CSV`, `XML` etc.).
 - Unf*** `Codable`.
 
