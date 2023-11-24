@@ -10,7 +10,7 @@ This library has ambitious goals:
 
 # Features
 - An opinionated, protocol-oriented encapsulated of persistent identifiers (both type identifiers and instance identifiers).
-- A modular plugin system for `Codable`.
+- A modular plugin system for `Codable` (achieved by custom encoders & decoders that can wrap existing ones, macros, and a suite of protocols).
 - Better diagnostics for `Codable` errors (`EncodingError` and `DecodingError` are subpar).
 - Essential data storage primitives (see `@FileStorage` and `@FolderStorage` – similar to SwiftUI's `@AppStorage` but for the application's persistence layer.)
 - A high performance `JSON` primitive.
