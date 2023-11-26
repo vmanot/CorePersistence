@@ -144,7 +144,7 @@ public class _NaiveFileStorageCoordinator<ValueType, UnwrappedValue>: _AnyFileSt
     }
     
     init(
-        fileSystemResource: any _FileOrFolderRepresenting,
+        fileSystemResource: @autoclosure @escaping () throws -> any _FileOrFolderRepresenting,
         configuration: _RelativeFileConfiguration<UnwrappedValue>,
         cache: any SingleValueCache<UnwrappedValue> = InMemorySingleValueCache()
     ) throws {
@@ -153,13 +153,13 @@ public class _NaiveFileStorageCoordinator<ValueType, UnwrappedValue>: _AnyFileSt
         self.cache = cache
         
         try super.init(
-            fileSystemResource: fileSystemResource,
+            fileSystemResource: try fileSystemResource(),
             configuration: configuration
         )
         
         self.read = {
             let contents = try _withLogicalParent(self._enclosingInstance) {
-                try fileSystemResource.decode(using: configuration.serialization.coder)
+                try fileSystemResource().decode(using: configuration.serialization.coder)
             }
             
             guard let contents = contents else {

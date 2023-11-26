@@ -56,7 +56,10 @@ extension CSVDecoder._Decoder.KeyedContainer: KeyedDecodingContainerProtocol {
         return self.values[unwrappedHeader.index]
     }
     
-    func decode<T: LosslessStringConvertible>(_ type: T.Type, forKey key: Key) throws -> T where T: Decodable {
+    func decode<T: LosslessStringConvertible>(
+        _ type: T.Type,
+        forKey key: Key
+    ) throws -> T where T: Decodable {
         let string = try self.decode(String.self, forKey: key)
         
         guard let value = T(string) else  {
@@ -71,11 +74,17 @@ extension CSVDecoder._Decoder.KeyedContainer: KeyedDecodingContainerProtocol {
         return value
     }
     
-    func decode<T>(_ type: T.Type, forKey key: Key) throws -> T where T: Decodable {
+    func decode<T>(
+        _ type: T.Type,
+        forKey key: Key
+    ) throws -> T where T: Decodable {
         return try ObjectDecoder().decode(type, from: try ObjectEncoder().encode(try decode(String.self, forKey: key))) // TODO: Optimize
     }
     
-    func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type, forKey key: Key) throws -> KeyedDecodingContainer<NestedKey> where NestedKey: CodingKey {
+    func nestedContainer<NestedKey>(
+        keyedBy type: NestedKey.Type,
+        forKey key: Key
+    ) throws -> KeyedDecodingContainer<NestedKey> where NestedKey: CodingKey {
         throw Never.Reason.unavailable
     }
     

@@ -38,6 +38,7 @@ public final class FolderContents<Item, ID: Hashable>: MutablePropertyWrapper, O
         }
     }
     
+    @MainActor
     public init(
         folder: any _FileOrFolderRepresenting,
         fileConfiguration: @escaping (FolderStorageElement<Item>) throws -> _RelativeFileConfiguration<Item>,
@@ -48,15 +49,25 @@ public final class FolderContents<Item, ID: Hashable>: MutablePropertyWrapper, O
         self.id = id
         self._wrappedValue = .init(id: id)
         
-        initialize()
+        _expectNoThrow {
+            try FileManager.default.withUserGrantedAccess(toDirectory: folderURL) { url in
+                try initialize(withFolderURL: url)
+            }
+        }
     }
     
-    func initialize() {
-        let urls = _expectNoThrow {
-            try FileManager.default.contentsOfDirectory(at: try folderURL)
-        } ?? []
+    func initialize(
+        withFolderURL folderURL: URL
+    ) throws {
+        try FileManager.default.createDirectoryIfNecessary(at: folderURL, withIntermediateDirectories: true)
+        
+        let urls = try FileManager.default.contentsOfDirectory(at: folderURL)
         
         for url in urls {
+            if FileManager.default.isDirectory(at: url) {
+                continue
+            }
+            
             _expectNoThrow {
                 var fileConfiguration = try self.fileConfiguration(.url(url.toFileURL()))
                 let relativeFilePath = try fileConfiguration.consumePath()
@@ -76,7 +87,9 @@ public final class FolderContents<Item, ID: Hashable>: MutablePropertyWrapper, O
         }
     }
     
-    public func setNewValue(_ newValue: IdentifierIndexingArray<Item, ID>) throws {
+    public func setNewValue(
+        _ newValue: IdentifierIndexingArray<Item, ID>
+    ) throws {
         let oldValue = self._wrappedValue
         let difference = Set(newValue.identifiers).difference(from: Set(oldValue.identifiers))
         

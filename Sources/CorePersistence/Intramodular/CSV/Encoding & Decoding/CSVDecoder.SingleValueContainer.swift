@@ -6,14 +6,17 @@ import Foundation
 import Swallow
 
 extension CSVDecoder._Decoder {
-    final class SingleValueContainer {
+    struct SingleValueContainer {
         let codingPath: [CodingKey]
         
         private let headers: [CSVColumnHeader]
         private let rows: [[String]]
         
-        required init(headers: [CSVColumnHeader], rows: [[String]], codingPath: [CodingKey])
-        {
+        init(
+            headers: [CSVColumnHeader],
+            rows: [[String]],
+            codingPath: [CodingKey]
+        ) {
             self.headers = headers
             self.rows = rows
             self.codingPath = codingPath

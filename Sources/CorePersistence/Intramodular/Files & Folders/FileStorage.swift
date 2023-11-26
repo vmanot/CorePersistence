@@ -97,16 +97,14 @@ public final class FileStorage<ValueType, UnwrappedType> {
 extension FileStorage {
     public convenience init<Coder: TopLevelDataCoder>(
         wrappedValue: UnwrappedType,
-        location: () -> URL,
+        location: () throws -> URL,
         coder: Coder,
         options: FileStorageOptions
     ) where UnwrappedType: Codable, ValueType == MutableValueBox<UnwrappedType> {
-        let url = FileURL(location())
-        
         self.init(
             coordinator: try! _NaiveFileStorageCoordinator(
                 initialValue: wrappedValue,
-                file: url,
+                file: FileURL(location()),
                 coder: .init(.topLevelDataCoder(coder, forType: UnwrappedType.self)),
                 options: options
             )
@@ -192,6 +190,7 @@ extension FileStorage {
     }
 }
 
+@MainActor
 extension FileStorage {
     public convenience init<Item, ID>(
         directory: () throws -> URL,
@@ -212,7 +211,7 @@ extension FileStorage {
     
     public convenience init<Item, ID, Coder: TopLevelDataCoder>(
         directory: @escaping () throws -> URL,
-        filename: KeyPath<Item, FilenameProvider>,
+        filename: @escaping (Item) -> FilenameProvider,
         coder: Coder,
         id: KeyPath<Item, ID>,
         options: FileStorageOptions = nil
@@ -232,7 +231,7 @@ extension FileStorage {
                                 )
                             case .inMemory(let element):
                                 try _RelativeFileConfiguration(
-                                    path: element[keyPath: filename].filename(inDirectory: try directory()),
+                                    path: filename(element).filename(inDirectory: try directory()),
                                     coder: .init(coder, for: Item.self),
                                     readWriteOptions: options,
                                     initialValue: nil
@@ -254,13 +253,60 @@ extension FileStorage {
     ) where Item: Codable, ValueType == FolderContents<Item, ID>, UnwrappedType == ValueType.WrappedValue {
         self.init(
             directory: { directory },
-            filename: filename,
+            filename: { $0[keyPath: filename] },
             coder: coder,
             id: id,
             options: options
         )
     }
     
+    public convenience init<Item, ID, Filename: CustomFilenameConvertible & Randomnable, Coder: TopLevelDataCoder>(
+        directory: URL,
+        filename: Filename.Type,
+        coder: Coder,
+        id: KeyPath<Item, ID>,
+        options: FileStorageOptions = nil
+    ) where Item: Codable, ValueType == FolderContents<Item, ID>, UnwrappedType == ValueType.WrappedValue {
+        self.init(
+            directory: { directory },
+            filename: { _ in Filename.random().filenameProvider },
+            coder: coder,
+            id: id,
+            options: options
+        )
+    }
+    
+    public convenience init<Item, Filename: CustomFilenameConvertible & Randomnable, Coder: TopLevelDataCoder>(
+        directory: URL,
+        filename: Filename.Type,
+        coder: Coder,
+        options: FileStorageOptions = nil
+    ) where Item: Codable & Identifiable, ValueType == FolderContents<Item, Item.ID>, UnwrappedType == ValueType.WrappedValue {
+        self.init(
+            directory: { directory },
+            filename: { _ in Filename.random().filenameProvider },
+            coder: coder,
+            id: \.id,
+            options: options
+        )
+    }
+    
+    public convenience init<Item, Filename: CustomFilenameConvertible & Randomnable, Coder: TopLevelDataCoder>(
+        directory: CanonicalFileDirectory,
+        path: String?,
+        filename: Filename.Type,
+        coder: Coder,
+        options: FileStorageOptions = nil
+    ) where Item: Codable & Identifiable, ValueType == FolderContents<Item, Item.ID>, UnwrappedType == ValueType.WrappedValue {
+        self.init(
+            directory: { try directory.toURL().appendingDirectoryPathComponent(path) },
+            filename: { _ in Filename.random().filenameProvider },
+            coder: coder,
+            id: \.id,
+            options: options
+        )
+    }
+
     public convenience init<Item, ID, Coder: TopLevelDataCoder>(
         location: @escaping () throws -> URL,
         directory: String,

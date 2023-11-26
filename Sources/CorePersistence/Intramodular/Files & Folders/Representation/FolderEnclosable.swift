@@ -11,8 +11,12 @@ public protocol FolderEnclosable {
     var topLevelFileContents: [URL.PathComponent] { get throws }
 }
 
-public struct FilenameProvider {
+public struct FilenameProvider: CustomFilenameConvertible {
     public var name: String
+    
+    public var filenameProvider: FilenameProvider {
+        self
+    }
     
     public init(name: String) {
         self.name = name
