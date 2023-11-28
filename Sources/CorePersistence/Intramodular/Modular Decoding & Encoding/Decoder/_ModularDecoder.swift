@@ -66,8 +66,6 @@ struct _ModularDecoder: Decoder {
     }
 }
 
-// MARK: - Error Handling
-
 // MARK: - Auxiliary
 
 extension Decoder {
@@ -80,10 +78,6 @@ extension Decoder {
                 
                 return kind
             } catch {
-                guard case .typeMismatch = _ModularDecodingError(error) else {
-                    throw error
-                }
-                
                 return nil
             }
         })
