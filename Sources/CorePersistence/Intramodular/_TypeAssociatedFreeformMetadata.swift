@@ -17,11 +17,11 @@ public struct _TypeAssociatedFreeformMetadata<Parent>: Initiable {
         
     }
     
-    public subscript<Value: _TypeAssociatedFreeformMetadataValue<Parent>>(
-        _ value: Value.Type
-    ) get {
-        
-    }
+    /*public subscript<Value: _TypeAssociatedFreeformMetadataValue<Parent>>(
+     _ value: Value.Type
+     ) get {
+     
+     }*/
     
     public mutating func assign<Value: _TypeAssociatedFreeformMetadataValue<Parent>>(
         _ value: Value
