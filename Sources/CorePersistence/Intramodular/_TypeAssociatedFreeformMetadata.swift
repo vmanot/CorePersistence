@@ -26,8 +26,8 @@ public struct _TypeAssociatedFreeformMetadata<Parent>: Initiable {
     public mutating func assign<Value: _TypeAssociatedFreeformMetadataValue<Parent>>(
         _ value: Value
     ) {
-        let type: any _FreeformMetadataValue<Parent>.Type = Swift.type(of: value)
-        let key = _UnsafelySerialized<any _FreeformMetadataValue<Parent>.Type>(type)
+        let type: any _TypeAssociatedFreeformMetadataValue<Parent>.Type = Swift.type(of: value)
+        let key = _UnsafelySerialized<any _TypeAssociatedFreeformMetadataValue<Parent>.Type>(type)
         
         storage[key] = value
     }
