@@ -15,6 +15,7 @@ let package = Package(
         .library(
             name: "CorePersistence",
             targets: [
+                "_CSV",
                 "CorePersistence",
                 "Proquint",
                 "UUIDv6"
@@ -42,6 +43,23 @@ let package = Package(
             path: "Sources/CorePersistenceMacros"
         ),
         .target(
+            name: "_CSV",
+            dependencies: [
+                "Swallow"
+            ],
+            path: "Sources/_CSV",
+            swiftSettings: []
+        ),
+        .target(
+            name: "_XMLCoder",
+            dependencies: [
+                "CorePersistence",
+                "Swallow"
+            ],
+            path: "Sources/_XMLCoder",
+            swiftSettings: []
+        ),
+        .target(
             name: "CorePersistence",
             dependencies: [
                 "CorePersistenceMacros",
@@ -62,15 +80,6 @@ let package = Package(
             dependencies: [
                 "CorePersistence"
             ]
-        ),
-        .target(
-            name: "_XMLCoder",
-            dependencies: [
-                "CorePersistence",
-                "Swallow"
-            ],
-            path: "Sources/_XMLCoder",
-            swiftSettings: []
         ),
         .testTarget(
             name: "CorePersistenceTests",

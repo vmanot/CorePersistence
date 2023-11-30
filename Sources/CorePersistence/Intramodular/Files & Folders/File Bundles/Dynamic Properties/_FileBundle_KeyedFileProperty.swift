@@ -19,6 +19,7 @@ public final class _FileBundle_KeyedFileProperty<Parent, Contents>: _FileBundle_
     private var assignedValue: Contents?
     private var base: Base?
     
+    @MainActor
     public var wrappedValue: Contents {
         get {
             if let base {

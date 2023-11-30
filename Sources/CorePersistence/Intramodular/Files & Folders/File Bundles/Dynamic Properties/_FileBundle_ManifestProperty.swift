@@ -14,6 +14,7 @@ public final class _FileBundle_ManifestProperty<Value: Equatable & Sendable>: _F
     private let configuration: _RelativeFileConfiguration<Value>
     private var base: _KeyedFileBundleChildGenericBase<Value>?
     
+    @MainActor
     public var wrappedValue: Value {
         get {
             try! base.unwrap().contents

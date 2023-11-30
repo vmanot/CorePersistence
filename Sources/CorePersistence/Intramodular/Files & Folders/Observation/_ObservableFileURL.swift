@@ -5,7 +5,7 @@
 import FoundationX
 import Swallow
 
-public final class _ObservableURL: ObservableObject {
+public final class _ObservableFileURL: ObservableObject {
     public var url: BookmarkedURL
     
     public init(from url: URL) throws {

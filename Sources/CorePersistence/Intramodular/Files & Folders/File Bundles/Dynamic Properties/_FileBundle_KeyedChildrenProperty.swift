@@ -22,6 +22,7 @@ public final class _FileBundle_KeyedChildrenProperty<Key: StringRepresentable, V
     private let configuration: Configuration
     private var base: Base?
     
+    @MainActor
     public var wrappedValue: [Key: Value] {
         get {
             _expectNoThrow {
@@ -62,6 +63,7 @@ public final class _FileBundle_KeyedChildrenProperty<Key: StringRepresentable, V
 
 @available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
 extension _FileBundle_KeyedChildrenProperty {
+    @MainActor
     convenience public init(
         wrappedValue: [Key: Value]? = nil,
         _ path: String

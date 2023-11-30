@@ -6,42 +6,44 @@ import FoundationX
 import Merge
 import Swallow
 
-public enum FolderStorageElement<Item> {
-    case url(any _FileOrFolderRepresenting)
-    case inMemory(Item)
-}
+public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable>: MutablePropertyWrapper, ObservableObject {
+    public enum Element {
+        case url(any _FileOrFolderRepresenting)
+        case inMemory(Item)
+    }
 
-public final class FolderContents<Item, ID: Hashable>: MutablePropertyWrapper, ObservableObject {
     public typealias WrappedValue = IdentifierIndexingArray<Item, ID>
     
     public let folder: any _FileOrFolderRepresenting
-    public let fileConfiguration: (FolderStorageElement<Item>) throws -> _RelativeFileConfiguration<Item>
+    public let fileConfiguration: (Element) throws -> _RelativeFileConfiguration<Item>
     public let id: (Item) -> ID
     
-    private var storage: [ID: _NaiveFileStorageCoordinator<MutableValueBox<Item>, Item>] = [:]
+    private var storage: [ID: _FileStorageCoordinators.RegularFile<MutableValueBox<Item>, Item>] = [:]
     
     public private(set) var _wrappedValue: WrappedValue
     
+    @MainActor
     public var folderURL: URL {
         get throws {
             try self.folder._toURL()
         }
     }
     
+    @MainActor
     public var wrappedValue: WrappedValue {
         get {
             _wrappedValue
         } set {
             objectWillChange.send()
             
-            try! setNewValue(newValue)
+            try! _setNewValue(newValue)
         }
     }
     
     @MainActor
     public init(
         folder: any _FileOrFolderRepresenting,
-        fileConfiguration: @escaping (FolderStorageElement<Item>) throws -> _RelativeFileConfiguration<Item>,
+        fileConfiguration: @escaping (Element) throws -> _RelativeFileConfiguration<Item>,
         id: @escaping (Item) -> ID
     ) {
         self.folder = folder
@@ -51,12 +53,13 @@ public final class FolderContents<Item, ID: Hashable>: MutablePropertyWrapper, O
         
         _expectNoThrow {
             try FileManager.default.withUserGrantedAccess(toDirectory: folderURL) { url in
-                try initialize(withFolderURL: url)
+                try _initialize(withFolderURL: url)
             }
         }
     }
     
-    func initialize(
+    @MainActor
+    func _initialize(
         withFolderURL folderURL: URL
     ) throws {
         try FileManager.default.createDirectoryIfNecessary(at: folderURL, withIntermediateDirectories: true)
@@ -68,26 +71,25 @@ public final class FolderContents<Item, ID: Hashable>: MutablePropertyWrapper, O
                 continue
             }
             
-            _expectNoThrow {
-                var fileConfiguration = try self.fileConfiguration(.url(url.toFileURL()))
-                let relativeFilePath = try fileConfiguration.consumePath()
-                let fileURL = try folder._toURL().appendingPathComponent(relativeFilePath).toFileURL()
-                
-                let fileCoordinator = try _NaiveFileStorageCoordinator<MutableValueBox<Item>, Item>(
-                    fileSystemResource: fileURL,
-                    configuration: fileConfiguration
-                )
-                
-                let element = try fileCoordinator._wrappedValue
-                
-                self.storage[self.id(element)] = fileCoordinator
-                
-                self._wrappedValue.append(element)
-            }
+            var fileConfiguration = try self.fileConfiguration(.url(url.toFileURL()))
+            let relativeFilePath = try fileConfiguration.consumePath()
+            let fileURL = try folder._toURL().appendingPathComponent(relativeFilePath).toFileURL()
+            
+            let fileCoordinator = try _FileStorageCoordinators.RegularFile<MutableValueBox<Item>, Item>(
+                fileSystemResource: fileURL,
+                configuration: fileConfiguration
+            )
+            
+            let element = try fileCoordinator._wrappedValue
+            
+            self.storage[self.id(element)] = fileCoordinator
+            
+            self._wrappedValue.append(element)
         }
     }
     
-    public func setNewValue(
+    @MainActor
+    public func _setNewValue(
         _ newValue: IdentifierIndexingArray<Item, ID>
     ) throws {
         let oldValue = self._wrappedValue
@@ -164,7 +166,7 @@ public final class FolderContents<Item, ID: Hashable>: MutablePropertyWrapper, O
             
             try FileManager.default.createDirectory(at: folderURL, withIntermediateDirectories: true)
             
-            let fileCoordinator = try! _NaiveFileStorageCoordinator<MutableValueBox<Item>, Item>(
+            let fileCoordinator = try! _FileStorageCoordinators.RegularFile<MutableValueBox<Item>, Item>(
                 fileSystemResource: FileURL(fileURL),
                 configuration: fileConfiguration
             )
@@ -182,4 +184,3 @@ public final class FolderContents<Item, ID: Hashable>: MutablePropertyWrapper, O
         self._wrappedValue = updatedNewValue
     }
 }
-

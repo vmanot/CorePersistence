@@ -18,6 +18,7 @@ public final class _FileBundle_BundleProperty<Parent, Contents: FileBundle>: _Fi
     private var assignedValue: Contents?
     private var base: Base?
     
+    @MainActor
     public var wrappedValue: Contents {
         get {
             try! base.unwrap().contents
@@ -34,6 +35,7 @@ public final class _FileBundle_BundleProperty<Parent, Contents: FileBundle>: _Fi
         self.configuration = configuration
     }
     
+    @MainActor
     func _initialize(
         with parameters: InitializationParameters
     ) throws -> Bool {

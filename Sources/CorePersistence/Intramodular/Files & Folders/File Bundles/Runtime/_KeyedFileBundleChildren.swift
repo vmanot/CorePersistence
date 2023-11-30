@@ -184,7 +184,10 @@ final class _KeyedFileBundleChildren<Key: StringRepresentable, Value, WrappedVal
         parent?.childDidUpdate(self)
     }
     
-    public func setContents(_ newValue: Contents) throws {
+    @MainActor
+    public func setContents(
+        _ newValue: Contents
+    ) throws {
         let difference = Set(newValue.keys).difference(from: Set(children.keys))
         
         var removedKeysByValue: [_HashableOrObjectIdentifier: Key] = [:]

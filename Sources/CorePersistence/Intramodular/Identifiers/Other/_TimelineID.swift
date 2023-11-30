@@ -32,7 +32,7 @@ extension _TimelineID: Initiable where T: Initiable {
 
 public final class TimelineNode<T: Initiable & UniversallyUniqueIdentifier> {
     public typealias Element = _TimelineID<T>
-
+    
     public let id: Element
     public let parent: TimelineNode?
     public var children: [TimelineNode]
@@ -50,7 +50,7 @@ public final class TimelineNode<T: Initiable & UniversallyUniqueIdentifier> {
     public convenience init(parent: TimelineNode) {
         self.init(parent: Optional(parent))
     }
-
+    
     public func fork() -> TimelineNode {
         let child = TimelineNode(parent: self)
         

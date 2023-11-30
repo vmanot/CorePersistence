@@ -3,6 +3,7 @@
 //
 
 import Compute
+import FoundationX
 import Swallow
 import SwiftUI
 import UniformTypeIdentifiers
@@ -376,7 +377,9 @@ extension CSV {
     }
     
     /// Writes the contents of the CSV to a CSV writer.
-    public func write(to writer: CSVWriter) throws {
+    public func write(
+        to writer: CSVWriter
+    ) throws {
         if hasHeaderRow {
             writer.beginNewRow()
             try writer.write(row: headers.map({ $0.name ?? "" }))
@@ -388,7 +391,9 @@ extension CSV {
     }
     
     /// Writes the contents of the CSV to a given location.
-    public func write(to location: URLRepresentable) throws {
+    public func write(
+        to location: URLRepresentable
+    ) throws {
         let writer = try CSVWriter(stream: try OutputStream(url: location, append: false).unwrap())
         
         try write(to: writer)

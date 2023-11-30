@@ -19,6 +19,7 @@ class _KeyedFileBundleChildFile<Contents>: _KeyedFileBundleChildGenericBase<Cont
     private var coordinator: FileStorage<MutableValueBox<Contents>, Contents>.Coordinator?
     private let coordinatorObjectWillChangeRelay = ObjectWillChangePublisherRelay()
     
+    @MainActor
     override var contents: Contents {
         get {
             try! getFileCoordinator().wrappedValue
@@ -93,27 +94,29 @@ class _KeyedFileBundleChildFile<Contents>: _KeyedFileBundleChildGenericBase<Cont
         _assertParentChildFileWrapperConsistency()
     }
     
+    @MainActor
     func getFileCoordinator() throws -> FileStorage<MutableValueBox<Contents>, Contents>.Coordinator {
         try coordinator ?? _refreshFileCoordinator()
     }
     
+    @MainActor
     @discardableResult
     func _refreshFileCoordinator() throws -> FileStorage<MutableValueBox<Contents>, Contents>.Coordinator {
         var latestConfiguration = try configuration()
         
         latestConfiguration.readWriteOptions.readErrorRecoveryStrategy = .fatalError
-
+        
         let relativeFilePath = try? latestConfiguration.consumePath()
-
+        
         preferredFileName = relativeFilePath
-                
+        
         if let existingCoordinator = coordinator {
             guard existingCoordinator.configuration.isEqual(to: latestConfiguration) == false else {
                 return existingCoordinator
             }
         }
         
-        coordinator = try _NaiveFileStorageCoordinator(
+        coordinator = try _FileStorageCoordinators.RegularFile(
             fileSystemResource: self,
             configuration: latestConfiguration,
             cache: InMemorySingleValueCache()
@@ -170,4 +173,3 @@ class _KeyedFileBundleChildFile<Contents>: _KeyedFileBundleChildGenericBase<Cont
         parent?.childDidUpdate(self)
     }
 }
-
