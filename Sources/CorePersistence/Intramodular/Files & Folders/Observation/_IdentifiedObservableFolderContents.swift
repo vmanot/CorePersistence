@@ -11,7 +11,7 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable>: Muta
         case url(any _FileOrFolderRepresenting)
         case inMemory(Item)
     }
-
+    
     public typealias WrappedValue = IdentifierIndexingArray<Item, ID>
     
     public let folder: any _FileOrFolderRepresenting
@@ -20,7 +20,26 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable>: Muta
     
     private var storage: [ID: _FileStorageCoordinators.RegularFile<MutableValueBox<Item>, Item>] = [:]
     
-    public private(set) var _wrappedValue: WrappedValue
+    public private(set) var _resolvedWrappedValue: WrappedValue?
+        
+    @MainActor
+    public var _wrappedValue: WrappedValue {
+        get {
+            guard let result = _resolvedWrappedValue else {
+                self._resolvedWrappedValue = WrappedValue(id: id)
+                
+                _initializeWrappedValue()
+                
+                return _resolvedWrappedValue!
+            }
+            
+            return result
+        } set {
+            assert(_resolvedWrappedValue != nil)
+            
+            _resolvedWrappedValue = newValue
+        }
+    }
     
     @MainActor
     public var folderURL: URL {
@@ -36,7 +55,9 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable>: Muta
         } set {
             objectWillChange.send()
             
-            try! _setNewValue(newValue)
+            try! FileManager.default.withUserGrantedAccess(toDirectory: folderURL) { folderURL in
+                try! _setNewValue(newValue, withFolderURL: folderURL)
+            }
         }
     }
     
@@ -49,17 +70,19 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable>: Muta
         self.folder = folder
         self.fileConfiguration = fileConfiguration
         self.id = id
-        self._wrappedValue = .init(id: id)
-        
+    }
+    
+    @MainActor
+    private func _initializeWrappedValue() {
         _expectNoThrow {
             try FileManager.default.withUserGrantedAccess(toDirectory: folderURL) { url in
                 try _initialize(withFolderURL: url)
             }
         }
     }
-    
+
     @MainActor
-    func _initialize(
+    private func _initialize(
         withFolderURL folderURL: URL
     ) throws {
         try FileManager.default.createDirectoryIfNecessary(at: folderURL, withIntermediateDirectories: true)
@@ -80,6 +103,12 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable>: Muta
                 configuration: fileConfiguration
             )
             
+            _expectNoThrow {
+                try _withLogicalParent(ofType: AnyObject.self) {
+                    fileCoordinator._enclosingInstance = $0
+                }
+            }
+            
             let element = try fileCoordinator._wrappedValue
             
             self.storage[self.id(element)] = fileCoordinator
@@ -90,7 +119,8 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable>: Muta
     
     @MainActor
     public func _setNewValue(
-        _ newValue: IdentifierIndexingArray<Item, ID>
+        _ newValue: IdentifierIndexingArray<Item, ID>,
+        withFolderURL folderURL: URL
     ) throws {
         let oldValue = self._wrappedValue
         let difference = Set(newValue.identifiers).difference(from: Set(oldValue.identifiers))
@@ -137,12 +167,8 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable>: Muta
             guard renamedKeys[key] == nil else {
                 continue
             }
-            
-            let child = try oldValue[id: key].unwrap()
-            
-            var fileConfiguration = try fileConfiguration(.inMemory(child))
-            let relativeFilePath = try fileConfiguration.consumePath()
-            let fileURL = try folder._toURL().appendingPathComponent(relativeFilePath)
+                        
+            let fileURL = try storage[key].unwrap().fileSystemResource._toURL()
             
             assert(FileManager.default.regularFileExists(at: fileURL))
             
@@ -160,7 +186,7 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable>: Muta
             let element = newValue[id: key]!
             var fileConfiguration = try fileConfiguration(.inMemory(element))
             let relativeFilePath = try fileConfiguration.consumePath()
-            let fileURL = try folderURL.appendingPathComponent(relativeFilePath)
+            let fileURL = folderURL.appendingPathComponent(relativeFilePath)
             
             fileConfiguration.serialization.initialValue = .available(element)
             
@@ -171,6 +197,8 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable>: Muta
                 configuration: fileConfiguration
             )
             
+            fileCoordinator.commit()
+            
             storage[key] = fileCoordinator
             updatedNewValue[id: key] = element
         }
@@ -178,7 +206,11 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable>: Muta
         let updated = updatedNewValue._unorderedIdentifiers.removing(contentsOf: difference.insertions)
         
         for identifier in updated {
-            self.storage[identifier]!.wrappedValue = newValue[id: identifier]!
+            let updatedElement = newValue[id: identifier]!
+            
+            self.storage[identifier]!.wrappedValue = updatedElement
+            
+            updatedNewValue[id: identifier] = updatedElement
         }
         
         self._wrappedValue = updatedNewValue

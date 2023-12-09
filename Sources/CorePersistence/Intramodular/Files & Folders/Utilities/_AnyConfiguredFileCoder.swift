@@ -2,7 +2,7 @@
 // Copyright (c) Vatsal Manot
 //
 
-import Foundation
+import FoundationX
 import Swallow
 import UniformTypeIdentifiers
 
@@ -64,6 +64,29 @@ extension FileManager {
         to url: URL,
         coder: _AnyConfiguredFileCoder
     ) throws {
+        var url = url
+        var endSecurityScopedAccess: (() -> Void)? = nil
+
+        if !isReadableAndWritable(at: url) {
+            if let securityScopedURL = try? _SecurityScopedBookmarks.resolvedURL(for: url) {
+                if isReadableAndWritable(at: securityScopedURL) {
+                    url = securityScopedURL
+                }
+            } else if let securityScopedParent = nearestSecurityScopedAccessibleAncestor(for: url) {
+                guard securityScopedParent.startAccessingSecurityScopedResource() else {
+                    assertionFailure("Failed to acquire permission to write to parent URL: \(securityScopedParent) (parent for \(url)")
+
+                    return
+                }
+                
+                endSecurityScopedAccess = {
+                    securityScopedParent.stopAccessingSecurityScopedResource()
+                }
+            } else {
+                assertionFailure("Failed to acquire permission to write to \(url)")
+            }
+        }
+        
         switch coder.rawValue {
             case .document(let document):
                 try document
@@ -85,6 +108,8 @@ extension FileManager {
                     createDirectoriesIfNecessary: createDirectoriesIfNecessary
                 )
         }
+        
+        endSecurityScopedAccess?()
     }
 }
 

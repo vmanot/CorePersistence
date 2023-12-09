@@ -87,7 +87,9 @@ public final class FileStorage<ValueType, UnwrappedType> {
         }
     }
     
-    init(coordinator: @autoclosure () throws -> FileStorage.Coordinator) {
+    init(
+        coordinator: @autoclosure () throws -> FileStorage.Coordinator
+    ) {
         self.coordinator = try! coordinator()
     }
 }

@@ -13,12 +13,28 @@ extension _FileStorageCoordinators {
         
         @PublishedObject var base: Base
         
+        public var _hasReadWithLogicalParentAtLeastOnce = false
+        
         @MainActor(unsafe)
         public override var wrappedValue: _ObservableIdentifiedFolderContents<Item, ID>.WrappedValue {
             get {
-                base.wrappedValue
+                guard _hasReadWithLogicalParentAtLeastOnce else {
+                    guard let _enclosingInstance else {
+                        return base.wrappedValue
+                    }
+                    
+                    return try! _withLogicalParent(_enclosingInstance) {
+                        base.wrappedValue
+                    }
+                }
+                
+                return base.wrappedValue
             } set {
-                base.wrappedValue = newValue
+                _expectNoThrow {
+                    try _withLogicalParent(_enclosingInstance) {
+                        base.wrappedValue = newValue
+                    }
+                }
             }
         }
         

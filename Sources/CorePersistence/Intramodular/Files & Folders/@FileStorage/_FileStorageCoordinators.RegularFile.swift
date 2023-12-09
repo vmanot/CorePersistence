@@ -76,7 +76,13 @@ extension _FileStorageCoordinators {
                 configuration: configuration
             )
             
-            self.read = {
+            self.read = { [weak self] in
+                guard let `self` = self else {
+                    assertionFailure()
+                    
+                    throw Never.Reason.unexpected
+                }
+                
                 let contents = try _withLogicalParent(self._enclosingInstance) {
                     try fileSystemResource().decode(using: configuration.serialization.coder)
                 }
@@ -88,8 +94,16 @@ extension _FileStorageCoordinators {
                 return try cast(contents, to: UnwrappedValue.self)
             }
             
-            self.write = { [weak self] in
-                try self?.fileSystemResource.encode($0, using: configuration.serialization.coder)
+            self.write = { [weak self] newValue in
+                guard let `self` = self else {
+                    assertionFailure()
+                    
+                    return
+                }
+
+                try _withLogicalParent(self._enclosingInstance) {
+                    try self.fileSystemResource.encode(newValue, using: configuration.serialization.coder)
+                }
             }
             
             let _readInitialValue: (() async -> Void) = {
@@ -172,6 +186,12 @@ extension _FileStorageCoordinators {
         
         override public func commit() {
             guard let value = _cachedValue else {
+                _expectNoThrow {
+                    if !FileManager.default.fileExists(at: try fileSystemResource._toURL()) {
+                        _writeValue(self.wrappedValue, immediately: true)
+                    }
+                }
+                
                 return
             }
             
