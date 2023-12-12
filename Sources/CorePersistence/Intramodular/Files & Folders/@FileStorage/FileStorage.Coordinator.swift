@@ -12,9 +12,10 @@ public enum _FileStorageCoordinators: _StaticNamespaceType {
 }
 
 public class _AnyFileStorageCoordinator<ValueType, UnwrappedValue>: ObservableObject, @unchecked Sendable {
-    enum StateFlag {
+    public enum StateFlag {
         case initialReadComplete
         case latestWritten
+        case discarded
     }
     
     weak var _enclosingInstance: AnyObject?
@@ -22,6 +23,8 @@ public class _AnyFileStorageCoordinator<ValueType, UnwrappedValue>: ObservableOb
     let cancellables = Cancellables()
     let lock = OSUnfairLock()
     
+    public internal(set) var stateFlags: Set<StateFlag> = []
+
     let writeQueue = DispatchQueue(
         label: "com.vmanot.Data.FileStorage.Coordinator.write",
         qos: .default
@@ -52,7 +55,19 @@ public class _AnyFileStorageCoordinator<ValueType, UnwrappedValue>: ObservableOb
         fatalError(.abstract)
     }
     
+    open func discard() {
+        guard !stateFlags.contains(.discarded) else {
+            return
+        }
+        
+        stateFlags.insert(.discarded)
+    }
+    
     deinit {
+        guard !stateFlags.contains(.discarded) else {
+            return
+        }
+
         commit()
     }
 }

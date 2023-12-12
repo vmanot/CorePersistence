@@ -11,9 +11,7 @@ extension _FileStorageCoordinators {
         private let cache: any SingleValueCache<UnwrappedValue>
         private var read: (() throws -> UnwrappedValue)!
         private var write: ((UnwrappedValue) throws -> Void)!
-        
-        private var stateFlags: Set<StateFlag> = []
-        
+                
         private var writeWorkItem: DispatchWorkItem? = nil
         private var valueObjectWillChangeListener: AnyCancellable?
         
@@ -96,8 +94,6 @@ extension _FileStorageCoordinators {
             
             self.write = { [weak self] newValue in
                 guard let `self` = self else {
-                    assertionFailure()
-                    
                     return
                 }
 
@@ -185,6 +181,10 @@ extension _FileStorageCoordinators {
         }
         
         override public func commit() {
+            guard !stateFlags.contains(.discarded) else {
+                return
+            }
+            
             guard let value = _cachedValue else {
                 _expectNoThrow {
                     if !FileManager.default.fileExists(at: try fileSystemResource._toURL()) {

@@ -172,7 +172,9 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable>: Muta
             
             assert(FileManager.default.regularFileExists(at: fileURL))
             
+            storage[key]?.discard()
             storage[key] = nil
+            
             updatedNewValue[id: key] = nil
             
             try FileManager.default.removeItemIfNecessary(at: fileURL)
