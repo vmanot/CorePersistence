@@ -2,7 +2,7 @@
 // Copyright (c) Vatsal Manot
 //
 
-import Foundation
+import FoundationX
 import POSIX
 import Swallow
 import System

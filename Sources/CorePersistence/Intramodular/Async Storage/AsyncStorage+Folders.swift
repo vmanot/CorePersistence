@@ -2,7 +2,7 @@
 // Copyright (c) Vatsal Manot
 //
 
-import Compute
+import FoundationX
 import Merge
 import Swallow
 

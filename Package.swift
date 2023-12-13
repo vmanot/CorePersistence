@@ -15,7 +15,10 @@ let package = Package(
         .library(
             name: "CorePersistence",
             targets: [
+                "_CoreIdentity",
                 "_CSV",
+                "_JSON",
+                "_ModularDecodingEncoding",
                 "CorePersistence",
                 "Proquint",
                 "UUIDv6"
@@ -24,6 +27,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-syntax", from: "509.0.0"),
+        .package(url: "https://github.com/SwiftUIX/SwiftUIX.git", branch: "master"),
         .package(url: "https://github.com/vmanot/Expansions.git", branch: "main"),
         .package(url: "https://github.com/vmanot/Merge.git", branch: "master"),
         .package(url: "https://github.com/vmanot/Swallow.git", branch: "master")
@@ -43,11 +47,43 @@ let package = Package(
             path: "Sources/CorePersistenceMacros"
         ),
         .target(
+            name: "_ModularDecodingEncoding",
+            dependencies: [
+                "_CoreIdentity",
+                "Expansions",
+                "Merge",
+                "Swallow"
+            ],
+            path: "Sources/_ModularDecodingEncoding",
+            swiftSettings: []
+        ),
+        .target(
+            name: "_CoreIdentity",
+            dependencies: [
+                "CorePersistenceMacros",
+                "Expansions",
+                "Merge",
+                "Proquint",
+                "Swallow"
+            ],
+            path: "Sources/_CoreIdentity",
+            swiftSettings: []
+        ),
+        .target(
             name: "_CSV",
             dependencies: [
                 "Swallow"
             ],
             path: "Sources/_CSV",
+            swiftSettings: []
+        ),
+        .target(
+            name: "_JSON",
+            dependencies: [
+                "Swallow",
+                "SwiftUIX"
+            ],
+            path: "Sources/_JSON",
             swiftSettings: []
         ),
         .target(
@@ -62,6 +98,9 @@ let package = Package(
         .target(
             name: "CorePersistence",
             dependencies: [
+                "_CoreIdentity",
+                "_JSON",
+                "_ModularDecodingEncoding",
                 "CorePersistenceMacros",
                 "Expansions",
                 "Merge",

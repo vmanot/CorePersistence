@@ -2,6 +2,7 @@
 // Copyright (c) Vatsal Manot
 //
 
+import Foundation
 import Swift
 
 /// A property wrapper that encodes its value as stringified JSON.

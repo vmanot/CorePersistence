@@ -3,7 +3,7 @@
 //
 
 import Combine
-import Foundation
+import FoundationX
 import Swallow
 
 /// A wrapper coder that allows for polymorphic decoding.

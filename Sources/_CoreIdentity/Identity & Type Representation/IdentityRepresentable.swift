@@ -6,7 +6,7 @@ import Swift
 
 /// A class of types whose instances hold the value of an entity with one or more stable identities.
 public protocol IdentityRepresentable {
-    associatedtype IdentityRepresentation: CorePersistence.IdentityRepresentation
+    associatedtype IdentityRepresentation: _CoreIdentity.IdentityRepresentation
     
     /// The representation used to identify the value.
     ///

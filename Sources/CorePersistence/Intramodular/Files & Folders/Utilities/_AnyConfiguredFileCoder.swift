@@ -82,9 +82,7 @@ extension FileManager {
                 endSecurityScopedAccess = {
                     securityScopedParent.stopAccessingSecurityScopedResource()
                 }
-            } else {
-                assertionFailure("Failed to acquire permission to write to \(url)")
-            }
+            } 
         }
         
         switch coder.rawValue {

@@ -8,7 +8,7 @@ import Swallow
 
 public typealias _UnsafelySerializedAny = _UnsafelySerialized<Any>
 
-protocol _UnsafelySerializedPropertyWrapperProtocol: Codable, ParameterlessPropertyWrapper {
+public protocol _UnsafelySerializedPropertyWrapperProtocol: Codable, ParameterlessPropertyWrapper {
     
 }
 

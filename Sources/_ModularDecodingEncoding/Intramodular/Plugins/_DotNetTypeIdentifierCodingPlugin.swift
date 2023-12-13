@@ -2,6 +2,8 @@
 // Copyright (c) Vatsal Manot
 //
 
+import _CoreIdentity
+import Foundation
 import Diagnostics
 import Swallow
 

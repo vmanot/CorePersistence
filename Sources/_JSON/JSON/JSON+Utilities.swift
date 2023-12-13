@@ -2,7 +2,7 @@
 // Copyright (c) Vatsal Manot
 //
 
-import Swift
+import Swallow
 
 extension JSON {
     public static func _extractJSONStrings(

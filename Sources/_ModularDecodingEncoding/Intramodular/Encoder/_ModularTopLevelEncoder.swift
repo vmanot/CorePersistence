@@ -2,8 +2,9 @@
 // Copyright (c) Vatsal Manot
 //
 
+import _CoreIdentity
 import Combine
-import Foundation
+import FoundationX
 import Swallow
 
 public struct _ModularTopLevelEncoder<Output>: TopLevelEncoder, @unchecked Sendable {

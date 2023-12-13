@@ -2,7 +2,7 @@
 // Copyright (c) Vatsal Manot
 //
 
-import Swift
+import Swallow
 import UniformTypeIdentifiers
 
 /// A declarative description of the identity of something.
