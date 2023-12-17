@@ -49,7 +49,7 @@ extension _ModularEncoder {
         private let encoderConfiguration: _ModularEncoder.Configuration
         
         private var _requiresUnsafeSerialization: Bool? {
-            if let wrappedType = Value.self as? any _UnsafelySerializedPropertyWrapperProtocol.Type, !(wrappedType._opaque_WrappedValue.self is any Encodable.Type) {
+            if let wrappedType = Value.self as? any _UnsafelySerializedType.Type, !(wrappedType._opaque_WrappedValue.self is any Encodable.Type) {
                 return true
             }
             
@@ -61,7 +61,7 @@ extension _ModularEncoder {
                 return true
             }
             
-            if let base = (base as? any _UnsafelySerializedPropertyWrapperProtocol)?.wrappedValue {
+            if let base = (base as? any _UnsafelySerializedType)?.wrappedValue {
                 return _isValueNil(base)
             }
             
@@ -80,31 +80,34 @@ extension _ModularEncoder {
         
         func encode(to encoder: Encoder) throws {
             do {
-                try _encode(to: encoder)
+                assert(!(base is _ModularTopLevelProxyEncodableType))
+                assert(!(encoder is _ModularEncoder))
+                
+                let wrappedEncoder = _ModularEncoder(
+                    base: encoder,
+                    configuration: encoderConfiguration,
+                    context: .init(type: Value.self)
+                )
+
+                try encode(to: wrappedEncoder)
             } catch {
                 throw error
             }
         }
         
-        private func _encode(to encoder: Encoder) throws {
-            assert(!(base is _ModularTopLevelProxyEncodableType))
-            assert(!(encoder is _ModularEncoder))
-            
-            let wrappedEncoder = _ModularEncoder(
-                base: encoder,
-                configuration: encoderConfiguration,
-                context: .init(type: Value.self)
-            )
-            
+        private func encode(
+            to encoder: _ModularEncoder
+        ) throws {
             let encoded: Bool
+            let valueType: Any.Type = Swift.type(of: base)
             
             if !(base is Encodable), let base = base as? (any _UnsafeSerializationRepresentable) {
-                try base._unsafeSerializationRepresentation.encode(to: wrappedEncoder)
+                try base._unsafeSerializationRepresentation.encode(to: encoder)
                 
                 encoded = true
-            } else if let base = base as? (any _UnsafelySerializedPropertyWrapperProtocol), base.wrappedValue is (any _UnsafeSerializationRepresentable)  {
+            } else if let base = base as? (any _UnsafelySerializedType), base.wrappedValue is (any _UnsafeSerializationRepresentable)  {
                 try base._opaque_encodeUnsafeSerializationRepresentable(
-                    to: encoder,
+                    to: encoder.base,
                     encoderConfiguration: encoderConfiguration
                 )
                 
@@ -128,7 +131,7 @@ extension _ModularEncoder {
                         
                         encoded = true
                     } else {
-                        try cast(base, to: (any Encodable).self).encode(to: wrappedEncoder)
+                        try cast(base, to: (any Encodable).self).encode(to: encoder)
                         
                         encoded = true
                     }
@@ -140,19 +143,42 @@ extension _ModularEncoder {
                     encoded = true
                 } else {
                     if
-                        let base = base as? (any _UnsafelySerializedPropertyWrapperProtocol),
-                        let unwrappedBase = base.wrappedValue as? Encodable,
-                        try Self._encodeDiscriminator(for: __fixed_type(of: unwrappedBase), to: wrappedEncoder) != nil
+                        let base = base as? (any _UnsafelySerializedType),
+                        let unwrappedBase = base.wrappedValue as? Encodable
                     {
-                        try unwrappedBase.encode(to: wrappedEncoder)
+                        let encodedDiscriminator = (try? Self._encodeDiscriminator(for: __fixed_type(of: unwrappedBase), to: encoder)).compact() != nil
+                        
+                        if !encodedDiscriminator {
+                            guard encoder.configuration.plugins.contains(where: { $0 is _UnsafeSerializationPlugin }) else {
+                                throw _ModularDecodingError.unsafeSerializationUnsupported(valueType)
+                            }
+                        }
+                        
+                        try unwrappedBase.encode(to: encoder)
+                        
+                        encoded = true
+                    } else if
+                        let base = base as? (any _UnsafelySerializedType),
+                        let unwrappedBase = base.wrappedValue as? Any.Type
+                    {
+                        let metatypePlugin = try encoder.configuration.plugins
+                            .first(byUnwrapping: { $0 as? (any _MetatypeCodingPlugin) })
+                            .unwrap()
+                        
+                        let encodedMetatype = try metatypePlugin.codableRepresentation(
+                            for: unwrappedBase,
+                            context: .init()
+                        )
+                        
+                        try encodedMetatype.encode(to: encoder)
                         
                         encoded = true
                     } else if
                         let base = base as? _TypeSerializingAnyCodable,
                         let baseUnwrapped = try base.decode(),
-                        try Self._encodeDiscriminator(for: __fixed_type(of: baseUnwrapped), to: wrappedEncoder) != nil
+                        try Self._encodeDiscriminator(for: __fixed_type(of: baseUnwrapped), to: encoder) != nil
                     {
-                        try baseUnwrapped.encode(to: wrappedEncoder)
+                        try baseUnwrapped.encode(to: encoder)
                         
                         encoded = true
                     } else {
@@ -160,10 +186,10 @@ extension _ModularEncoder {
                         
                         try Self._encodeDiscriminator(
                             for: __fixed_type(of: _base),
-                            to: wrappedEncoder
+                            to: encoder
                         )
                         
-                        try _base.encode(to: wrappedEncoder)
+                        try _base.encode(to: encoder)
                         
                         encoded = true
                     }
@@ -201,7 +227,7 @@ extension _ModularEncoder {
     }
 }
 
-extension _UnsafelySerializedPropertyWrapperProtocol {
+extension _UnsafelySerializedType {
     fileprivate func _opaque_encodeUnsafeSerializationRepresentable(
         to encoder: Encoder,
         encoderConfiguration: _ModularEncoder.Configuration

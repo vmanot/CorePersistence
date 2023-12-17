@@ -14,21 +14,29 @@ public struct AnyPersistentIdentifier: Hashable, Sendable {
     public init(rawValue: RawValue) {
         self.rawValue = rawValue
     }
+    
+    public init<T: Codable & Hashable & Sendable>(erasing value: T) {
+        self.init(rawValue: value)
+    }
+    
+    public func `as`<T>(_ type: T.Type) throws -> T {
+        try cast(rawValue, to: type)
+    }
 }
+
+// MARK: - Conformances
 
 extension AnyPersistentIdentifier: Codable {
     public init(from decoder: Decoder) throws {
         do {
-            try self.init(rawValue: UUID(from: decoder))
+            self._rawValue = .init(wrappedValue: try UUID(from: decoder))
         } catch {
-            runtimeIssue(error)
-            
-            try self.init(rawValue: String(from: decoder)) // FIXME
+            self._rawValue = try _UnsafelySerialized<any Codable & Hashable & Sendable>(from: decoder)
         }
     }
-    
+
     public func encode(to encoder: Encoder) throws {
-        try rawValue.encode(to: encoder)
+        try _rawValue.encode(to: encoder)
     }
 }
 

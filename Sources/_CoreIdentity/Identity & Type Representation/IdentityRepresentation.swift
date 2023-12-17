@@ -15,6 +15,12 @@ public protocol IdentityRepresentation {
 
 // MARK: - Extensions
 
+extension IdentityRepresentation where Self: RawRepresentable, RawValue == String {
+    public var body: some IdentityRepresentation {
+        _StringIdentityRepresentation(self.rawValue)
+    }
+}
+
 extension IdentityRepresentation where Self == _StringIdentityRepresentation {
     public static func string(_ string: String) -> Self {
         .init(string)
@@ -39,7 +45,7 @@ public struct _StringIdentityRepresentation: Codable, Hashable, IdentityRepresen
     public let value: String
     
     public var body: some IdentityRepresentation {
-        self
+        fatalError()
     }
     
     public init(_ value: String) {

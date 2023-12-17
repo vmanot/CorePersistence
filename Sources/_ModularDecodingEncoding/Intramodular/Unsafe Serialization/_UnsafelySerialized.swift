@@ -8,13 +8,14 @@ import Swallow
 
 public typealias _UnsafelySerializedAny = _UnsafelySerialized<Any>
 
-public protocol _UnsafelySerializedPropertyWrapperProtocol: Codable, ParameterlessPropertyWrapper {
+/// A protocol for the property wrapper `@_UnsafelySerialized`.
+public protocol _UnsafelySerializedType: Codable, ParameterlessPropertyWrapper {
     
 }
 
 @propertyWrapper
-public struct _UnsafelySerialized<Value>: _UnsafelySerializedPropertyWrapperProtocol, ParameterlessPropertyWrapper {
-    public var wrappedValue: Value 
+public struct _UnsafelySerialized<Value>: _UnsafelySerializedType, ParameterlessPropertyWrapper {
+    public var wrappedValue: Value
     private var _cachedHashValue: Int?
     
     private init(wrappedValue: Value, _cachedHashValue: Int?) {
@@ -23,6 +24,10 @@ public struct _UnsafelySerialized<Value>: _UnsafelySerializedPropertyWrapperProt
     }
     
     public init(wrappedValue: Value)  {
+        if wrappedValue is (any _UnsafelySerializedType) {
+            assertionFailure()
+        }
+        
         if Value.self == Any.self {
             guard let _value = Optional(_unwrapping: wrappedValue) else {
                 self.wrappedValue = EmptyValue() as! Value
@@ -71,12 +76,12 @@ extension _UnsafelySerialized: Codable {
 extension _UnsafelySerialized: CustomStringConvertible {
     public var description: String {
         if (Value.self is any OptionalProtocol.Type) {
-            return String(describing: wrappedValue)
+            return "[unsafely serialized] \(wrappedValue)"
         } else {
             if let value = Optional(_unwrapping: wrappedValue) {
-                return String(describing: value)
+                return "[unsafely serialized] \(value)"
             } else {
-                return String(describing: wrappedValue)
+                return "[unsafely serialized] \(wrappedValue)"
             }
         }
     }
@@ -114,6 +119,8 @@ extension _UnsafelySerialized: Hashable {
         do {
             if let wrappedValue = wrappedValue as? any Hashable {
                 hasher.combine(wrappedValue)
+            } else if let wrappedValue = wrappedValue as? _UnsafeHashable {
+                try wrappedValue._unsafelyHash(into: &hasher)
             } else {
                 do {
                     hasher.combine(try _IntermediateRepresentation(wrappedValue))
@@ -160,7 +167,7 @@ extension _UnsafelySerialized {
         case metatype(_SerializedTypeIdentity?)
         case representable(any Hashable & Codable)
         case anything(_TypeSerializingAnyCodable)
-                
+        
         /// Whether this `_UnsafelySerialized` is representing a metatype.
         private static var isMetatypeContainer: Bool? {
             let valueType = Metatype(Value.self).unwrapped

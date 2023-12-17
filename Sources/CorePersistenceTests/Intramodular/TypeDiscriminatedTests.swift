@@ -9,8 +9,10 @@ import FoundationX
 import XCTest
 
 final class TypeDiscriminatedCodingTests: XCTestCase {
-    func testShit() throws {
-        let coder = _ModularTopLevelCoder(coder: JSONCoder(outputFormatting: [.prettyPrinted, .sortedKeys]))
+    func test() throws {
+        let coder = _ModularTopLevelCoder(
+            coder: JSONCoder(outputFormatting: [.prettyPrinted, .sortedKeys])
+        )
         
         let data = Baz(
             child1: Foo(x: 42),
@@ -29,13 +31,13 @@ final class TypeDiscriminatedCodingTests: XCTestCase {
 }
 
 private enum TestTypeDiscriminator: String, CaseIterable, Codable, Swallow.TypeDiscriminator {
-    public typealias _DiscriminatedSwiftType = _ExistentialSwiftType<any TestType, any TestType.Type>
+    public typealias _DiscriminatedSwiftType = _ExistentialSwiftType<any TypeDiscriminatedCodingTestType, any TypeDiscriminatedCodingTestType.Type>
     
     case foo
     case bar
     case baz
     
-    func resolveType() throws -> any TestType.Type {
+    func resolveType() throws -> any TypeDiscriminatedCodingTestType.Type {
         switch self {
             case .foo:
                 return Foo.self
@@ -47,13 +49,13 @@ private enum TestTypeDiscriminator: String, CaseIterable, Codable, Swallow.TypeD
     }
 }
 
-fileprivate protocol TestType: Codable, Hashable, TypeDiscriminable<TestTypeDiscriminator> {
+fileprivate protocol TypeDiscriminatedCodingTestType: Codable, Hashable, TypeDiscriminable<TestTypeDiscriminator> {
     associatedtype X: Number
     
     var x: X { get }
 }
 
-private struct Foo: TestType {
+private struct Foo: TypeDiscriminatedCodingTestType {
     var x: Int
     var y: Int?
     
@@ -62,7 +64,7 @@ private struct Foo: TestType {
     }
 }
 
-private struct Bar: TestType {
+private struct Bar: TypeDiscriminatedCodingTestType {
     var x: Float
     var y: Float?
     
@@ -71,16 +73,16 @@ private struct Bar: TestType {
     }
 }
 
-private struct Baz: TestType {
+private struct Baz: TypeDiscriminatedCodingTestType {
     var x: Int {
         0
     }
     
     @TypeDiscriminated<TestTypeDiscriminator>
-    var child1: any TestType
+    var child1: any TypeDiscriminatedCodingTestType
     
     @TypeDiscriminated<TestTypeDiscriminator>
-    var child2: any TestType
+    var child2: any TypeDiscriminatedCodingTestType
     
     var typeDiscriminator: TestTypeDiscriminator {
         .baz

@@ -4,7 +4,11 @@
 
 import Swift
 
-/// Defines a type identifier that uniquely identifies a type. This is useful for maintaining the identity of a type, even when its type name is changed.
+/// Defines a type representation that offers unique and persistent identities for a type.
+///
+/// It's similar to `AppIntents.PersistentlyIdentifiable`, but much more powerful.
+///
+/// This is useful for maintaining the identity of a type, even when its type name is changed.
 public protocol PersistentlyRepresentableType {
     associatedtype PersistentTypeRepresentation: IdentityRepresentation
     

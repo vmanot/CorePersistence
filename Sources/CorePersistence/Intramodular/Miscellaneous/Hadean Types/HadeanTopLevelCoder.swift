@@ -6,20 +6,25 @@ import Combine
 import FoundationX
 import Swallow
 
-public struct HadeanTopLevelCoder<EncodedRepresentation> {    
+public struct HadeanTopLevelCoder<EncodedRepresentation> {
     private let base: _ModularTopLevelCoder<EncodedRepresentation>
+    
+    private let plugins: [any _ModularCodingPlugin] = [
+        _HadeanTypeCodingPlugin(),
+        _DotNetTypeIdentifierCodingPlugin(
+            idResolver: _UniversalTypeRegistry.typeToIdentifierResolver,
+            typeResolver: _UniversalTypeRegistry.identifierToTypeResolver
+        )
+    ]
     
     private init(base: _ModularTopLevelCoder<EncodedRepresentation>) {
         _ = _UniversalTypeRegistry.shared
         
+        assert(base.plugins.isEmpty)
+        
         var base = base
         
-        base.plugins = [
-            _DotNetTypeIdentifierCodingPlugin(
-                idResolver: _UniversalTypeRegistry.typeToIdentifierResolver,
-                typeResolver: _UniversalTypeRegistry.identifierToTypeResolver
-            )
-        ]
+        base.plugins = plugins
         
         self.base = base
     }
@@ -59,4 +64,29 @@ extension HadeanTopLevelCoder {
 
 extension HadeanTopLevelCoder: TopLevelDataCoder where EncodedRepresentation == Data {
     
+}
+
+
+// MARK: - Auxiliary
+
+public final class _HadeanTypeCodingPlugin: _MetatypeCodingPlugin {
+    public typealias CodableRepresentation = HadeanIdentifier
+    
+    public init() {
+        _ = _UniversalTypeRegistry.shared
+    }
+    
+    public func codableRepresentation(
+        for type: Any.Type,
+        context: Context
+    ) throws -> CodableRepresentation {
+        try _UniversalTypeRegistry[type].unwrap()
+    }
+    
+    public func type(
+        from codableRepresentation: CodableRepresentation,
+        context: Context
+    ) throws -> Any.Type {
+        try _UniversalTypeRegistry[codableRepresentation].unwrap()
+    }
 }

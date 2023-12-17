@@ -12,6 +12,6 @@ public struct _ModularCodingPluginContext {
     }
 }
 
-public protocol _ModularCodingPlugin: Identifiable {
+public protocol _ModularCodingPlugin: Identifiable, Sendable {
     typealias Context = _ModularCodingPluginContext
 }

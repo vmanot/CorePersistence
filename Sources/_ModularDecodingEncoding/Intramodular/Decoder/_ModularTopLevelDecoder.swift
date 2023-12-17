@@ -6,6 +6,7 @@ import Combine
 import Diagnostics
 import FoundationX
 import Swallow
+import Runtime
 
 public struct _ModularTopLevelDecoder<Input>: TopLevelDecoder, @unchecked Sendable {
     private let base: AnyTopLevelDecoder<Input>
@@ -78,127 +79,160 @@ extension _ModularDecoder.TopLevelProxyDecodable {
             context: .init(type: T.self)
         )
         
-        if !(type is Decodable.Type), let type = type as? any _UnsafeSerializationRepresentable.Type {
-            let _value: Any
-            
-            do {
-                _value = try type._opaque_decodeThroughUnsafeSerializationRepresentation(
-                    from: decoder
-                )
-            } catch let decodingError as Swift.DecodingError {
-                throw _ModularDecodingError(
-                    from: decodingError,
-                    type: type._opaque_UnsafeSerializationRepresentation,
-                    value: try? AnyCodable(from: _decoder)
-                )
+        try self.init(from: decoder)
+    }
+    
+    private init(from decoder: _ModularDecoder) throws {
+        func sanityCheckFunction() throws {
+            guard let type = decoder.context.type, type == T.self else {
+                assertionFailure()
+                
+                throw Never.Reason.illegal
             }
+        }
+        
+        try sanityCheckFunction()
+        
+        if let type = (decoder.context.type as? any _UnsafelySerializedType.Type), TypeMetadata(type._opaque_WrappedValue).kind == .existentialMetatype {
+            let plugin = try decoder.configuration.plugins
+                .first(byUnwrapping: { $0 as? (any _MetatypeCodingPlugin) })
+                .unwrap()
             
-            self.value = try cast(_value, to: T.self)
-        } else if let type = type as? any (_UnsafelySerializedPropertyWrapperProtocol & _UnsafeSerializationRepresentable).Type {
-            let _value: Any
+            let wrappedValue = try plugin._decode(Any.Type.self, from: decoder, context: .init())
             
-            do {
-                do {
-                    _value = try type._opaque_decodeThroughUnsafeSerializationRepresentation(
+            value = try cast(type.init(_opaque_wrappedValue: wrappedValue))
+        } else if let type = decoder.context.type as? any _UnsafeSerializationRepresentable.Type, !(type is Decodable.Type) {
+            value = try Self._decodeNonDecodableUnsafeSerializationRepresentable(
+                type,
+                from: decoder
+            )
+        } else if let type = decoder.context.type as? any (_UnsafelySerializedType & _UnsafeSerializationRepresentable).Type {
+            value = try Self._decodeUnsafelySerializationPropertyWrappedUnsafeSerializationRepresentable(
+                type,
+                from: decoder
+            )
+        } else if let type = decoder.context.type as? (any Decodable.Type) {
+            let discriminatedType: (any Decodable.Type)? = try Self.decodeDiscriminatedDecodableTypeIfAny(from: decoder)
+            
+            try Self._validatePluginSupportForConcreteType(type, decoder: decoder)
+            
+            if let discriminatedType {
+                if let concreteType = type as? (any _UnsafelySerializedType.Type) {
+                    value = try Self.decodeDiscriminatedType(
+                        discriminatedType,
+                        wrappingIn: concreteType,
                         from: decoder
                     )
-                } catch {
-                    if (try? decoder.singleValueContainer()._decodeUnsafelySerializedNil()) == true {
-                        runtimeIssue("Attempting recovery from corruped `nil` value for \(type._opaque_WrappedValue).")
-                        
-                        _value = try _opaque_generatePlaceholder(ofType: type)
-                    } else {
-                        throw error
-                    }
-                }
-            } catch let decodingError as Swift.DecodingError {
-                throw _ModularDecodingError(
-                    from: decodingError,
-                    type: type._opaque_UnsafeSerializationRepresentation,
-                    value: try? AnyCodable(from: _decoder)
-                )
-            }
-            
-            self.value = try cast(_value, to: T.self)
-        } else {
-            let concreteType = try cast(type, to: (any Decodable.Type).self)
-            
-            if concreteType is (any _UnsafelySerializedPropertyWrapperProtocol.Type) {
-                guard decoder.configuration.plugins.contains(where: {
-                    $0 is _UnsafeSerializationPlugin
-                }) || decoder.configuration.plugins.contains(where: {
-                    $0 is (any _TypeDiscriminatorCodingPlugin)
-                }) else {
-                    throw _ModularDecodingError.unsafeSerializationUnsupported(concreteType)
-                }
-            }
-            
-            do {
-                if
-                    let concreteType = concreteType as? (any _UnsafelySerializedPropertyWrapperProtocol.Type),
-                    let discriminatedType = try Self.decodeDiscriminatedTypeIfAny(from: decoder)
-                {
-                    let unwrappedValue: Decodable
-                    
-                    do {
-                        unwrappedValue = try discriminatedType.init(from: decoder)
-                    } catch let decodingError as Swift.DecodingError {
-                        throw _ModularDecodingError(
-                            from: decodingError,
-                            type: discriminatedType,
-                            value: try? AnyCodable(from: _decoder)
-                        )
-                    }
-                    
-                    self.value = try cast(concreteType.init(_opaque_wrappedValue: unwrappedValue), to: type)
-                } else if
-                    concreteType is _TypeSerializingAnyCodable.Type,
-                    let discriminatedType = try Self.decodeDiscriminatedTypeIfAny(from: decoder)
-                {
-                    let value: Decodable
-                    
-                    do {
-                        value = try discriminatedType.init(from: decoder)
-                    } catch let decodingError as Swift.DecodingError {
-                        throw _ModularDecodingError(
-                            from: decodingError,
-                            type: discriminatedType,
-                            value: try? AnyCodable(from: _decoder)
-                        )
-                    }
-                    
-                    if let _ = value as? _TypeSerializingAnyCodable {
-                        throw _AssertionFailure() // _TypeSerializingAnyCodable cannot be a discriminated type
-                    } else {
-                        do {
-                            self.value = try cast(_TypeSerializingAnyCodable(value))
-                        } catch {
-                            throw error
-                        }
-                    }
+                } else if type is _TypeSerializingAnyCodable.Type {
+                    value = try Self.decodeDiscriminatedTypeAsTypeSerializedAnyCodable(
+                        discriminatedType,
+                        from: decoder
+                    )
                 } else {
-                    if let type = concreteType as? any _UnsafelySerializedPropertyWrapperProtocol.Type {
-                        self.value = try Self._decodeUnsafelySerialized(type, from: decoder)
-                    } else {
-                        do {
-                            let _value = try concreteType.init(from: decoder)
-                            
-                            self.value = try cast(_value, to: T.self)
-                        } catch let decodingError as Swift.DecodingError {
-                            throw _ModularDecodingError(
-                                from: decodingError,
-                                type: concreteType,
-                                value: try? AnyCodable(from: _decoder)
-                            )
-                        }
-                    }
+                    value = try Self._naivelyDecode(discriminatedType, from: decoder)
                 }
+            } else if let type = type as? any _UnsafelySerializedType.Type {
+                value = try Self._decodeUnsafelySerialized(type, from: decoder)
+            } else {
+                value = try Self._naivelyDecode(type, from: decoder)
+            }
+        } else {
+            assertionFailure("Decoding failed: \(decoder.context)")
+            
+            throw Never.Reason.unexpected
+        }
+    }
+    
+    private static func _naivelyDecode(
+        _ type: Decodable.Type,
+        from decoder: _ModularDecoder
+    ) throws -> T {
+        do {
+            let value = try type.init(from: decoder)
+            
+            return try cast(value, to: T.self)
+        } catch let decodingError as Swift.DecodingError {
+            throw _ModularDecodingError(
+                from: decodingError,
+                type: type,
+                value: try? AnyCodable(from: decoder.base)
+            )
+        }
+    }
+    
+    private static func _validatePluginSupportForConcreteType(
+        _ concreteType: Any.Type,
+        decoder: _ModularDecoder
+    ) throws {
+        if concreteType is (any _UnsafelySerializedType.Type) {
+            let hasUnsafeSerializationPlugin = decoder.configuration.plugins.contains(where: {
+                $0 is _UnsafeSerializationPlugin
+            })
+            
+            let hasTypeDiscriminatorCodingPlugin = decoder.configuration.plugins.contains(where: {
+                $0 is (any _TypeDiscriminatorCodingPlugin)
+            })
+            
+            guard hasUnsafeSerializationPlugin || hasTypeDiscriminatorCodingPlugin else {
+                throw _ModularDecodingError.unsafeSerializationUnsupported(concreteType)
             }
         }
     }
     
+    private static func _decodeNonDecodableUnsafeSerializationRepresentable(
+        _ type: any _UnsafeSerializationRepresentable.Type,
+        from decoder: _ModularDecoder
+    ) throws -> T {
+        let _value: Any
+        
+        do {
+            _value = try type._opaque_decodeThroughUnsafeSerializationRepresentation(
+                from: decoder
+            )
+        } catch let decodingError as Swift.DecodingError {
+            throw _ModularDecodingError(
+                from: decodingError,
+                type: type._opaque_UnsafeSerializationRepresentation,
+                value: try? AnyCodable(from: decoder.base)
+            )
+        }
+        
+        return try cast(_value, to: T.self)
+    }
+    
+    private static func _decodeUnsafelySerializationPropertyWrappedUnsafeSerializationRepresentable(
+        _ type: any (_UnsafelySerializedType & _UnsafeSerializationRepresentable).Type,
+        from decoder: _ModularDecoder
+    ) throws -> T {
+        let _value: Any
+        
+        do {
+            do {
+                _value = try type._opaque_decodeThroughUnsafeSerializationRepresentation(
+                    from: decoder
+                )
+            } catch {
+                if (try? decoder.singleValueContainer()._decodeUnsafelySerializedNil()) == true {
+                    runtimeIssue("Attempting recovery from corruped `nil` value for \(type._opaque_WrappedValue).")
+                    
+                    _value = try _opaque_generatePlaceholder(ofType: type)
+                } else {
+                    throw error
+                }
+            }
+        } catch let decodingError as Swift.DecodingError {
+            throw _ModularDecodingError(
+                from: decodingError,
+                type: type._opaque_UnsafeSerializationRepresentation,
+                value: try? AnyCodable(from: decoder.base)
+            )
+        }
+        
+        return try cast(_value, to: T.self)
+    }
+    
     private static func _decodeUnsafelySerialized(
-        _ type: any _UnsafelySerializedPropertyWrapperProtocol.Type,
+        _ type: any _UnsafelySerializedType.Type,
         from decoder: _ModularDecoder
     ) throws -> T {
         if decoder.configuration.allowsUnsafeSerialization {
@@ -214,9 +248,7 @@ extension _ModularDecoder.TopLevelProxyDecodable {
         } else {
             if let value = try? decoder.base.singleValueContainer()._decodeUnsafelySerializedNil(T.self) {
                 return try cast(value, to: T.self)
-            } else if let value = try? type.init(from: decoder) {
-                runtimeIssue("Whoops!")
-                
+            } else if let value = try? type.init(from: decoder) {                
                 if let result = value as? T {
                     return result
                 } else if let result = value.wrappedValue as? T {
@@ -232,7 +264,50 @@ extension _ModularDecoder.TopLevelProxyDecodable {
         }
     }
     
-    private static func decodeDiscriminatedTypeIfAny(
+    private static func decodeDiscriminatedType(
+        _ discriminatedType: any Decodable.Type,
+        wrappingIn concreteType: any _UnsafelySerializedType.Type,
+        from decoder: _ModularDecoder
+    ) throws -> T {
+        let unwrappedValue: Decodable
+        
+        do {
+            unwrappedValue = try discriminatedType.init(from: decoder)
+        } catch let decodingError as Swift.DecodingError {
+            throw _ModularDecodingError(
+                from: decodingError,
+                type: discriminatedType,
+                value: try? AnyCodable(from: decoder.base)
+            )
+        }
+        
+        return try cast(concreteType.init(_opaque_wrappedValue: unwrappedValue), to: T.self)
+    }
+    
+    private static func decodeDiscriminatedTypeAsTypeSerializedAnyCodable(
+        _ type: Decodable.Type,
+        from decoder: _ModularDecoder
+    ) throws -> T {
+        let value: Decodable
+        
+        do {
+            value = try type.init(from: decoder)
+        } catch let decodingError as Swift.DecodingError {
+            throw _ModularDecodingError(
+                from: decodingError,
+                type: type,
+                value: try? AnyCodable(from: decoder.base)
+            )
+        }
+        
+        guard !(value is _TypeSerializingAnyCodable) else {
+            throw _AssertionFailure() // _TypeSerializingAnyCodable cannot be a discriminated type
+        }
+        
+        return try cast(_TypeSerializingAnyCodable(value))
+    }
+    
+    private static func decodeDiscriminatedDecodableTypeIfAny(
         from decoder: _ModularDecoder
     ) throws -> (any Decodable.Type)? {
         let pluginContext = _ModularCodingPluginContext() // FIXME!!!

@@ -7,7 +7,7 @@ import Foundation
 import Diagnostics
 import Swallow
 
-public struct _DotNetTypeIdentifierCodingPlugin<ID: Codable & PersistentIdentifier>: _TypeDiscriminatorCodingPlugin {
+public struct _DotNetTypeIdentifierCodingPlugin<ID: Codable & PersistentIdentifier>: _TypeDiscriminatorCodingPlugin, @unchecked Sendable {
     private enum CodingKeys: String, CodingKey {
         case type = "$type"
     }
@@ -16,16 +16,20 @@ public struct _DotNetTypeIdentifierCodingPlugin<ID: Codable & PersistentIdentifi
     
     public let id: AnyHashable = UUID()
     
-    private let _resolveTypeForDiscriminator: (ID) throws -> Any.Type?
-    private let _resolveDiscriminatorForType: (Any.Type) throws -> ID?
-    private let _decodeDiscriminator: (Decoder) throws -> ID?
-    private let _encodeDiscriminator: (ID, Encoder) throws -> Void
+    private let _resolveTypeForDiscriminator: @Sendable (ID) throws -> Any.Type?
+    private let _resolveDiscriminatorForType: @Sendable (Any.Type) throws -> ID?
+    private let _decodeDiscriminator: @Sendable (Decoder) throws -> ID?
+    private let _encodeDiscriminator: @Sendable (ID, Encoder) throws -> Void
     
-    public func resolveType(for discriminator: ID) throws -> Any.Type? {
+    public func resolveType(
+        for discriminator: ID
+    ) throws -> Any.Type? {
         try _resolveTypeForDiscriminator(discriminator)
     }
     
-    public func resolveDiscriminator(for type: Any.Type) throws -> ID? {
+    public func resolveDiscriminator(
+        for type: Any.Type
+    ) throws -> ID? {
         try _resolveDiscriminatorForType(type)
     }
     

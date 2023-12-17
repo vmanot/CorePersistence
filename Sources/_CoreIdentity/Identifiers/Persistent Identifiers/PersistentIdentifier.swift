@@ -7,7 +7,7 @@ import Proquint
 import Swallow
 
 /// A persistent identifier.
-public protocol PersistentIdentifier: Codable, IdentifierProtocol {
+public protocol PersistentIdentifier: Codable, Hashable, IdentifierProtocol, Sendable {
     associatedtype IdentifierSpace: _PersistentIdentifierSpace = _DefaultPersistentIdentifierSpace<Self> where IdentifierSpace.Identifier == Self
 }
 

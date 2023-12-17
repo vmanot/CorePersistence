@@ -50,7 +50,6 @@ let package = Package(
             name: "_ModularDecodingEncoding",
             dependencies: [
                 "_CoreIdentity",
-                "Expansions",
                 "Merge",
                 "Swallow"
             ],
@@ -61,7 +60,6 @@ let package = Package(
             name: "_CoreIdentity",
             dependencies: [
                 "CorePersistenceMacros",
-                "Expansions",
                 "Merge",
                 "Proquint",
                 "Swallow"

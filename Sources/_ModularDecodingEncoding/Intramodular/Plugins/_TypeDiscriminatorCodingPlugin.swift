@@ -4,6 +4,20 @@
 
 import Swallow
 
+public protocol _MetatypeCodingPlugin: _ModularCodingPlugin {
+    associatedtype CodableRepresentation: Codable
+    
+    func codableRepresentation(
+        for type: Any.Type,
+        context: Context
+    ) throws -> CodableRepresentation
+    
+    func type(
+        from codableRepresentation: CodableRepresentation,
+        context: Context
+    ) throws -> Any.Type
+}
+
 public protocol _TypeDiscriminatorCodingPlugin: _ModularCodingPlugin {
     associatedtype Discriminator: Hashable
     
@@ -33,5 +47,15 @@ extension _TypeDiscriminatorCodingPlugin {
             to: encoder,
             context: context
         )
+    }
+}
+
+extension _MetatypeCodingPlugin {
+    func _decode<T>(
+        _ type: T.Type,
+        from decoder: _ModularDecoder,
+        context: _ModularCodingPluginContext
+    ) throws -> T {
+        try cast(self.type(from: try CodableRepresentation(from: decoder), context: context), to: T.self)
     }
 }

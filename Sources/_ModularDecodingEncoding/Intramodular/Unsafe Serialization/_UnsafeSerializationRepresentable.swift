@@ -3,7 +3,7 @@
 //
 
 import Foundation
-import Swallow
+@_spi(Internal) import Swallow
 
 protocol _UnsafeSerializationRepresentable {
     associatedtype _UnsafeSerializationRepresentation: Codable & Hashable
@@ -38,6 +38,78 @@ extension _UnsafeSerializationRepresentable {
 }
 
 // MARK: - Implemented Conformances
+
+extension HeterogeneousDictionary: _UnsafeSerializationRepresentable {
+    typealias _UnsafeSerializationRepresentation = [_UnsafelySerializedKeyValuePair]
+    
+    public struct _UnsafelySerializedKeyValuePair: Hashable, Codable {
+        public enum CodingKeys: String, CodingKey {
+            case key
+            case value
+        }
+        
+        @_UnsafelySerialized
+        public var key: any HeterogeneousDictionaryKey.Type
+        @_UnsafelySerialized
+        public var value: Any
+        
+        public init(
+            key: any HeterogeneousDictionaryKey.Type,
+            value: Any
+        ) {
+            self.key = key
+            self.value = value
+        }
+        
+        public init<T>(
+            key: AnyHeterogeneousDictionaryKey,
+            value: T
+        ) throws {
+            self.key = try cast(key.base)
+            self.value = value
+        }
+        
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            
+            self._key = try container.decode(forKey: .key)
+            
+            func decodeValue<Value>(_: Value.Type) throws -> Any {
+                try container.decode(_UnsafelySerialized<Value>.self, forKey: .value).wrappedValue
+            }
+            
+            self.value = try _openExistential(_key.wrappedValue._opaque_Value.self, do: decodeValue)
+        }
+        
+        public func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            
+            try container.encode(_key, forKey: .key)
+            try container.encode(_value, forKey: .value)
+        }
+    }
+
+    var _unsafeSerializationRepresentation: [_UnsafelySerializedKeyValuePair] {
+        get throws {
+            try map {
+                try _UnsafelySerializedKeyValuePair(key: $0.key, value: $0.value)
+            }
+        }
+    }
+    
+    init(
+        _unsafeSerializationRepresentation representation: [_UnsafelySerializedKeyValuePair]
+    ) throws {
+        self.init(_unsafeStorage: representation._mapToDictionary(
+            key: {
+                AnyHeterogeneousDictionaryKey(base: $0.key)
+            },
+            value: {
+                $0.value
+            }
+        ))
+    }
+}
 
 extension Array: _UnsafeSerializationRepresentable {
     typealias _UnsafeSerializationRepresentation = [_TypeSerializingAnyCodable]

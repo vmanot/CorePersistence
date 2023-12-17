@@ -2,6 +2,8 @@
 // Copyright (c) Vatsal Manot
 //
 
+#if canImport(PDFKit)
+
 import PDFKit
 import Swallow
 import SwiftUI
@@ -34,3 +36,5 @@ extension PDFFileDocument: _FileDocument {
         FileWrapper(regularFileWithContents: try pdf.dataRepresentation().unwrap())
     }
 }
+
+#endif

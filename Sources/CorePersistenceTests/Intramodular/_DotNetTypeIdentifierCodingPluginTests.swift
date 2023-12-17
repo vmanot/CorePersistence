@@ -8,14 +8,8 @@ import Diagnostics
 import FoundationX
 import XCTest
 
-@HadeanIdentifier("foo")
-@RuntimeDiscoverable
-private struct _Boop_ {
-    
-}
-
 final class ModularCodingTests: XCTestCase {
-    func testShit() throws {
+    func test() throws {
         var coder = _ModularTopLevelCoder(coder: JSONCoder(outputFormatting: [.prettyPrinted, .sortedKeys]))
         
         coder.plugins = [
@@ -50,7 +44,7 @@ final class ModularCodingTests: XCTestCase {
     }
 }
 
-private struct TestTypes {
+struct TestTypes {
     enum TypeIdentifier: String, Codable, Hashable, PersistentIdentifier {
         case foo
         case bar
@@ -81,7 +75,7 @@ private struct TestTypes {
     }
 }
 
-fileprivate protocol TestType: Codable, Hashable {
+protocol TestType: Codable, Hashable {
     associatedtype X: Number
     
     var x: X { get }

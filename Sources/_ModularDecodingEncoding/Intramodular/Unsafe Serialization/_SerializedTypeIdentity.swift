@@ -4,6 +4,7 @@
 
 import _CoreIdentity
 import Foundation
+import Runtime
 import Swallow
 
 /// A custom (i.e. specific to this framework) serialization format for representing a type's identity.
@@ -24,6 +25,8 @@ public struct _SerializedTypeIdentity: Hashable {
     
     /// The mangled type name of a Swift type as returned by `_mangledTypeName`.
     public let _swift_mangledTypeName: String?
+    /// The mangled type name of a Swift type as returned by `_typeName`.
+    public let _swift_typeName: String?
     /// The Objective-C class name of this type as returned by `NSStringFromClass`, if applicable.
     public let _objectiveC_className: String?
     
@@ -35,13 +38,19 @@ public struct _SerializedTypeIdentity: Hashable {
     private init(
         version: _SerializedTypeIdentity.Version,
         _swift_mangledTypeName: String?,
+        _swift_typeName: String?,
         _objectiveC_className: String?,
         _CorePersistence_persistentTypeRepresentation: AnyCodable?
     ) {
         self.version = version
         self._swift_mangledTypeName = _swift_mangledTypeName
+        self._swift_typeName = _swift_typeName
         self._objectiveC_className = _objectiveC_className
         self._CorePersistence_persistentTypeRepresentation = _CorePersistence_persistentTypeRepresentation
+        
+        if (try? resolveType()) == nil {
+            runtimeIssue("Failed deseriaize type named: \(_swift_typeName ?? _swift_mangledTypeName ?? "<error>")")
+        }
     }
     
     @_spi(Internal)
@@ -51,6 +60,7 @@ public struct _SerializedTypeIdentity: Hashable {
         self._resolvedType = type
         
         self._swift_mangledTypeName = _mangledTypeName(type)
+        self._swift_typeName = _typeName(type)
         self._objectiveC_className = (type as? AnyObject.Type).map(NSStringFromClass)
         
         if let type = type as? (any PersistentlyRepresentableType.Type) {
@@ -95,6 +105,7 @@ extension _SerializedTypeIdentity: Codable {
     private enum CodingKeys: String, CodingKey {
         case version
         case _swift_mangledTypeName
+        case _swift_typeName
         case _objectiveC_className
         case _CorePersistence_persistentTypeRepresentation
     }
@@ -111,6 +122,7 @@ extension _SerializedTypeIdentity: Codable {
                 self.init(
                     version: version,
                     _swift_mangledTypeName: try container.decodeIfPresent(forKey: ._swift_mangledTypeName),
+                    _swift_typeName: try container.decodeIfPresent(forKey: ._swift_typeName),
                     _objectiveC_className: try container.decodeIfPresent(forKey: ._objectiveC_className),
                     _CorePersistence_persistentTypeRepresentation: try container.decodeIfPresent(forKey: ._CorePersistence_persistentTypeRepresentation)
                 )
@@ -122,6 +134,7 @@ extension _SerializedTypeIdentity: Codable {
         
         try container.encode(version, forKey: .version)
         try container.encodeIfPresent(_swift_mangledTypeName, forKey: ._swift_mangledTypeName)
+        try container.encodeIfPresent(_swift_typeName, forKey: ._swift_typeName)
         try container.encodeIfPresent(_objectiveC_className, forKey: ._objectiveC_className)
         try container.encodeIfPresent(_CorePersistence_persistentTypeRepresentation, forKey: ._CorePersistence_persistentTypeRepresentation)
     }
@@ -146,6 +159,7 @@ extension _SerializedTypeIdentity {
                 .init(
                     version: .v0_0_2,
                     _swift_mangledTypeName: _swift_mangledTypeName,
+                    _swift_typeName: nil,
                     _objectiveC_className: objCClassName,
                     _CorePersistence_persistentTypeRepresentation: typeRepresentation
                 )
