@@ -21,7 +21,7 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable>: Muta
     private var storage: [ID: _FileStorageCoordinators.RegularFile<MutableValueBox<Item>, Item>] = [:]
     
     public private(set) var _resolvedWrappedValue: WrappedValue?
-        
+    
     @MainActor
     public var _wrappedValue: WrappedValue {
         get {
@@ -80,7 +80,7 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable>: Muta
             }
         }
     }
-
+    
     @MainActor
     private func _initialize(
         withFolderURL folderURL: URL
@@ -167,7 +167,7 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable>: Muta
             guard renamedKeys[key] == nil else {
                 continue
             }
-                        
+            
             let fileURL = try storage[key].unwrap().fileSystemResource._toURL()
             
             assert(FileManager.default.regularFileExists(at: fileURL))

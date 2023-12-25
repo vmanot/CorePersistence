@@ -64,6 +64,10 @@ extension _UnsafelySerialized: Codable {
             wrappedValue: intermediate.value,
             _cachedHashValue: intermediate.hashValue
         )
+        
+        if wrappedValue is any _UnsafelySerializedType {
+            assertionFailure()
+        }
     }
     
     public func encode(to encoder: Encoder) throws {
@@ -75,13 +79,15 @@ extension _UnsafelySerialized: Codable {
 
 extension _UnsafelySerialized: CustomStringConvertible {
     public var description: String {
+        let type = "\(Swift.type(of: wrappedValue))"
+        
         if (Value.self is any OptionalProtocol.Type) {
-            return "[unsafely serialized] \(wrappedValue)"
+            return "[unsafely serialized \(type)] \(wrappedValue)"
         } else {
             if let value = Optional(_unwrapping: wrappedValue) {
-                return "[unsafely serialized] \(value)"
+                return "[unsafely serialized \(type)] \(value)"
             } else {
-                return "[unsafely serialized] \(wrappedValue)"
+                return "[unsafely serialized \(type)] \(wrappedValue)"
             }
         }
     }

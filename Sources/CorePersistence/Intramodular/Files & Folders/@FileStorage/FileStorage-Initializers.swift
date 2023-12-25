@@ -263,6 +263,7 @@ extension FileStorage {
     
     @MainActor
     public convenience init<Item, ID, Coder: TopLevelDataCoder>(
+        wrappedValue: UnwrappedType = [],
         directory: @escaping () throws -> URL,
         coder: Coder,
         options: FileStorageOptions = nil
@@ -278,11 +279,14 @@ extension FileStorage {
     
     @MainActor
     public convenience init<Item, ID, Coder: TopLevelDataCoder>(
+        wrappedValue: UnwrappedType = [],
         _ location: CanonicalFileDirectory,
         directory: String,
         coder: Coder,
         options: FileStorageOptions = nil
     ) where Item: Codable & Identifiable, Item.ID: CustomFilenameConvertible, ID == Item.ID, ValueType == _ObservableIdentifiedFolderContents<Item, ID>, UnwrappedType == ValueType.WrappedValue {
+        assert(wrappedValue.isEmpty)
+        
         self.init(
             directory: { try location.toURL().appendingPathComponent(directory, isDirectory: true) },
             filename: \.id.filenameProvider,
@@ -303,6 +307,24 @@ extension FileStorage {
             directory: {
                 try location.toURL().appendingPathComponent(directory, isDirectory: true)
             },
+            file: file,
+            id: id
+        )
+    }
+
+    @MainActor
+    public convenience init<Item, ID>(
+        wrappedValue: UnwrappedType,
+        _ location: CanonicalFileDirectory,
+        directory: String,
+        file: @escaping (_ObservableIdentifiedFolderContents<Item, ID>.Element) -> _RelativeFileConfiguration<Item>,
+        id: KeyPath<Item, ID>
+    ) where ValueType == _ObservableIdentifiedFolderContents<Item, ID>, UnwrappedType == ValueType.WrappedValue {
+        assert(wrappedValue.isEmpty)
+        
+        self.init(
+            location,
+            directory: directory,
             file: file,
             id: id
         )

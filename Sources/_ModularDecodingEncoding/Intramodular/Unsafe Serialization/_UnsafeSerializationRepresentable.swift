@@ -75,9 +75,9 @@ extension HeterogeneousDictionary: _UnsafeSerializationRepresentable {
             self._key = try container.decode(forKey: .key)
             
             func decodeValue<Value>(_: Value.Type) throws -> Any {
-                try container.decode(_UnsafelySerialized<Value>.self, forKey: .value).wrappedValue
+                try _unwrapPossiblyOptionalAny(container.decode(_UnsafelySerialized<Value>.self, forKey: .value).wrappedValue)
             }
-            
+                        
             self.value = try _openExistential(_key.wrappedValue._opaque_Value.self, do: decodeValue)
         }
         
