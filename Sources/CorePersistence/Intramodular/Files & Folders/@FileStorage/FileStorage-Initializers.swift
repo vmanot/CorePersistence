@@ -68,6 +68,7 @@ extension FileStorage {
 
 extension FileStorage {
     @MainActor
+    @_disfavoredOverload
     public convenience init<Coder: TopLevelDataCoder>(
         wrappedValue: UnwrappedType,
         location: () throws -> URL,
@@ -85,6 +86,7 @@ extension FileStorage {
     }
     
     @MainActor
+    @_disfavoredOverload
     public convenience init<Coder: TopLevelDataCoder>(
         wrappedValue: UnwrappedType,
         location: @autoclosure @escaping () throws -> URL,
@@ -109,6 +111,7 @@ extension FileStorage {
     }
     
     @MainActor
+    @_disfavoredOverload
     public convenience init<Coder: TopLevelDataCoder>(
         wrappedValue: UnwrappedType,
         _ location: CanonicalFileDirectory,
@@ -125,6 +128,7 @@ extension FileStorage {
     }
     
     @MainActor
+    @_disfavoredOverload
     public convenience init<Coder: TopLevelDataCoder>(
         location: @autoclosure @escaping () throws -> URL,
         coder: Coder,
@@ -139,6 +143,7 @@ extension FileStorage {
     }
     
     @MainActor
+    @_disfavoredOverload
     public convenience init<Coder: TopLevelDataCoder>(
         _ location: CanonicalFileDirectory,
         path: String,
@@ -154,6 +159,7 @@ extension FileStorage {
     }
 
     @MainActor
+    @_disfavoredOverload
     public convenience init<Coder: TopLevelDataCoder, Element>(
         location: @autoclosure @escaping () throws -> URL,
         coder: Coder,
@@ -168,6 +174,7 @@ extension FileStorage {
     }
     
     @MainActor
+    @_disfavoredOverload
     public convenience init<Coder: TopLevelDataCoder, Element>(
         _ location: CanonicalFileDirectory,
         path: String,
