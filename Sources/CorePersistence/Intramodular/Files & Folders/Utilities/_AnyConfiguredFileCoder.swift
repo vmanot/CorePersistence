@@ -40,6 +40,29 @@ public struct _AnyConfiguredFileCoder {
     }
 }
 
+extension _AnyConfiguredFileCoder {
+    public init<Coder: TopLevelDataCoder, T>(
+        _ coder: Coder,
+        forUnsafelySerialized type: T.Type
+    ) {
+        let coder = _AnyTopLevelDataCoder.custom(
+            .init(
+                for: type,
+                decode: { (data: Data) -> T in
+                    try coder.decode(_UnsafelySerialized<T>.self, from: data).wrappedValue
+                },
+                encode: { (value: T) in
+                    try coder.encode(_UnsafelySerialized(wrappedValue: value))
+                }
+            )
+        )
+        
+        self.init(rawValue: .topLevelData(coder))
+    }
+    
+}
+
+
 // MARK: - Auxiliary
 
 extension FileManager {
@@ -66,7 +89,7 @@ extension FileManager {
     ) throws {
         var url = url
         var endSecurityScopedAccess: (() -> Void)? = nil
-
+        
         if !isReadableAndWritable(at: url) {
             if let securityScopedURL = try? _SecurityScopedBookmarks.resolvedURL(for: url) {
                 if isReadableAndWritable(at: securityScopedURL) {
@@ -75,14 +98,14 @@ extension FileManager {
             } else if let securityScopedParent = nearestSecurityScopedAccessibleAncestor(for: url) {
                 guard securityScopedParent.startAccessingSecurityScopedResource() else {
                     assertionFailure("Failed to acquire permission to write to parent URL: \(securityScopedParent) (parent for \(url)")
-
+                    
                     return
                 }
                 
                 endSecurityScopedAccess = {
                     securityScopedParent.stopAccessingSecurityScopedResource()
                 }
-            } 
+            }
         }
         
         switch coder.rawValue {

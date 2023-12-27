@@ -19,7 +19,7 @@ extension FileStorage {
             coordinator: try _FileStorageCoordinators.RegularFile(
                 initialValue: wrappedValue,
                 file: FileURL(location()),
-                coder: .init(.topLevelDataCoder(coder, forType: UnwrappedType.self)),
+                coder: _AnyConfiguredFileCoder(.topLevelDataCoder(coder, forType: UnwrappedType.self)),
                 options: options
             )
         )
@@ -43,7 +43,7 @@ extension FileStorage {
             coordinator: try _FileStorageCoordinators.RegularFile(
                 initialValue: wrappedValue,
                 file: url,
-                coder: .init(.topLevelDataCoder(coder, forType: UnwrappedType.self)),
+                coder: _AnyConfiguredFileCoder(.topLevelDataCoder(coder, forType: UnwrappedType.self)),
                 options: options
             )
         )
@@ -64,7 +64,127 @@ extension FileStorage {
             options: options
         )
     }
+}
+
+extension FileStorage {
+    @MainActor
+    public convenience init<Coder: TopLevelDataCoder>(
+        wrappedValue: UnwrappedType,
+        location: () throws -> URL,
+        coder: Coder,
+        options: FileStorageOptions = nil
+    ) where ValueType == _UnsafelySerialized<UnwrappedType> {
+        self.init(
+            coordinator: try _FileStorageCoordinators.RegularFile(
+                initialValue: wrappedValue,
+                file: FileURL(location()),
+                coder: _AnyConfiguredFileCoder(coder, forUnsafelySerialized: UnwrappedType.self),
+                options: options
+            )
+        )
+    }
     
+    @MainActor
+    public convenience init<Coder: TopLevelDataCoder>(
+        wrappedValue: UnwrappedType,
+        location: @autoclosure @escaping () throws -> URL,
+        coder: Coder,
+        options: FileStorageOptions = nil
+    ) where ValueType == _UnsafelySerialized<UnwrappedType> {
+        let directoryURL = try! location().deletingLastPathComponent()
+        let url = try! FileURL(location())
+        
+        try! FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
+        
+        assert(FileManager.default.directoryExists(at: directoryURL))
+        
+        self.init(
+            coordinator: try _FileStorageCoordinators.RegularFile(
+                initialValue: wrappedValue,
+                file: url,
+                coder: _AnyConfiguredFileCoder(coder, forUnsafelySerialized: UnwrappedType.self),
+                options: options
+            )
+        )
+    }
+    
+    @MainActor
+    public convenience init<Coder: TopLevelDataCoder>(
+        wrappedValue: UnwrappedType,
+        _ location: CanonicalFileDirectory,
+        path: String,
+        coder: Coder,
+        options: FileStorageOptions = nil
+    ) where ValueType == _UnsafelySerialized<UnwrappedType> {
+        self.init(
+            wrappedValue: wrappedValue,
+            location: try location.toURL().appendingPathComponent(path, isDirectory: false),
+            coder: coder,
+            options: options
+        )
+    }
+    
+    @MainActor
+    public convenience init<Coder: TopLevelDataCoder>(
+        location: @autoclosure @escaping () throws -> URL,
+        coder: Coder,
+        options: FileStorageOptions = nil
+    ) where ValueType == _UnsafelySerialized<UnwrappedType>, UnwrappedType: Initiable {
+        self.init(
+            wrappedValue: UnwrappedType(),
+            location: location,
+            coder: coder,
+            options: options
+        )
+    }
+    
+    @MainActor
+    public convenience init<Coder: TopLevelDataCoder>(
+        _ location: CanonicalFileDirectory,
+        path: String,
+        coder: Coder,
+        options: FileStorageOptions = nil
+    ) where ValueType == _UnsafelySerialized<UnwrappedType>, UnwrappedType: Initiable {
+        self.init(
+            wrappedValue: UnwrappedType(),
+            location: try location.toURL().appendingPathComponent(path, isDirectory: false),
+            coder: coder,
+            options: options
+        )
+    }
+
+    @MainActor
+    public convenience init<Coder: TopLevelDataCoder, Element>(
+        location: @autoclosure @escaping () throws -> URL,
+        coder: Coder,
+        options: FileStorageOptions = nil
+    ) where ValueType == _UnsafelySerialized<UnwrappedType>, UnwrappedType == IdentifierIndexingArray<Element, AnyHashable> {
+        self.init(
+            wrappedValue: IdentifierIndexingArray(id: { ($0 as! (any Identifiable)).id.erasedAsAnyHashable }),
+            location: location,
+            coder: coder,
+            options: options
+        )
+    }
+    
+    @MainActor
+    public convenience init<Coder: TopLevelDataCoder, Element>(
+        _ location: CanonicalFileDirectory,
+        path: String,
+        coder: Coder,
+        options: FileStorageOptions = nil
+    ) where ValueType == _UnsafelySerialized<UnwrappedType>, UnwrappedType == IdentifierIndexingArray<Element, AnyHashable> {
+        self.init(
+            wrappedValue: IdentifierIndexingArray(id: { ($0 as! (any Identifiable)).id.erasedAsAnyHashable }),
+            location,
+            path: path,
+            coder: coder,
+            options: options
+        )
+    }
+}
+
+extension FileStorage {
     @MainActor
     public convenience init(
         wrappedValue: UnwrappedType,
@@ -98,7 +218,7 @@ extension FileStorage {
         options: FileStorageOptions
     ) where UnwrappedType: Codable & Initiable, ValueType == MutableValueBox<UnwrappedType> {
         self.init(
-            wrappedValue: .init(),
+            wrappedValue: UnwrappedType(),
             location: try location.toURL().appendingPathComponent(path, isDirectory: false),
             coder: coder,
             options: options
@@ -137,7 +257,7 @@ extension FileStorage {
     ) where Item: Codable, ValueType == _ObservableIdentifiedFolderContents<Item, ID>, UnwrappedType == ValueType.WrappedValue {
         self.init(
             coordinator: try _FileStorageCoordinators.Directory(
-                base: .init(
+                base: _ObservableIdentifiedFolderContents(
                     folder: try directory().toFileURL(),
                     fileConfiguration: { element in
                         switch element {
@@ -268,6 +388,8 @@ extension FileStorage {
         coder: Coder,
         options: FileStorageOptions = nil
     ) where Item: Codable & Identifiable, Item.ID: CustomFilenameConvertible, ID == Item.ID, ValueType == _ObservableIdentifiedFolderContents<Item, ID>, UnwrappedType == ValueType.WrappedValue {
+        assert(wrappedValue.isEmpty)
+        
         self.init(
             directory: directory,
             filename: \.id.filenameProvider,

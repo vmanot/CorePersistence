@@ -209,7 +209,33 @@ extension IdentifierIndexingArray: _UnsafeSerializationRepresentable {
     init(
         _unsafeSerializationRepresentation representation: _UnsafeSerializationRepresentation
     ) throws {
-        throw Never.Reason.unavailable
+        if let type = Self.self as? any _UnsafelySerializationRepresentableIdentifierIndexingArray.Type {
+            self = try cast(type.init(_unsafeSerializationRepresentation: representation))
+        } else {
+            throw Never.Reason.unavailable
+        }
+    }
+}
+
+protocol _UnsafelySerializationRepresentableIdentifierIndexingArray: IdentifierIndexingArrayType where ID == AnyHashable {
+    var _unsafeSerializationRepresentation: Array<_TypeSerializingAnyCodable> { get throws }
+    
+    init(_unsafeSerializationRepresentation _: Array<_TypeSerializingAnyCodable>) throws
+}
+
+extension IdentifierIndexingArray: _UnsafelySerializationRepresentableIdentifierIndexingArray where ID == AnyHashable {
+    var _unsafeSerializationRepresentation: Array<_TypeSerializingAnyCodable> {
+        get throws {
+            try Array(self)._unsafeSerializationRepresentation
+        }
+    }
+    
+    init(
+        _unsafeSerializationRepresentation representation: Array<_TypeSerializingAnyCodable>
+    ) throws {
+        let array = try Array<Element>(_unsafeSerializationRepresentation: representation)
+        
+        self.init(array, id: { ($0 as! any Identifiable).id.erasedAsAnyHashable })
     }
 }
 
