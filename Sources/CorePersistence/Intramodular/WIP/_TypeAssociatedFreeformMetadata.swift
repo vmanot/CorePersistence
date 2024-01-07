@@ -5,7 +5,7 @@
 import Combine
 import Swallow
 
-public protocol _TypeAssociatedFreeformMetadataValue<Parent> {
+public protocol _TypeAssociatedFreeformMetadataValue<Parent>: HadeanIdentifiable {
     associatedtype Parent
 }
 
