@@ -6,7 +6,7 @@
 
 import Foundation
 import Swallow
-import SwiftUIX
+import SwiftUI
 import System
 
 public struct FileItemRowView: View {
@@ -19,7 +19,7 @@ public struct FileItemRowView: View {
     }
     
     public var body: some View {
-        PassthroughView {
+        Group {
             if try! FilePath(fileURL: location.url).resolveFileType() == .directory {
                 DirectoryView(location: location)
             } else {
@@ -46,9 +46,9 @@ public struct FileItemRowView: View {
                 .disabled(!fileManager.isWritableFile(atPath: location.path.stringValue))
             }
             
-            PresentationLink(destination: AppActivityView(activityItems: [location.url])) {
+            /*PresentationLink(destination: AppActivityView(activityItems: [location.url])) {
                 Label("Share", systemImage: .squareAndArrowUp)
-            }
+            }*/
         }
     }
     

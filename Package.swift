@@ -26,7 +26,7 @@ let package = Package(
         )
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-syntax", from: "509.0.0"),
+        .package(url: "https://github.com/apple/swift-syntax.git", from: "509.1.0"),
         .package(url: "https://github.com/SwiftUIX/SwiftUIX.git", branch: "master"),
         .package(url: "https://github.com/vmanot/Expansions.git", branch: "main"),
         .package(url: "https://github.com/vmanot/Merge.git", branch: "master"),
@@ -54,7 +54,14 @@ let package = Package(
                 "Swallow"
             ],
             path: "Sources/_ModularDecodingEncoding",
-            swiftSettings: []
+            swiftSettings: [
+                .unsafeFlags([
+                    "-Xfrontend",
+                    "-disable-typo-correction",
+                    "-Xfrontend",
+                    "-disable-verify-exclusivity",
+                ])
+            ]
         ),
         .target(
             name: "_CoreIdentity",
@@ -65,7 +72,14 @@ let package = Package(
                 "Swallow"
             ],
             path: "Sources/_CoreIdentity",
-            swiftSettings: []
+            swiftSettings: [
+                .unsafeFlags([
+                    "-Xfrontend",
+                    "-disable-typo-correction",
+                    "-Xfrontend",
+                    "-disable-verify-exclusivity",
+                ])
+            ]
         ),
         .target(
             name: "_CSV",
@@ -73,7 +87,14 @@ let package = Package(
                 "Swallow"
             ],
             path: "Sources/_CSV",
-            swiftSettings: []
+            swiftSettings: [
+                .unsafeFlags([
+                    "-Xfrontend",
+                    "-disable-typo-correction",
+                    "-Xfrontend",
+                    "-disable-verify-exclusivity",
+                ])
+            ]
         ),
         .target(
             name: "_JSON",
@@ -82,7 +103,14 @@ let package = Package(
                 "SwiftUIX"
             ],
             path: "Sources/_JSON",
-            swiftSettings: []
+            swiftSettings: [
+                .unsafeFlags([
+                    "-Xfrontend",
+                    "-disable-typo-correction",
+                    "-Xfrontend",
+                    "-disable-verify-exclusivity",
+                ])
+            ]
         ),
         .target(
             name: "_XMLCoder",
@@ -91,7 +119,14 @@ let package = Package(
                 "Swallow"
             ],
             path: "Sources/_XMLCoder",
-            swiftSettings: []
+            swiftSettings: [
+                .unsafeFlags([
+                    "-Xfrontend",
+                    "-disable-typo-correction",
+                    "-Xfrontend",
+                    "-disable-verify-exclusivity",
+                ])
+            ]
         ),
         .target(
             name: "CorePersistence",
@@ -104,6 +139,14 @@ let package = Package(
                 "Merge",
                 "Proquint",
                 "Swallow"
+            ],
+            swiftSettings: [
+                .unsafeFlags([
+                    "-Xfrontend",
+                    "-disable-typo-correction",
+                    "-Xfrontend",
+                    "-disable-verify-exclusivity",
+                ])
             ]
         ),
         .target(

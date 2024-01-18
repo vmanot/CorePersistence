@@ -48,16 +48,16 @@ extension FilePath {
 
 extension FilePath {
     public static func temporaryDirectory() -> Self {
-        FilePath(URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true))!
+        FilePath(url: URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true))!
     }
     
     #if os(macOS)
     public static var homeDirectoryForCurrentUser: Self! {
-        FilePath(URL(fileURLWithPath: FileManager.default.homeDirectoryForCurrentUser.path))
+        FilePath(url: URL(fileURLWithPath: FileManager.default.homeDirectoryForCurrentUser.path))
     }
     
     public static var desktopDirectoryForCurrentUser: Self! {
-        FilePath(URL(fileURLWithPath: FileManager.default.homeDirectoryForCurrentUser.path).appendingPathComponent("Desktop", isDirectory: true))
+        FilePath(url: URL(fileURLWithPath: FileManager.default.homeDirectoryForCurrentUser.path).appendingPathComponent("Desktop", isDirectory: true))
     }
     #endif
 }

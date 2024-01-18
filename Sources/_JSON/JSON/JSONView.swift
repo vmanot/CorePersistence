@@ -65,7 +65,7 @@ extension JSON {
 
 #if os(iOS) || os(macOS)
 
-struct JSONView: View {
+public struct JSONView: View {
     @Binding var json: JSON
     
     public init(json: Binding<JSON>) {

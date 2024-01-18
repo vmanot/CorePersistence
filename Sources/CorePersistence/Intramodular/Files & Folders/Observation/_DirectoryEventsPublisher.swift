@@ -21,7 +21,7 @@ public final class _DirectoryEventsPublisher: Cancellable, ConnectablePublisher 
     
     init(url: URL) throws {
         self.url = url
-        self.filePath = try FilePath(url).unwrap()
+        self.filePath = try FilePath(url: url).unwrap()
         
         refreshSnapshot()
     }

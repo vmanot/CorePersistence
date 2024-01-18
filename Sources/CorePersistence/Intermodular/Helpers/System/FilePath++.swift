@@ -54,7 +54,7 @@ extension FilePath {
 extension FilePath {
     public static func + (lhs: Self, rhs: String) -> Self {
         FilePath(
-            URL(_filePath: lhs)!.appendingPathComponent(
+            url: URL(_filePath: lhs)!.appendingPathComponent(
                 String(
                     rhs.dropPrefixIfPresent("/")
                 )
