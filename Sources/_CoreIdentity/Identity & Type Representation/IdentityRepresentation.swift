@@ -68,7 +68,13 @@ extension UTType: IdentityRepresentation {
 }
 
 extension Never: IdentityRepresentation {
+    
+}
+
+#if !os(visionOS)
+extension Never {
     public var body: Never {
         return fatalError()
     }
 }
+#endif
