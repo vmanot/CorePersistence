@@ -2,6 +2,7 @@
 // Copyright (c) Vatsal Manot
 //
 
+import _ModularDecodingEncoding
 import Combine
 import Swallow
 
