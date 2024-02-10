@@ -75,6 +75,16 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable>: Muta
     @MainActor
     private func _initializeWrappedValue() {
         _expectNoThrow {
+            let folderURL = try self.folderURL
+            
+            do {
+                if !FileManager.default.fileExists(at: folderURL) {
+                    try FileManager.default.createDirectory(at: folderURL, withIntermediateDirectories: true)
+                }
+            } catch {
+                runtimeIssue(error)
+            }
+            
             try FileManager.default.withUserGrantedAccess(to: folderURL) { url in
                 try _initialize(withFolderURL: url)
             }
