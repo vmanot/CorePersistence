@@ -18,8 +18,19 @@ public class _AnyFileStorageCoordinator<ValueType, UnwrappedValue>: ObservableOb
         case discarded
     }
     
-    weak var _enclosingInstance: AnyObject?
+    weak var _enclosingInstance: AnyObject? {
+        didSet {
+            guard !(_enclosingInstance === oldValue) else {
+                return
+            }
+            
+            if let _enclosingInstance = _enclosingInstance as? (any PersistenceRepresentable) {
+                _persistenceContext.persistenceRepresentationResolutionContext.sourceList.insert(Weak(wrappedValue: _enclosingInstance))
+            }
+        }
+    }
     
+    let _persistenceContext = _PersistenceContext(for: ValueType.self)
     let cancellables = Cancellables()
     let lock = OSUnfairLock()
     

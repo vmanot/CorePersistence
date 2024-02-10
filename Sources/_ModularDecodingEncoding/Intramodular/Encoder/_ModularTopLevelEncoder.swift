@@ -19,7 +19,9 @@ public struct _ModularTopLevelEncoder<Output>: TopLevelEncoder, @unchecked Senda
         }
     }
     
-    public init<Encoder: TopLevelEncoder>(from encoder: Encoder) where Encoder.Output == Output {
+    public init<Encoder: TopLevelEncoder>(
+        from encoder: Encoder
+    ) where Encoder.Output == Output {
         self.base = AnyTopLevelEncoder(erasing: encoder)
         self.configuration = .init()
     }

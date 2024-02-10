@@ -11,6 +11,8 @@ public protocol _ResolvedPersistentRepresentation_Element: Identifiable where ID
 
 @_spi(Internal)
 public struct _ResolvedPersistentRepresentation {
+    private var storage = IdentifierIndexingArray<any _ResolvedPersistentRepresentation_Element, Metatype<Any.Type>>(id: \.id)
+    
     public struct Element<Item>: _ResolvedPersistentRepresentation_Element {
         public var deduplicateCopy: PersistenceRepresentations.DeduplicateCopy<Item>?
         
@@ -22,9 +24,7 @@ public struct _ResolvedPersistentRepresentation {
             Metatype(Item.self)
         }
     }
-    
-    private var storage = IdentifierIndexingArray<any _ResolvedPersistentRepresentation_Element, Metatype<Any.Type>>(id: \.id)
-    
+
     public subscript<Item>(_ type: Item.Type) -> Element<Item> {
         get {
             try! cast(storage[id: Metatype(type), default: Element<Item>()])

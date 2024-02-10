@@ -17,7 +17,9 @@ public struct HadeanTopLevelCoder<EncodedRepresentation> {
         )
     ]
     
-    private init(base: _ModularTopLevelCoder<EncodedRepresentation>) {
+    private init(
+        base: _ModularTopLevelCoder<EncodedRepresentation>
+    ) {
         _ = _UniversalTypeRegistry.shared
         
         assert(base.plugins.isEmpty)

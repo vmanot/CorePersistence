@@ -9,6 +9,10 @@ import Swallow
 public struct PersistenceRepresentationBuilder {
     public typealias Component = PersistenceRepresentation
     
+    public static func buildBlock() -> Accumulated {
+        Accumulated(components: [])
+    }
+    
     public static func buildBlock<T: Component>(
         _ component: T
     ) -> T {
@@ -36,6 +40,10 @@ public struct PersistenceRepresentationBuilder {
 extension PersistenceRepresentationBuilder {
     public struct Accumulated: PersistenceRepresentation, _PersistenceRepresentationBuiltin {
         public let components: [any Component]
+        
+        public var isEmpty: Bool {
+            components.isEmpty
+        }
         
         public init(components: [any Component] = []) {
             self.components = components
@@ -67,10 +75,26 @@ extension PersistenceRepresentationBuilder {
 
 extension PersistenceRepresentation {
     @_spi(Internal)
-    public func resolve() throws -> _ResolvedPersistentRepresentation {
+    public func resolve(
+        context: _PersistentRepresentationResolutionContext
+    ) throws -> _ResolvedPersistentRepresentation {
         var representation = _ResolvedPersistentRepresentation()
         
-        try _recursivelyResolve(into: &representation, context: .init())
+        let accumulated = PersistenceRepresentationBuilder.Accumulated(
+            components: context.sourceList.compactMap({ source -> (any PersistenceRepresentation)? in
+                guard let source = source.wrappedValue else {
+                    return nil
+                }
+                
+                return type(of: source).persistenceRepresentation
+            })
+        )
+
+        if accumulated.isEmpty {
+            try accumulated._recursivelyResolve(into: &representation, context: context)
+        }
+        
+        try _recursivelyResolve(into: &representation, context: context)
         
         return representation
     }

@@ -55,7 +55,7 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable>: Muta
         } set {
             objectWillChange.send()
             
-            try! FileManager.default.withUserGrantedAccess(toDirectory: folderURL) { folderURL in
+            try! FileManager.default.withUserGrantedAccess(to: folderURL) { folderURL in
                 try! _setNewValue(newValue, withFolderURL: folderURL)
             }
         }
@@ -75,7 +75,7 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable>: Muta
     @MainActor
     private func _initializeWrappedValue() {
         _expectNoThrow {
-            try FileManager.default.withUserGrantedAccess(toDirectory: folderURL) { url in
+            try FileManager.default.withUserGrantedAccess(to: folderURL) { url in
                 try _initialize(withFolderURL: url)
             }
         }

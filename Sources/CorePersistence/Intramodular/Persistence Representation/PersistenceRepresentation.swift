@@ -42,6 +42,8 @@ extension _PersistenceRepresentationBuiltin {
 }
 
 public struct _PersistentRepresentationResolutionContext {
+    public var sourceList: [Weak<any PersistenceRepresentable>] = []
+    
     public init() {
         
     }

@@ -20,6 +20,7 @@ let package = Package(
                 "_JSON",
                 "_ModularDecodingEncoding",
                 "CorePersistence",
+                "CorePersistenceMacros",
                 "Proquint",
                 "UUIDv6"
             ]
@@ -54,14 +55,7 @@ let package = Package(
                 "Swallow"
             ],
             path: "Sources/_ModularDecodingEncoding",
-            swiftSettings: [
-                .unsafeFlags([
-                    "-Xfrontend",
-                    "-disable-typo-correction",
-                    "-Xfrontend",
-                    "-disable-verify-exclusivity",
-                ])
-            ]
+            swiftSettings: []
         ),
         .target(
             name: "_CoreIdentity",
@@ -72,14 +66,7 @@ let package = Package(
                 "Swallow"
             ],
             path: "Sources/_CoreIdentity",
-            swiftSettings: [
-                .unsafeFlags([
-                    "-Xfrontend",
-                    "-disable-typo-correction",
-                    "-Xfrontend",
-                    "-disable-verify-exclusivity",
-                ])
-            ]
+            swiftSettings: []
         ),
         .target(
             name: "_CSV",
@@ -87,14 +74,7 @@ let package = Package(
                 "Swallow"
             ],
             path: "Sources/_CSV",
-            swiftSettings: [
-                .unsafeFlags([
-                    "-Xfrontend",
-                    "-disable-typo-correction",
-                    "-Xfrontend",
-                    "-disable-verify-exclusivity",
-                ])
-            ]
+            swiftSettings: []
         ),
         .target(
             name: "_JSON",
@@ -103,14 +83,7 @@ let package = Package(
                 "SwiftUIX"
             ],
             path: "Sources/_JSON",
-            swiftSettings: [
-                .unsafeFlags([
-                    "-Xfrontend",
-                    "-disable-typo-correction",
-                    "-Xfrontend",
-                    "-disable-verify-exclusivity",
-                ])
-            ]
+            swiftSettings: []
         ),
         .target(
             name: "_XMLCoder",
@@ -119,14 +92,7 @@ let package = Package(
                 "Swallow"
             ],
             path: "Sources/_XMLCoder",
-            swiftSettings: [
-                .unsafeFlags([
-                    "-Xfrontend",
-                    "-disable-typo-correction",
-                    "-Xfrontend",
-                    "-disable-verify-exclusivity",
-                ])
-            ]
+            swiftSettings: []
         ),
         .target(
             name: "CorePersistence",
@@ -140,14 +106,7 @@ let package = Package(
                 "Proquint",
                 "Swallow"
             ],
-            swiftSettings: [
-                .unsafeFlags([
-                    "-Xfrontend",
-                    "-disable-typo-correction",
-                    "-Xfrontend",
-                    "-disable-verify-exclusivity",
-                ])
-            ]
+            swiftSettings: []
         ),
         .target(
             name: "Proquint",
