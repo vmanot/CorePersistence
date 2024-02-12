@@ -29,7 +29,6 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/apple/swift-syntax.git", from: "509.1.0"),
         .package(url: "https://github.com/SwiftUIX/SwiftUIX.git", branch: "master"),
-        .package(url: "https://github.com/vmanot/Expansions.git", branch: "main"),
         .package(url: "https://github.com/vmanot/Merge.git", branch: "master"),
         .package(url: "https://github.com/vmanot/Swallow.git", branch: "master")
     ],
@@ -37,7 +36,7 @@ let package = Package(
         .macro(
             name: "CorePersistenceMacros",
             dependencies: [
-                "Expansions",
+                "Swallow",
                 .product(name: "SwiftSyntax", package: "swift-syntax"),
                 .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
                 .product(name: "SwiftOperators", package: "swift-syntax"),
@@ -101,7 +100,6 @@ let package = Package(
                 "_JSON",
                 "_ModularDecodingEncoding",
                 "CorePersistenceMacros",
-                "Expansions",
                 "Merge",
                 "Proquint",
                 "Swallow"
