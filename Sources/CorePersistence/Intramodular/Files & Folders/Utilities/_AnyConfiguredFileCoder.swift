@@ -91,7 +91,7 @@ extension FileManager {
         var endSecurityScopedAccess: (() -> Void)? = nil
         
         if !isReadableAndWritable(at: url) {
-            if let securityScopedURL = try? _SecurityScopedBookmarks.resolvedURL(for: url) {
+            if let securityScopedURL = try? URL._BookmarksCache.resolvedURL(for: url) {
                 if isReadableAndWritable(at: securityScopedURL) {
                     url = securityScopedURL
                 }
