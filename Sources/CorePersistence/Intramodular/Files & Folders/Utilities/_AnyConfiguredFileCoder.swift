@@ -91,11 +91,11 @@ extension FileManager {
         var endSecurityScopedAccess: (() -> Void)? = nil
         
         if !isReadableAndWritable(at: url) {
-            if let securityScopedURL = try? URL._BookmarksCache.resolvedURL(for: url) {
+            if let securityScopedURL = try? URL._BookmarksCache.cachedURL(for: url) {
                 if isReadableAndWritable(at: securityScopedURL) {
                     url = securityScopedURL
                 }
-            } else if let securityScopedParent = nearestSecurityScopedAccessibleAncestor(for: url) {
+            } else if let securityScopedParent = nearestAccessibleSecurityScopedAncestor(for: url) {
                 guard securityScopedParent.startAccessingSecurityScopedResource() else {
                     assertionFailure("Failed to acquire permission to write to parent URL: \(securityScopedParent) (parent for \(url)")
                     

@@ -27,10 +27,10 @@ extension FileManager {
         if let bookmarkData: Data = location.bookmarkData {
             do {
                 var isBookmarkStale = false
-                let resolvedURL = try URL(resolvingBookmarkData: bookmarkData, bookmarkDataIsStale: &isBookmarkStale)
+                let cachedURL = try URL(resolvingBookmarkData: bookmarkData, bookmarkDataIsStale: &isBookmarkStale)
                 
                 if !isBookmarkStale {
-                    if isReadableAndWritable(at: resolvedURL) {
+                    if isReadableAndWritable(at: cachedURL) {
                         return location
                     } else {
                         throw SandboxFolderAccessError()
