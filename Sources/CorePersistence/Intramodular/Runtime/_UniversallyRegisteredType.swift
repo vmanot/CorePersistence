@@ -20,6 +20,7 @@ public struct _UniversallyRegisteredType<Existential>: Hashable, Sendable {
 }
 
 extension _UniversallyRegisteredType: CaseIterable {
+    @MainActor(unsafe)
     public static var allCases: [_UniversallyRegisteredType<Existential>] {
         let types = _UniversalTypeRegistry.shared.compactMap {
             $0._unwrapBase() as? Existential

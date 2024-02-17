@@ -19,6 +19,8 @@ let package = Package(
                 "_CSV",
                 "_JSON",
                 "_ModularDecodingEncoding",
+                "_SWXMLHash",
+                "_XMLCoder",
                 "CorePersistence",
                 "CorePersistenceMacros",
                 "Proquint",
@@ -83,6 +85,11 @@ let package = Package(
             ],
             path: "Sources/_JSON",
             swiftSettings: []
+        ),
+        .target(
+            name: "_SWXMLHash",
+            path: "Sources/_SWXMLHash",
+            exclude: ["Info.plist"]
         ),
         .target(
             name: "_XMLCoder",
