@@ -100,30 +100,34 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable>: Muta
         let urls = try FileManager.default.contentsOfDirectory(at: folderURL)
         
         for url in urls {
-            if FileManager.default.isDirectory(at: url) {
-                continue
-            }
-            
-            var fileConfiguration = try self.fileConfiguration(.url(url.toFileURL()))
-            let relativeFilePath = try fileConfiguration.consumePath()
-            let fileURL = try folder._toURL().appendingPathComponent(relativeFilePath).toFileURL()
-            
-            let fileCoordinator = try _FileStorageCoordinators.RegularFile<MutableValueBox<Item>, Item>(
-                fileSystemResource: fileURL,
-                configuration: fileConfiguration
-            )
-            
-            _expectNoThrow {
-                try _withLogicalParent(ofType: AnyObject.self) {
-                    fileCoordinator._enclosingInstance = $0
+            do {
+                if FileManager.default.isDirectory(at: url) {
+                    continue
                 }
+                
+                var fileConfiguration = try self.fileConfiguration(.url(url.toFileURL()))
+                let relativeFilePath = try fileConfiguration.consumePath()
+                let fileURL = try folder._toURL().appendingPathComponent(relativeFilePath).toFileURL()
+                
+                let fileCoordinator = try _FileStorageCoordinators.RegularFile<MutableValueBox<Item>, Item>(
+                    fileSystemResource: fileURL,
+                    configuration: fileConfiguration
+                )
+                
+                _expectNoThrow {
+                    try _withLogicalParent(ofType: AnyObject.self) {
+                        fileCoordinator._enclosingInstance = $0
+                    }
+                }
+                
+                let element = try fileCoordinator._wrappedValue
+                
+                self.storage[self.id(element)] = fileCoordinator
+                
+                self._wrappedValue.append(element)
+            } catch {
+                runtimeIssue("An error occurred while reading \(url)")
             }
-            
-            let element = try fileCoordinator._wrappedValue
-            
-            self.storage[self.id(element)] = fileCoordinator
-            
-            self._wrappedValue.append(element)
         }
     }
     

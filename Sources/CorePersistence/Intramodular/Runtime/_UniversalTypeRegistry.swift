@@ -2,13 +2,18 @@
 // Copyright (c) Vatsal Manot
 //
 
+import Runtime
 @_spi(Internal) import Swallow
 
+/// A universal registry that maps `HadeanIdentifier`s to Swift metatypes (`Any.Type`).
 public struct _UniversalTypeRegistry {
     static let lock = OSUnfairLock()
     
     @MainActor
     public static let shared = _UniversalTypeRegistry()
+    
+    /// Parsed all available Swift binaries to index `HadeanIdentifiable` types.
+    static var scrapedAllTypes: Bool = false
     
     @usableFromInline
     static var typesByIdentifier: [HadeanIdentifier: Any.Type] = [:]
@@ -25,6 +30,26 @@ public struct _UniversalTypeRegistry {
                 RuntimeDiscoverableTypes.enumerate(typesConformingTo: (any HadeanIdentifiable).self)
             }
         )
+    }
+    
+    private static func _indexAllTypesIfNeeded() {
+        guard !scrapedAllTypes else {
+            return
+        }
+        
+        defer {
+            scrapedAllTypes = true
+        }
+        
+        do {
+            let types: [any HadeanIdentifiable.Type] = try _SwiftRuntime.index
+                .fetch(.conformsTo((any HadeanIdentifiable).self))
+                .map({ try cast($0) })
+            
+            types.forEach(_register)
+        } catch {
+            assertionFailure(error)
+        }
     }
     
     public static func register(_ type: Any.Type) {
@@ -119,7 +144,19 @@ extension _UniversalTypeRegistry {
         func resolve(
             from input: Input
         ) throws -> Output? {
-            typesByIdentifier[input].map({ .existential($0) })
+            try _UniversalTypeRegistry.lock.withCriticalScope {
+                let result: Output? = typesByIdentifier[input].map({ .existential($0) })
+                
+                if result == nil {
+                    _UniversalTypeRegistry._indexAllTypesIfNeeded()
+                    
+                    if let result2: Output = typesByIdentifier[input].map({ .existential($0) }) {
+                        return result2
+                    }
+                }
+                
+                return try result.unwrap()
+            }
         }
     }
     
@@ -139,17 +176,25 @@ extension _UniversalTypeRegistry {
         func resolve(
             from input: Input
         ) throws -> Output? {
-            let type = input.value
-            
-            guard let identifier = identifiersByType[Metatype(type)] else {
-                if (type is any HadeanIdentifiable.Type) {
-                    throw _Error.failedToResolveIdentifier(for: input.value)
-                } else {
-                    return nil
+            try _UniversalTypeRegistry.lock.withCriticalScope {
+                let type = input.value
+                
+                guard let identifier = identifiersByType[Metatype(type)] else {
+                    _UniversalTypeRegistry._indexAllTypesIfNeeded()
+                    
+                    if let identifier = identifiersByType[Metatype(type)] {
+                        return identifier
+                    } else {
+                        if (type is any HadeanIdentifiable.Type) {
+                            throw _Error.failedToResolveIdentifier(for: input.value)
+                        } else {
+                            return nil
+                        }
+                    }
                 }
+                
+                return identifier
             }
-            
-            return identifier
         }
     }
 }

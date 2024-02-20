@@ -208,7 +208,7 @@ extension _ModularEncoder {
         ) throws -> Any? {
             let pluginContext = _ModularCodingPluginContext()
             
-            let concreteType = try cast(type, to: (any Encodable.Type).self)
+            let concreteType = try ((try? cast(type, to: (any Encodable.Type).self)) ?? (type as? Encodable.Type)).unwrap()
             
             guard let typeDiscriminatorPlugin = encoder.configuration.plugins.first(ofType: (any _TypeDiscriminatorCodingPlugin).self) else {
                 return nil
