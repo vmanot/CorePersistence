@@ -17,6 +17,7 @@ public struct JSONSchema: Codable, Hashable, Sendable {
     }
     
     public var type: JSONType
+    public var items: Items?
     public var properties: [String: Property]?
     public var requiredProperties: [String]?
     public var pattern: String?
@@ -38,6 +39,7 @@ public struct JSONSchema: Codable, Hashable, Sendable {
         
     public init(
         type: JSONType,
+        items: Items? = nil,
         properties: [String: Property]? = nil,
         requiredProperties: [String]? = nil,
         pattern: String? = nil,
@@ -48,6 +50,7 @@ public struct JSONSchema: Codable, Hashable, Sendable {
         maximum: Int? = nil
     ) {
         self.type = type
+        self.items = items
         self.properties = properties
         self.requiredProperties = requiredProperties
         self.pattern = pattern

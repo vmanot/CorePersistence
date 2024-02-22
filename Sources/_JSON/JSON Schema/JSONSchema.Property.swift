@@ -72,6 +72,8 @@ extension JSONSchema {
 extension JSONSchema.Property {
     public init(_ schema: JSONSchema) {
         self.type = schema.type
+        self.items = schema.items
+        assert(schema.properties.isNilOrEmpty)
         self.requiredProperties = schema.requiredProperties
         self.pattern = schema.pattern
         self.const = schema.const
