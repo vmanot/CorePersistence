@@ -90,6 +90,13 @@ extension FileManager {
         var url = url
         var endSecurityScopedAccess: (() -> Void)? = nil
         
+        if !FileManager.default.fileExists(at: url.deletingLastPathComponent()) {
+            try? FileManager.default.createDirectory(
+                at: url.deletingLastPathComponent(),
+                withIntermediateDirectories: true
+            )
+        }
+        
         if !isReadableAndWritable(at: url) {
             if let securityScopedURL = try? URL._BookmarksCache.cachedURL(for: url) {
                 if isReadableAndWritable(at: securityScopedURL) {
