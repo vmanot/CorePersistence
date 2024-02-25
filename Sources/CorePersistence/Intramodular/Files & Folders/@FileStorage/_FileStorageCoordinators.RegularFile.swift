@@ -11,7 +11,7 @@ extension _FileStorageCoordinators {
         private let cache: any SingleValueCache<UnwrappedValue>
         private var read: (() throws -> UnwrappedValue)!
         private var write: ((UnwrappedValue) throws -> Void)!
-                
+        
         private var writeWorkItem: DispatchWorkItem? = nil
         private var valueObjectWillChangeListener: AnyCancellable?
         
@@ -25,8 +25,14 @@ extension _FileStorageCoordinators {
             }
         }
         
+        private var _wasWrappedValueAccessedSynchronously: Bool = false
+        
         public var _wrappedValue: UnwrappedValue {
             get throws {
+                lock.withCriticalScope {
+                    _wasWrappedValueAccessedSynchronously = true
+                }
+                
                 if let value = self._cachedValue {
                     return value
                 } else {
@@ -96,22 +102,18 @@ extension _FileStorageCoordinators {
                 guard let `self` = self else {
                     return
                 }
-
+                
                 try _withLogicalParent(self._enclosingInstance) {
                     try self.fileSystemResource.encode(newValue, using: configuration.serialization.coder)
                 }
             }
+                        
+            // scheduleEagerRead() // FIXME!!! disabled because it's maxing out CPU
             
-            let _readInitialValue: (() async -> Void) = {
-                _expectNoThrow {
-                    _ = try self.readInitialValue()
-                }
-            }
-            
-            Task.detached(priority: .high) {
-                await _readInitialValue()
-            }
-            
+            setUpAppRunningStateObserver()
+        }
+        
+        private func setUpAppRunningStateObserver() {
             AppRunningState.EventNotificationPublisher()
                 .sink { [unowned self] event in
                     guard lock.withCriticalScope({ !self.stateFlags.contains(.latestWritten) }) else {
@@ -126,6 +128,29 @@ extension _FileStorageCoordinators {
                     }
                 }
                 .store(in: cancellables)
+        }
+        
+        /// Schedules an eager read of the file into memory.
+        private func scheduleEagerRead() {
+            let _readInitialValue: (() async -> Void) = {
+                _expectNoThrow {
+                    _ = try self.readInitialValue()
+                }
+            }
+
+            Task.detached(priority: .background) {
+                try? await Task.sleep(.seconds(1))
+                
+                let alreadyRead = self.lock.withCriticalScope(perform: { self._wasWrappedValueAccessedSynchronously })
+                
+                guard !alreadyRead else {
+                    return
+                }
+                
+                await Task.yield()
+                
+                await _readInitialValue()
+            }
         }
         
         private func setUpObservableObjectObserver() {
