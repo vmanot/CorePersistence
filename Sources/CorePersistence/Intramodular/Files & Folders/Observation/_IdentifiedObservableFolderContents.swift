@@ -105,9 +105,9 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable>: Muta
                     continue
                 }
                 
-                var fileConfiguration = try self.fileConfiguration(.url(url.toFileURL()))
+                var fileConfiguration = try self.fileConfiguration(.url(FileURL(url)))
                 let relativeFilePath = try fileConfiguration.consumePath()
-                let fileURL = try folder._toURL().appendingPathComponent(relativeFilePath).toFileURL()
+                let fileURL = try FileURL(folder._toURL().appendingPathComponent(relativeFilePath))
                 
                 let fileCoordinator = try _FileStorageCoordinators.RegularFile<MutableValueBox<Item>, Item>(
                     fileSystemResource: fileURL,

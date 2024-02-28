@@ -32,10 +32,13 @@ extension FileStorage {
         coder: Coder,
         options: FileStorageOptions
     ) where UnwrappedType: Codable, ValueType == MutableValueBox<UnwrappedType> {
-        let directoryURL = try! location().deletingLastPathComponent()
-        let url = try! FileURL(location())
+        let directoryURL: URL = try! location().deletingLastPathComponent()._actuallyStandardizedFileURL
+        let url = try! FileURL(location()._actuallyStandardizedFileURL)
         
-        try! FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
+        try! FileManager.default.createDirectory(
+            at: directoryURL,
+            withIntermediateDirectories: true
+        )
         
         assert(FileManager.default.directoryExists(at: directoryURL))
         
@@ -260,7 +263,7 @@ extension FileStorage {
         self.init(
             coordinator: try _FileStorageCoordinators.Directory(
                 base: .init(
-                    folder: try directory().toFileURL(),
+                    folder: FileURL(try directory()),
                     fileConfiguration: file,
                     id: { $0[keyPath: id] }
                 )
@@ -279,7 +282,7 @@ extension FileStorage {
         self.init(
             coordinator: try _FileStorageCoordinators.Directory(
                 base: _ObservableIdentifiedFolderContents(
-                    folder: try directory().toFileURL(),
+                    folder: FileURL(try directory()),
                     fileConfiguration: { element in
                         switch element {
                             case .url(let fileURL):

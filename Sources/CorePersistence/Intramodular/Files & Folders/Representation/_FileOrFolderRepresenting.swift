@@ -133,12 +133,6 @@ public struct FileURL: _FileOrFolderRepresenting {
     }
 }
 
-extension URL {
-    public func toFileURL() throws -> FileURL {
-        FileURL(url)
-    }
-}
-
 // MARK: - Implemented Conformances
 
 public struct DeferredURL {

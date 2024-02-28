@@ -273,7 +273,19 @@ extension _FileStorageCoordinators {
             if immediately {
                 _writeValueUnconditionally()
             } else {
-                writeQueue.asyncAfter(deadline: .now() + .milliseconds(200), execute: workItem)
+                let isRunningInTest = NSClassFromString("XCTestCase") != nil
+                let delay: DispatchTimeInterval
+                
+                if isRunningInTest {
+                    delay = .milliseconds(10)
+                } else {
+                    delay = .milliseconds(200)
+                }
+                
+                writeQueue.asyncAfter(
+                    deadline: .now() + delay,
+                    execute: workItem
+                )
             }
         }
     }
