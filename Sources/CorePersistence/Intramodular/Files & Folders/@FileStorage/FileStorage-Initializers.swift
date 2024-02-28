@@ -231,6 +231,20 @@ extension FileStorage {
             options: options
         )
     }
+    
+    @MainActor
+    public convenience init<Coder: TopLevelDataCoder>(
+        url: URL,
+        coder: Coder,
+        options: FileStorageOptions
+    ) where UnwrappedType: Codable & Initiable, ValueType == MutableValueBox<UnwrappedType> {
+        self.init(
+            wrappedValue: UnwrappedType(),
+            location: url,
+            coder: coder,
+            options: options
+        )
+    }
 }
 
 // MARK: - Directories
