@@ -4,6 +4,7 @@
 
 import Combine
 import FoundationX
+import Runtime
 import Swallow
 
 public struct HadeanTopLevelCoder<EncodedRepresentation> {
@@ -20,7 +21,7 @@ public struct HadeanTopLevelCoder<EncodedRepresentation> {
     private init(
         base: _ModularTopLevelCoder<EncodedRepresentation>
     ) {
-        _ = _UniversalTypeRegistry.shared
+        _UniversalTypeRegistry.initialize()
         
         assert(base.plugins.isEmpty)
         
@@ -75,7 +76,7 @@ public final class _HadeanTypeCodingPlugin: _MetatypeCodingPlugin {
     public typealias CodableRepresentation = HadeanIdentifier
     
     public init() {
-        _ = _UniversalTypeRegistry.shared
+        _UniversalTypeRegistry.initialize()
     }
     
     public func codableRepresentation(

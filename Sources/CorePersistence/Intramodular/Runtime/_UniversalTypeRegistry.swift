@@ -9,6 +9,12 @@ import Runtime
 public struct _UniversalTypeRegistry {
     static let lock = OSUnfairLock()
     
+    public static func initialize() {
+        Task { @MainActor in
+            _ = Self.shared
+        }
+    }
+    
     @MainActor
     public static let shared = _UniversalTypeRegistry()
     

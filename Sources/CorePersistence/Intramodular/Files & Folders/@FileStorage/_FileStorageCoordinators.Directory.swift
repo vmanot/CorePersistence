@@ -7,12 +7,13 @@ import Merge
 import Swallow
 
 extension _FileStorageCoordinators {
-    @MainActor
     public final class Directory<Item, ID: Hashable>: _AnyFileStorageCoordinator<_ObservableIdentifiedFolderContents<Item, ID>, _ObservableIdentifiedFolderContents<Item, ID>.WrappedValue> {
         public typealias Base = _ObservableIdentifiedFolderContents<Item, ID>
         
+        @MainActor
         @PublishedObject var base: Base
         
+        @MainActor
         public var _hasReadWithLogicalParentAtLeastOnce = false
         
         @MainActor(unsafe)
@@ -38,6 +39,7 @@ extension _FileStorageCoordinators {
             }
         }
         
+        @MainActor
         public init(
             base: Base
         ) throws {
