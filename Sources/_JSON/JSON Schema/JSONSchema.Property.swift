@@ -69,8 +69,22 @@ extension JSONSchema {
     }
 }
 
+extension JSONSchema {
+    public init(from schema: JSONSchema.Property) {
+        self.type = schema.type
+        self.items = schema.items
+        self.requiredProperties = schema.requiredProperties
+        self.pattern = schema.pattern
+        self.const = schema.const
+        self.enumValues = schema.enumValues
+        self.multipleOf = schema.multipleOf
+        // self.minimum = schema.minimum
+        // self.minimum = schema.maximum
+    }
+}
+
 extension JSONSchema.Property {
-    public init(_ schema: JSONSchema) {
+    public init(from schema: JSONSchema) {
         self.type = schema.type
         self.items = schema.items
         assert(schema.properties.isNilOrEmpty)

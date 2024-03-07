@@ -38,7 +38,7 @@ public struct _UniversalTypeRegistry {
         )
     }
     
-    private static func _indexAllTypesIfNeeded() {
+    private static func _indexAllTypesIfNeeded() throws {
         guard !scrapedAllTypes else {
             return
         }
@@ -46,16 +46,10 @@ public struct _UniversalTypeRegistry {
         defer {
             scrapedAllTypes = true
         }
-        
-        do {
-            let types: [any HadeanIdentifiable.Type] = try _SwiftRuntime.index
-                .fetch(.conformsTo((any HadeanIdentifiable).self))
-                .map({ try cast($0) })
-            
-            types.forEach(_register)
-        } catch {
-            assertionFailure(error)
-        }
+                
+        let types = try TypeMetadata._queryAll(.conformsTo((any HadeanIdentifiable).self))
+                
+        types.forEach(_register)
     }
     
     public static func register(_ type: Any.Type) {
@@ -132,6 +126,7 @@ extension _UniversalTypeRegistry: Sequence {
 
 extension _UniversalTypeRegistry {
     public enum _Error: Error {
+        case failedToResolveType(for: HadeanIdentifier)
         case failedToResolveIdentifier(for: Any.Type)
     }
     
@@ -150,18 +145,22 @@ extension _UniversalTypeRegistry {
         func resolve(
             from input: Input
         ) throws -> Output? {
-            try _UniversalTypeRegistry.lock.withCriticalScope {
-                let result: Output? = typesByIdentifier[input].map({ .existential($0) })
-                
-                if result == nil {
-                    _UniversalTypeRegistry._indexAllTypesIfNeeded()
+            do {
+                return try _UniversalTypeRegistry.lock.withCriticalScope {
+                    let result: Output? = typesByIdentifier[input].map({ .existential($0) })
                     
-                    if let result2: Output = typesByIdentifier[input].map({ .existential($0) }) {
-                        return result2
+                    if result == nil {
+                        try _UniversalTypeRegistry._indexAllTypesIfNeeded()
+                        
+                        if let result2: Output = typesByIdentifier[input].map({ .existential($0) }) {
+                            return result2
+                        }
                     }
+                    
+                    return try result.unwrap()
                 }
-                
-                return try result.unwrap()
+            } catch {
+                throw _Error.failedToResolveType(for: input)
             }
         }
     }
@@ -186,7 +185,7 @@ extension _UniversalTypeRegistry {
                 let type = input.value
                 
                 guard let identifier = identifiersByType[Metatype(type)] else {
-                    _UniversalTypeRegistry._indexAllTypesIfNeeded()
+                    try _UniversalTypeRegistry._indexAllTypesIfNeeded()
                     
                     if let identifier = identifiersByType[Metatype(type)] {
                         return identifier
