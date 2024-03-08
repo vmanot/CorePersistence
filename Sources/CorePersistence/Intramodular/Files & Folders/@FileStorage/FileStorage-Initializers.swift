@@ -27,6 +27,20 @@ extension FileStorage {
     
     @MainActor
     public convenience init<Coder: TopLevelDataCoder>(
+        wrappedValue: UnwrappedType = nil,
+        url: @autoclosure () throws -> URL,
+        coder: Coder
+    ) where UnwrappedType: Codable & OptionalProtocol, ValueType == MutableValueBox<UnwrappedType> {
+        self.init(
+            wrappedValue: nil,
+            location: { try url() },
+            coder: coder,
+            options: nil
+        )
+    }
+    
+    @MainActor
+    public convenience init<Coder: TopLevelDataCoder>(
         wrappedValue: UnwrappedType,
         location: @autoclosure @escaping () throws -> URL,
         coder: Coder,

@@ -87,15 +87,17 @@ extension _FileStorageCoordinators {
                     throw Never.Reason.unexpected
                 }
                 
-                let contents = try _withLogicalParent(self._enclosingInstance) {
-                    try fileSystemResource().decode(using: configuration.serialization.coder)
+                let rawContents: Any? = try _withLogicalParent(self._enclosingInstance) {
+                    let resource: any _FileOrFolderRepresenting = try fileSystemResource()
+                    
+                    return try resource.decode(using: configuration.serialization.coder)
                 }
-                
-                guard let contents = contents else {
+
+                guard let rawContents else {
                     return try configuration.serialization.initialValue().unwrap()
                 }
                 
-                return try cast(contents, to: UnwrappedValue.self)
+                return try cast(rawContents, to: UnwrappedValue.self)
             }
             
             self.write = { [weak self] newValue in
