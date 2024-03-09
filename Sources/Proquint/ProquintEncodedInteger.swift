@@ -5,7 +5,7 @@
 import Foundation
 import Swallow
 
-public struct ProquintEncodedInteger<T: Codable & BinaryInteger & Randomnable & Trivial>: Hashable, Sendable {
+public struct ProquintEncodedInteger<T: Codable & BinaryInteger & Randomnable & Sendable & Trivial>: Hashable, @unchecked Sendable {
     private static var decoder: ProquintDecoder {
         ProquintDecoder()
     }
