@@ -18,20 +18,3 @@ public struct _UniversallyRegisteredType<Existential>: Hashable, Sendable {
         self.base = base
     }
 }
-
-extension _UniversallyRegisteredType: CaseIterable {
-    @MainActor(unsafe)
-    public static var allCases: [_UniversallyRegisteredType<Existential>] {
-        let types = _UniversalTypeRegistry.shared.compactMap {
-            $0._unwrapBase() as? Existential
-        }
-        
-        guard !types.isEmpty else {
-            assertionFailure()
-            
-            return []
-        }
-        
-        return types.map({ .init(base: .init($0)) })
-    }
-}

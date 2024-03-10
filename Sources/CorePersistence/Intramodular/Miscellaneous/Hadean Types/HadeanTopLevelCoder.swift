@@ -21,8 +21,6 @@ public struct HadeanTopLevelCoder<EncodedRepresentation> {
     private init(
         base: _ModularTopLevelCoder<EncodedRepresentation>
     ) {
-        _UniversalTypeRegistry.initialize()
-        
         assert(base.plugins.isEmpty)
         
         var base = base
@@ -76,7 +74,7 @@ public final class _HadeanTypeCodingPlugin: _MetatypeCodingPlugin {
     public typealias CodableRepresentation = HadeanIdentifier
     
     public init() {
-        _UniversalTypeRegistry.initialize()
+
     }
     
     public func codableRepresentation(

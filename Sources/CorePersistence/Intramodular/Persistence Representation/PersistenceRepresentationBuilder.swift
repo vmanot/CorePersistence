@@ -38,7 +38,7 @@ public struct PersistenceRepresentationBuilder {
 }
 
 extension PersistenceRepresentationBuilder {
-    public struct Accumulated: PersistenceRepresentation, _PersistenceRepresentationBuiltin {
+    public struct Accumulated: PersistenceRepresentation {
         public let components: [any Component]
         
         public var isEmpty: Bool {
@@ -71,6 +71,11 @@ extension PersistenceRepresentationBuilder {
             }
         }
     }
+}
+
+@_spi(Internal)
+extension PersistenceRepresentationBuilder.Accumulated: _PersistenceRepresentationBuiltin {
+    
 }
 
 extension PersistenceRepresentation {

@@ -19,6 +19,7 @@ public protocol PersistenceRepresentable {
     static var persistenceRepresentation: PersistenceRepresentationType { get }
 }
 
+@_spi(Internal)
 public protocol _PersistenceRepresentationBuiltin {
     typealias Context = _PersistentRepresentationResolutionContext
     

@@ -56,7 +56,11 @@ let package = Package(
                 "Swallow"
             ],
             path: "Sources/_ModularDecodingEncoding",
-            swiftSettings: []
+            swiftSettings: [
+                .unsafeFlags([
+                    "-enable-library-evolution"
+                ])
+            ]
         ),
         .target(
             name: "_CoreIdentity",
@@ -67,7 +71,11 @@ let package = Package(
                 "Swallow"
             ],
             path: "Sources/_CoreIdentity",
-            swiftSettings: []
+            swiftSettings: [
+                .unsafeFlags([
+                    "-enable-library-evolution"
+                ])
+            ]
         ),
         .target(
             name: "_CSV",
@@ -75,7 +83,11 @@ let package = Package(
                 "Swallow"
             ],
             path: "Sources/_CSV",
-            swiftSettings: []
+            swiftSettings: [
+                .unsafeFlags([
+                    "-enable-library-evolution"
+                ])
+            ]
         ),
         .target(
             name: "_JSON",
@@ -84,7 +96,11 @@ let package = Package(
                 "SwiftUIX"
             ],
             path: "Sources/_JSON",
-            swiftSettings: []
+            swiftSettings: [
+                .unsafeFlags([
+                    "-enable-library-evolution"
+                ])
+            ]
         ),
         .target(
             name: "_SWXMLHash",
@@ -111,12 +127,21 @@ let package = Package(
                 "Proquint",
                 "Swallow"
             ],
-            swiftSettings: []
+            swiftSettings: [
+                .unsafeFlags([
+                    "-enable-library-evolution"
+                ])
+            ]
         ),
         .target(
             name: "Proquint",
             dependencies: [
                 "Swallow"
+            ],
+            swiftSettings: [
+                .unsafeFlags([
+                    "-enable-library-evolution"
+                ])
             ]
         ),
         .target(

@@ -5,29 +5,20 @@
 import CoreTransferable
 import Swallow
 
-
 public enum PersistenceRepresentations {
     
 }
 
 extension PersistenceRepresentations {
-    public struct DeduplicateCopy<Item>: PersistenceRepresentation, _PersistenceRepresentationBuiltin {
+    public struct DeduplicateCopy<Item>: PersistenceRepresentation {
         public let deduplicate: (Item, Item) throws -> Item
         
         public init(deduplicate: @escaping (Item, Item) throws -> Item) {
             self.deduplicate = deduplicate
         }
-        
-        @_spi(Internal)
-        public func _resolve(
-            into representation: inout _ResolvedPersistentRepresentation,
-            context: Context
-        ) throws {
-            representation[Item.self].deduplicateCopy = self
-        }
     }
     
-    public struct ImportFileURL<Parent>: PersistenceRepresentation, _PersistenceRepresentationBuiltin {
+    public struct ImportFileURL<Parent>: PersistenceRepresentation {
         public let keyPath: AnyKeyPath
         public let url: (URL) throws -> URL
         
@@ -38,14 +29,28 @@ extension PersistenceRepresentations {
             self.keyPath = keyPath
             self.url = url
         }
+    }
+}
+
+@_spi(Internal)
+extension PersistenceRepresentations.DeduplicateCopy: _PersistenceRepresentationBuiltin {
+    @_spi(Internal)
+    public func _resolve(
+        into representation: inout _ResolvedPersistentRepresentation,
+        context: Context
+    ) throws {
+        representation[Item.self].deduplicateCopy = self
+    }
+}
+
+@_spi(Internal)
+extension PersistenceRepresentations.ImportFileURL: _PersistenceRepresentationBuiltin {
+    @_spi(Internal)
+    public func _resolve(
+        into representation: inout _ResolvedPersistentRepresentation,
+        context: Context
+    ) throws {
         
-        @_spi(Internal)
-        public func _resolve(
-            into representation: inout _ResolvedPersistentRepresentation,
-            context: Context
-        ) throws {
-            
-        }
     }
 }
 
@@ -67,7 +72,7 @@ public struct ImportedFileURL: Codable, Hashable {
             self.assignedURL = initialValue
             self.url = nil
         }
-
+        
         get {
             url
         } set {

@@ -8,18 +8,9 @@ import Runtime
 /// A universal registry that maps `HadeanIdentifier`s to Swift metatypes (`Any.Type`).
 public struct _UniversalTypeRegistry {
     static let lock = OSUnfairLock()
-    
-    public static func initialize() {
-        Task { @MainActor in
-            _ = Self.shared
-        }
-    }
-    
-    @MainActor
-    public static let shared = _UniversalTypeRegistry()
-    
+            
     /// Parsed all available Swift binaries to index `HadeanIdentifiable` types.
-    static var scrapedAllTypes: Bool = false
+    fileprivate static var scrapedAllTypes: Bool = false
     
     @usableFromInline
     static var typesByIdentifier: [HadeanIdentifier: Any.Type] = [:]
@@ -47,7 +38,7 @@ public struct _UniversalTypeRegistry {
             scrapedAllTypes = true
         }
                 
-        let types = try TypeMetadata._queryAll(.conformsTo((any HadeanIdentifiable).self))
+        let types = try TypeMetadata._queryAll(.conformsTo((any HadeanIdentifiable).self), .nonAppleFramework)
                 
         types.forEach(_register)
     }
@@ -114,14 +105,6 @@ public struct _UniversalTypeRegistry {
     }
 }
 
-// MARK: - Conformances
-
-extension _UniversalTypeRegistry: Sequence {
-    public func makeIterator() -> AnyIterator<Metatype<Any.Type>> {
-        .init(Self.identifiersByType.keys.makeIterator())
-    }
-}
-
 // MARK: - Auxiliary
 
 extension _UniversalTypeRegistry {
@@ -151,7 +134,7 @@ extension _UniversalTypeRegistry {
                     
                     if result == nil {
                         try _UniversalTypeRegistry._indexAllTypesIfNeeded()
-                        
+
                         if let result2: Output = typesByIdentifier[input].map({ .existential($0) }) {
                             return result2
                         }
