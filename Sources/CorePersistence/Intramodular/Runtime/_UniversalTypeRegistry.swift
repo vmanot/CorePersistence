@@ -38,7 +38,10 @@ public struct _UniversalTypeRegistry {
             scrapedAllTypes = true
         }
                 
-        let types = try TypeMetadata._queryAll(.conformsTo((any HadeanIdentifiable).self), .nonAppleFramework)
+        let types = try TypeMetadata._queryAll(
+            .conformsTo((any HadeanIdentifiable).self),
+            .nonAppleFramework
+        )
                 
         types.forEach(_register)
     }

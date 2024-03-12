@@ -52,11 +52,11 @@ public final class FileStorage<ValueType, UnwrappedType> {
     ) -> UnwrappedType {
         get {
             instance[keyPath: storageKeyPath]._setUpEnclosingInstance(instance)
-                        
+            
             return instance[keyPath: storageKeyPath].wrappedValue
         } set {
             instance[keyPath: storageKeyPath]._setUpEnclosingInstance(instance)
-                        
+            
             _ObservableObject_objectWillChange_send(instance)
             
             instance[keyPath: storageKeyPath].wrappedValue = newValue
@@ -69,11 +69,11 @@ public final class FileStorage<ValueType, UnwrappedType> {
         guard let object = (object as? any ObservableObject) else {
             return
         }
-       
+        
         defer {
             self.coordinator._enclosingInstance = object
         }
-
+        
         guard objectWillChangeConduit == nil else {
             return
         }
@@ -134,5 +134,18 @@ public struct FileStorageOptions: Codable, ExpressibleByNilLiteral, Hashable {
     
     public init(nilLiteral: ()) {
         self.readErrorRecoveryStrategy = nil
+    }
+}
+
+extension FileStorage: _FileOrFolderRepresenting {    
+    public func _toURL() throws -> URL {
+        try url
+    }
+    
+    public func encode<T>(
+        _ contents: T,
+        using coder: _AnyConfiguredFileCoder
+    ) throws {
+        throw Never.Reason.illegal
     }
 }
