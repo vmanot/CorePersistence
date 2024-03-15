@@ -4,7 +4,6 @@
 
 import FoundationX
 import Swallow
-import SwiftUIX
 import SwiftUI
 
 extension JSON {
@@ -88,7 +87,9 @@ public struct JSONView: View {
                 Text(value)
             case .array(let value):
                 OutlineGroup(
-                    value.enumerated().map({ JSON.Children.Element(label: AnyCodingKey(intValue: $0.0), value: $0.1) }),
+                    value.enumerated().map({
+                        JSON.Children.Element(label: AnyCodingKey(intValue: $0.0), value: $0.1)
+                    }),
                     id: \.self,
                     children: \.children
                 ) { element in

@@ -8,7 +8,7 @@ import Cocoa
 
 import FoundationX
 import Swallow
-import SwiftUIX
+import SwiftUI
 import System
 
 #if canImport(Cocoa)

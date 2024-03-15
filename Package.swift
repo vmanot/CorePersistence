@@ -30,7 +30,6 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-syntax.git", from: "510.0.0"),
-        .package(url: "https://github.com/SwiftUIX/SwiftUIX.git", branch: "master"),
         .package(url: "https://github.com/vmanot/Merge.git", branch: "master"),
         .package(url: "https://github.com/vmanot/Swallow.git", branch: "master")
     ],
@@ -92,8 +91,7 @@ let package = Package(
         .target(
             name: "_JSON",
             dependencies: [
-                "Swallow",
-                "SwiftUIX"
+                "Swallow"
             ],
             path: "Sources/_JSON",
             swiftSettings: [

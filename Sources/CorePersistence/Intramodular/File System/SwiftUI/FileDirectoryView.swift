@@ -6,7 +6,7 @@
 
 import FoundationX
 import Swift
-import SwiftUIX
+import SwiftUI
 import System
 
 @available(iOS 14.0, *)
