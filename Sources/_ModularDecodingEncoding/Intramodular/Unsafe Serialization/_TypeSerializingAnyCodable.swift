@@ -100,7 +100,7 @@ extension _TypeSerializingAnyCodable {
         if data == nil, let type = type as? any OptionalProtocol.Type {
             let resolvedType = try typeRepresentation.resolveType()
             
-            if _unwrappedType(of: type) == resolvedType {
+            if _unwrappedType(from: type) == resolvedType {
                 return try cast(type.init(nilLiteral: ()), to: T.self)
             }
         }

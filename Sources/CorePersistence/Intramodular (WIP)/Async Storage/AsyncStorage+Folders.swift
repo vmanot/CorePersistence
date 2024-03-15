@@ -20,7 +20,7 @@ public struct FolderStorageConfiguration<Item: Codable> {
     }
     
     let directoryURL: URL
-    let filter: (URL) -> Bool // FIXME!!!
+    let filter: (URL) -> Bool // FIXME: !!!
     let coder: TopLevelDataCoder
     
     func _makeAsyncStorageBase() throws -> _ConcreteFolderAsyncStorageBase<_AsyncFileResourceCoordinator<Item>> {

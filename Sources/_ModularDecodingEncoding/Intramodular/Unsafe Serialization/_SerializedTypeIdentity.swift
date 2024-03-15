@@ -75,7 +75,7 @@ public struct _SerializedTypeIdentity: Hashable {
     }
     
     public init<T>(of value: T) {
-        self.init(_fromUnwrappedType: _unwrappedType(of: value))
+        self.init(_fromUnwrappedType: _unwrappedType(ofValue: value))
     }
 }
 
