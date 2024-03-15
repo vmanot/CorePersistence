@@ -38,12 +38,14 @@ public struct FileManagerView: View {
     
     public var body: some View {
         List(locationGroups, id: \.hashValue) { group in
-            group.first.ifSome { root in
-                NavigationLink(destination: FileDirectoryView(root)) {
-                    Label(
-                        root.url.lastPathComponent,
-                        systemImage: root.hasChildren ? .folderFill : .folder
-                    )
+            Group {
+                if let root = group.first {
+                    NavigationLink(destination: FileDirectoryView(root)) {
+                        Label(
+                            root.url.lastPathComponent,
+                            systemImage: root.hasChildren ? "folder.fill" : "folder"
+                        )
+                    }
                 }
             }
             .disabled(!group.isReachable)

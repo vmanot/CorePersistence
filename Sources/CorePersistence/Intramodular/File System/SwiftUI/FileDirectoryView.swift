@@ -9,41 +9,43 @@ import Swift
 import SwiftUI
 import System
 
+@available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
 @available(iOS 14.0, *)
 public struct FileDirectoryView: FileLocationInitiable, View {
     public let location: BookmarkedURL
     
+    @StateObject var fileDirectory: ObservableFileDirectory
+    
     public init(_ location: BookmarkedURL) {
         self.location = location
+        self._fileDirectory = .init(wrappedValue: ObservableFileDirectory(url: location.url))
     }
     
-    public init(_ location: CanonicalFileDirectory) throws {
-        self.location = try BookmarkedURL(url: location.toURL()).unwrap()
+    public init(_ location: CanonicalFileDirectory) {
+        self.init(try! BookmarkedURL(url: location.toURL()).unwrap())
     }
     
     @ViewBuilder
     public var body: some View {
-        withInlineStateObject(ObservableFileDirectory(url: location.url)) { directory in
-            ZStack {
-                if let children = directory.children, !children.isEmpty {
-                    List {
-                        OutlineGroup(
-                            children.compactMap(BookmarkedURL.init(url:)),
-                            children: \.children,
-                            content: FileItemRowView.init
-                        )
-                    }
-                    .listStyle(InsetGroupedListStyle())
-                } else {
-                    Text("No Files")
-                        .font(.title)
-                        .foregroundColor(.secondary)
-                        .fixedSize()
-                        .padding(.bottom)
+        ZStack {
+            if let children = fileDirectory.children, !children.isEmpty {
+                List {
+                    OutlineGroup(
+                        children.compactMap(BookmarkedURL.init(url:)),
+                        children: \.children,
+                        content: FileItemRowView.init
+                    )
                 }
+                .listStyle(InsetGroupedListStyle())
+            } else {
+                Text("No Files")
+                    .font(.title)
+                    .foregroundColor(.secondary)
+                    .fixedSize()
+                    .padding(.bottom)
             }
-            .navigationTitle(Text(location.path.lastComponent))
         }
+        .navigationTitle(Text(location.path.lastComponent))
         .id(location)
     }
 }

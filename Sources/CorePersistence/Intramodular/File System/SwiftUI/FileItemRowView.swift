@@ -39,7 +39,7 @@ public struct FileItemRowView: View {
         
         var body: some View {
             Section {
-                Button("Delete", systemImage: .trash) {
+                Button("Delete", systemImage: "trash") {
                     try! fileManager.removeItem(at: location.url)
                 }
                 .foregroundColor(.red)
@@ -53,7 +53,6 @@ public struct FileItemRowView: View {
     }
     
     struct RegularFileView: View {
-        @Environment(\.presenter) var presenter
         @Environment(\.fileManager) var fileManager
         
         let location: BookmarkedURL
@@ -61,7 +60,7 @@ public struct FileItemRowView: View {
         var body: some View {
             Label(
                 location.url.lastPathComponent,
-                systemImage: .docFill
+                systemImage: "doc.fill"
             )
         }
     }
@@ -72,16 +71,19 @@ public struct FileItemRowView: View {
         let location: BookmarkedURL
         
         var body: some View {
-            HStack {
-                Label(
-                    location.url.lastPathComponent,
-                    systemImage: location.hasChildren ? .folderFill : .folder
-                )
-                
-                Spacer()
+            NavigationLink(
+                destination: HStack {
+                    Label(
+                        location.url.lastPathComponent,
+                        systemImage: location.hasChildren ? "folder.fill" : "folder"
+                    )
+                    
+                    Spacer()
+                }
+                    .disabled(!location.hasChildren || !location.isReachable)
+            ) {
+                FileDirectoryView(location)
             }
-            .onPress(navigateTo: FileDirectoryView(location))
-            .disabled(!location.hasChildren || !location.isReachable)
         }
     }
 }
