@@ -72,15 +72,17 @@ public struct FileItemRowView: View {
         
         var body: some View {
             NavigationLink(
-                destination: HStack {
-                    Label(
-                        location.url.lastPathComponent,
-                        systemImage: location.hasChildren ? "folder.fill" : "folder"
-                    )
-                    
-                    Spacer()
-                }
+                destination: Group {
+                    HStack {
+                        Label(
+                            location.url.lastPathComponent,
+                            systemImage: location.hasChildren ? "folder.fill" : "folder"
+                        )
+                        
+                        Spacer()
+                    }
                     .disabled(!location.hasChildren || !location.isReachable)
+                }
             ) {
                 FileDirectoryView(location)
             }
