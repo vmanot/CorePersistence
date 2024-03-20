@@ -3,10 +3,10 @@
 //
 
 @_exported import Diagnostics
-@_exported import Expansions
 @_exported import Foundation
 @_exported import FoundationX
 @_exported import Swallow
+@_exported import SwallowMacrosClient
 
 @_exported import _CoreIdentity
 @_exported import _CSV

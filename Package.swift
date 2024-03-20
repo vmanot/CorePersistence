@@ -22,14 +22,12 @@ let package = Package(
                 "_SWXMLHash",
                 "_XMLCoder",
                 "CorePersistence",
-                "CorePersistenceMacros",
                 "Proquint",
                 "UUIDv6"
             ]
         )
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-syntax.git", from: "510.0.0"),
         .package(url: "https://github.com/vmanot/Merge.git", branch: "master"),
         .package(url: "https://github.com/vmanot/Swallow.git", branch: "master")
     ],
@@ -37,13 +35,7 @@ let package = Package(
         .macro(
             name: "CorePersistenceMacros",
             dependencies: [
-                "Swallow",
-                .product(name: "SwiftSyntax", package: "swift-syntax"),
-                .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
-                .product(name: "SwiftOperators", package: "swift-syntax"),
-                .product(name: "SwiftParser", package: "swift-syntax"),
-                .product(name: "SwiftParserDiagnostics", package: "swift-syntax"),
-                .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
+                .product(name: "MacroBuilder", package: "Swallow"),
             ],
             path: "Sources/CorePersistenceMacros"
         ),

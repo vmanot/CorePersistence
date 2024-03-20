@@ -4,6 +4,7 @@
 
 import Compute
 import Merge
+import OrderedCollections
 import Swallow
 
 // TODO: Rename ResourceCoordinators to ResourcesProducer maybe and introduce _AsyncResourcesProducer to expose rules of engagement (latency etc.)?
@@ -60,7 +61,7 @@ public final class _SyncedAsyncResources<ResourceCoordinators: AsyncSequence>: O
             allSeen.insert(coordinator.id)
         }
         
-        let toBeRemoved = Set(elements.orderedKeys).subtracting(allSeen)
+        let toBeRemoved = Set(elements.keys).subtracting(allSeen)
         
         toBeRemoved.forEach {
             elements[$0]?.removeFromParent()

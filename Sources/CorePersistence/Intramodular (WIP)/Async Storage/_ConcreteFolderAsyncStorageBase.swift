@@ -4,6 +4,7 @@
 
 import Merge
 import Runtime
+import OrderedCollections
 import Swallow
 
 @available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *)
@@ -22,7 +23,7 @@ final class _ConcreteFolderAsyncStorageBase<Resource: _AsyncResourceCoordinator>
     }
     
     public var wrappedValue: WrappedValue {
-        Array(base._cachedOrSynchronousSnapshot.orderedValues)
+        Array(base._cachedOrSynchronousSnapshot.values)
     }
     
     public var projectedValue: ProjectedValue {
