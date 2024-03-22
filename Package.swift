@@ -118,6 +118,7 @@ let package = Package(
                 "Swallow"
             ],
             swiftSettings: [
+                .enableExperimentalFeature("AccessLevelOnImport"),
                 .unsafeFlags([
                     "-enable-library-evolution"
                 ])

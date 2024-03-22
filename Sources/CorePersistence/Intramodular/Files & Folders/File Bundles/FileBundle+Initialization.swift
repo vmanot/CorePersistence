@@ -72,7 +72,7 @@ extension FileBundle {
     private func _initializeFileBundleAnnotations(
         readOptions: Set<FileDocumentReadOption>
     ) throws -> Bool {
-        guard let mirror = AnyNominalOrTupleMirror(self) else {
+        guard let mirror = InstanceMirror(self) else {
             assertionFailure()
             
             return false

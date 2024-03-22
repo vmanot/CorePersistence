@@ -84,3 +84,7 @@ extension UserInfo {
         }
     }
 }
+
+public struct ScopedUserInfo {
+    
+}

@@ -4,7 +4,7 @@
 
 import Compute
 import Merge
-import OrderedCollections
+package import OrderedCollections
 import Swallow
 
 // TODO: Rename ResourceCoordinators to ResourcesProducer maybe and introduce _AsyncResourcesProducer to expose rules of engagement (latency etc.)?
@@ -13,8 +13,8 @@ public final class _SyncedAsyncResources<ResourceCoordinators: AsyncSequence>: O
     public typealias ResourceValue = ResourceCoordinator.Value
     public typealias Element = _SyncedAsyncResource<ResourceCoordinator>
     
-    public typealias ResolvedResourceCoordinators = OrderedDictionary<ResourceCoordinator.ID, Element>
-    public typealias ResolvedResourceValues = OrderedDictionary<ResourceCoordinator.ID, ResourceValue>
+    package typealias ResolvedResourceCoordinators = OrderedDictionary<ResourceCoordinator.ID, Element>
+    package typealias ResolvedResourceValues = OrderedDictionary<ResourceCoordinator.ID, ResourceValue>
     
     public let objectWillChange = ObservableObjectPublisher()
     
@@ -23,11 +23,11 @@ public final class _SyncedAsyncResources<ResourceCoordinators: AsyncSequence>: O
     @MutexProtected
     private var resolvedResourceCoordinators: ResolvedResourceCoordinators = [:]
     
-    public var _cachedOrSynchronousSnapshot: ResolvedResourceValues {
+    package var _cachedOrSynchronousSnapshot: ResolvedResourceValues {
         resolvedResourceCoordinators.compactMapValues({ try? $0._cachedOrSynchronouslyAccessedValue })
     }
     
-    public init(stream: AsyncThrowingStream<ResourceCoordinators, Error>) {        
+    public init(stream: AsyncThrowingStream<ResourceCoordinators, Error>) {
         self.stream = stream
         
         Task {
