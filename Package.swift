@@ -47,11 +47,7 @@ let package = Package(
                 "Swallow"
             ],
             path: "Sources/_ModularDecodingEncoding",
-            swiftSettings: [
-                .unsafeFlags([
-                    "-enable-library-evolution"
-                ])
-            ]
+            swiftSettings: []
         ),
         .target(
             name: "_CoreIdentity",
@@ -62,11 +58,7 @@ let package = Package(
                 "Swallow"
             ],
             path: "Sources/_CoreIdentity",
-            swiftSettings: [
-                .unsafeFlags([
-                    "-enable-library-evolution"
-                ])
-            ]
+            swiftSettings: []
         ),
         .target(
             name: "_CSV",
@@ -74,11 +66,7 @@ let package = Package(
                 "Swallow"
             ],
             path: "Sources/_CSV",
-            swiftSettings: [
-                .unsafeFlags([
-                    "-enable-library-evolution"
-                ])
-            ]
+            swiftSettings: []
         ),
         .target(
             name: "_JSON",
@@ -86,23 +74,17 @@ let package = Package(
                 "Swallow"
             ],
             path: "Sources/_JSON",
-            swiftSettings: [
-                .unsafeFlags([
-                    "-enable-library-evolution"
-                ])
-            ]
+            swiftSettings: []
         ),
         .target(
             name: "_SWXMLHash",
+            dependencies: [],
             path: "Sources/_SWXMLHash",
             exclude: ["Info.plist"]
         ),
         .target(
             name: "_XMLCoder",
-            dependencies: [
-                "CorePersistence",
-                "Swallow"
-            ],
+            dependencies: [],
             path: "Sources/_XMLCoder",
             swiftSettings: []
         ),
@@ -119,9 +101,7 @@ let package = Package(
             ],
             swiftSettings: [
                 .enableExperimentalFeature("AccessLevelOnImport"),
-                .unsafeFlags([
-                    "-enable-library-evolution"
-                ])
+                .unsafeFlags([])
             ]
         ),
         .target(
@@ -129,11 +109,7 @@ let package = Package(
             dependencies: [
                 "Swallow"
             ],
-            swiftSettings: [
-                .unsafeFlags([
-                    "-enable-library-evolution"
-                ])
-            ]
+            swiftSettings: []
         ),
         .target(
             name: "UUIDv6",
