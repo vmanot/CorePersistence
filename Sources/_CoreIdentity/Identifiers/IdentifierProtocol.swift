@@ -3,7 +3,7 @@
 //
 
 import Foundation
-import Swallow
+@_spi(Internal) import Swallow
 
 public protocol IdentifierProtocol: Hashable, IdentityRepresentation {
     
@@ -14,6 +14,12 @@ public protocol UniversallyUniqueIdentifier: IdentifierProtocol, Sendable {
 }
 
 // MARK: - Implemented Conformances
+
+extension _AutoIncrementingIdentifier: IdentifierProtocol {
+    public var body: some IdentityRepresentation {
+        _BinaryIntegerIdentityRepresentation(id)
+    }
+}
 
 extension _TypeAssociatedID: IdentifierProtocol where RawValue: IdentifierProtocol {
     

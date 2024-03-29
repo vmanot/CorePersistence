@@ -41,6 +41,26 @@ extension _TypeAssociatedID: IdentityRepresentation where RawValue: IdentityRepr
     }
 }
 
+public struct _BinaryIntegerIdentityRepresentation<T: Codable & BinaryInteger>: Codable, Hashable, IdentityRepresentation {
+    public let value: T
+    
+    public init(_ value: T) {
+        self.value = value
+    }
+    
+    public var body: some IdentityRepresentation {
+        fatalError()
+    }
+    
+    public init(from decoder: Decoder) throws {
+        self.init(try .init(from: decoder))
+    }
+    
+    public func encode(to encoder: Encoder) throws {
+        try value.encode(to: encoder)
+    }
+}
+
 public struct _StringIdentityRepresentation: Codable, Hashable, IdentityRepresentation {
     public let value: String
     
