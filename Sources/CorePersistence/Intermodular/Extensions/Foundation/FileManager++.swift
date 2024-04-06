@@ -8,7 +8,6 @@ import Cocoa
 
 import FoundationX
 import Swallow
-import SwiftUI
 import System
 
 #if canImport(Cocoa)
@@ -49,6 +48,8 @@ extension FileManager {
         #if os(macOS)
         let openPanel = NSOpenPanel()
         #else
+        let NSOpenPanel_Type = unsafeBitCast(NSClassFromString("NSOpenPanel"), to: NSOpenPanelProtocol.Type.self)
+
         let openPanel = NSOpenPanel_Type.init()
         #endif
         
