@@ -13,11 +13,45 @@ public enum _RawUserInfoKey: Codable, Hashable, @unchecked Sendable {
     case key(_SerializedTypeIdentity)
 }
 
-public struct _RawUserInfo: _RawUserInfoProtocol {
-    private var storage: [_UnsafelySerialized<_RawUserInfoKey>: _UnsafelySerialized<Any>] = [:]
+public struct _RawUserInfo: _RawUserInfoProtocol, Initiable {
+    private var storage: [_RawUserInfoKey: _UnsafelySerialized<Any>] = [:]
     
     public init() {
         
+    }
+        
+    public mutating func assign<Value: Hashable>(
+        _ value: Value
+    ) {
+        let key = _key(fromType: Swift.type(of: value))
+        
+        storage[key] = _UnsafelySerialized(wrappedValue: value)
+    }
+    
+    private func _key<Key: UserInfoKey>(
+        fromType type: Key.Type
+    ) -> _RawUserInfoKey{
+        _RawUserInfoKey.key(_SerializedTypeIdentity(from: type))
+    }
+
+    private func _key<Value: Hashable>(
+        fromType type: Value.Type
+    ) -> _RawUserInfoKey {
+        _RawUserInfoKey.type(_SerializedTypeIdentity(from: type))
+    }
+    
+    public subscript<Key: UserInfoKey>(
+        _ type: Key.Type
+    ) -> Key.Value {
+        get {
+            let key = _key(fromType: type)
+            
+            return try! storage[key].map({ try cast($0.wrappedValue, to: Key.Value.self) }) ?? Key.defaultValue
+        } set {
+            let key = _key(fromType: type)
+            
+            storage[key] = _UnsafelySerialized(wrappedValue: newValue)
+        }
     }
     
     public subscript<Value: Hashable>(
@@ -37,20 +71,6 @@ public struct _RawUserInfo: _RawUserInfoProtocol {
             }
         }
     }
-    
-    public mutating func assign<Value: Hashable>(
-        _ value: Value
-    ) {
-        let key = _key(fromType: Swift.type(of: value))
-        
-        storage[key] = _UnsafelySerialized(wrappedValue: value)
-    }
-    
-    private func _key<Value: Hashable>(
-        fromType type: Value.Type
-    ) -> _UnsafelySerialized<_RawUserInfoKey> {
-        _UnsafelySerialized<_RawUserInfoKey>(.type(_SerializedTypeIdentity(from: type)))
-    }
 }
 
 // MARK: - Conformances
@@ -61,4 +81,3 @@ extension _RawUserInfo: ExpressibleByNilLiteral {
         
     }
 }
-

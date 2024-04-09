@@ -13,7 +13,7 @@ import Swallow
 /// The framework uses a 'best effort' approach to encode as many available representations of the target type.
 ///
 /// Some of these representations may not be stable across compiler modes/language runtimes.
-public struct _SerializedTypeIdentity: Hashable {
+public struct _SerializedTypeIdentity: Hashable, @unchecked Sendable {
     public enum _Error: Error {
         case failedToResolveSwiftTypeByName(String)
     }

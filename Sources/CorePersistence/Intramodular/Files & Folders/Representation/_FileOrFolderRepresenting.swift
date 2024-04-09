@@ -132,9 +132,3 @@ public struct FileURL: _FileOrFolderRepresenting {
         .init(base: base.appending(path: path))
     }
 }
-
-// MARK: - Implemented Conformances
-
-public struct DeferredURL {
-    
-}
