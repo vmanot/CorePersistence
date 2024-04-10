@@ -42,7 +42,7 @@ public class _AnyFileStorageCoordinator<ValueType, UnwrappedValue>: ObservableOb
     )
     
     var fileSystemResource: any _FileOrFolderRepresenting
-    let configuration: _RelativeFileConfiguration<UnwrappedValue>
+    var configuration: _RelativeFileConfiguration<UnwrappedValue>
     
     @MainActor(unsafe)
     open var wrappedValue: UnwrappedValue {

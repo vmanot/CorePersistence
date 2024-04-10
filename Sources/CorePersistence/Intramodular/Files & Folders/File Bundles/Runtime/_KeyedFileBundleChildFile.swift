@@ -63,12 +63,13 @@ class _KeyedFileBundleChildFile<Contents>: _KeyedFileBundleChildGenericBase<Cont
         
         if self.fileWrapper == nil, wantsCreation {
             let initialValue: Contents
+            let serialization = try configuration.serialization.unwrap()
             
-            initialValue = try configuration.serialization.initialValue().unwrap()
+            initialValue = try serialization.initialValue().unwrap()
             
             self.fileWrapper = try _FileRepresentingFileWrapper(
                 contents: initialValue,
-                coder: configuration.serialization.coder,
+                coder: serialization.coder,
                 id: self.id,
                 preferredFileName: _fileName
             )
@@ -135,7 +136,7 @@ class _KeyedFileBundleChildFile<Contents>: _KeyedFileBundleChildGenericBase<Cont
     ) throws -> Any? {
         guard let fileWrapper else {
             if wantsCreation {
-                return try coordinator?.configuration.serialization.initialValue()
+                return try coordinator?.configuration.serialization.unwrap().initialValue()
             } else {
                 return nil
             }

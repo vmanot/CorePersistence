@@ -80,7 +80,7 @@ extension _FileStorageCoordinators {
                 configuration: configuration
             )
             
-            self.read = { [weak self] in
+            self.read = { [weak self] () -> UnwrappedValue in
                 guard let `self` = self else {
                     assertionFailure()
                     
@@ -90,11 +90,15 @@ extension _FileStorageCoordinators {
                 let rawContents: Any? = try _withLogicalParent(self._enclosingInstance) {
                     let resource: any _FileOrFolderRepresenting = try fileSystemResource()
                     
-                    return try resource.decode(using: configuration.serialization.coder)
+                    if let serialization = configuration.serialization {
+                        return try resource.decode(using: serialization.coder)
+                    } else {
+                        return nil // FIXME
+                    }
                 }
 
                 guard let rawContents else {
-                    return try configuration.serialization.initialValue().unwrap()
+                    return try configuration.serialization?.initialValue().unwrap() ?? _generatePlaceholder(ofType: UnwrappedValue.self)
                 }
                 
                 return try cast(rawContents, to: UnwrappedValue.self)
@@ -106,7 +110,12 @@ extension _FileStorageCoordinators {
                 }
                 
                 try _withLogicalParent(self._enclosingInstance) {
-                    try self.fileSystemResource.encode(newValue, using: configuration.serialization.coder)
+                    if let serialization = configuration.serialization {
+                        try self.fileSystemResource.encode(
+                            newValue,
+                            using: serialization.coder
+                        )
+                    }
                 }
             }
                         
@@ -238,9 +247,13 @@ extension _FileStorageCoordinators {
                         case .discardAndReset:
                             runtimeIssue(error)
                             
-                            // Breakpoint.trigger()
+                            if let serialization = configuration.serialization {
+                                if let initialValue = try? serialization.initialValue() {
+                                    return initialValue
+                                }
+                            }
                             
-                            return try configuration.serialization.initialValue().unwrap()
+                            return try _generatePlaceholder()
                     }
                 }
                 

@@ -204,7 +204,7 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable>: Muta
             let relativeFilePath = try fileConfiguration.consumePath()
             let fileURL = folderURL.appendingPathComponent(relativeFilePath)
             
-            fileConfiguration.serialization.initialValue = .available(element)
+            fileConfiguration.serialization?.initialValue = .available(element)
             
             try FileManager.default.createDirectory(at: folderURL, withIntermediateDirectories: true)
             

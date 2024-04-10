@@ -16,7 +16,7 @@ public struct _RelativeFileConfiguration<Value> {
     }
     
     public var path: String?
-    public let serialization: _FileOrFolderSerializationConfiguration<Value>
+    public var serialization: _FileOrFolderSerializationConfiguration<Value>?
     public var readWriteOptions: FileStorageOptions
     public var pathValidations: [ValidatePath] = []
     

@@ -385,109 +385,48 @@ extension JSONSchema {
         self.anyOf = nil
         self.oneOf = nil
     }
-}
-
-/*
- * Unless explicitly stated otherwise all files in this repository are licensed under the Apache License Version 2.0.
- * This product includes software developed at Datadog (https://www.datadoghq.com/).
- * Copyright 2019-Present Datadog, Inc.
- */
-
-import Foundation
-
-public struct Exception: Error, CustomStringConvertible {
-    public let description: String
     
-    init(
-        _ reason: String,
-        file: StaticString,
-        line: UInt
+    /// Basic initializer for setting a schema type directly.
+    public init(
+        type: SchemaType?,
+        description: String? = nil,
+        properties: [String: JSONSchema]? = nil,
+        required: Bool,
+        additionalProperties: JSONSchema? = nil,
+        items: JSONSchema? = nil
     ) {
-        // `file` includes slash-separated path, take only the last component:
-        let fileName = "\(file)".split(separator: "/").last ?? "\(file)"
-        let sourceReference = "🧭 Thrown in \(fileName):\(line)"
-        
-        self.description = "\(reason)\n\n\(sourceReference)"
-    }
-    
-    public static func inconsistency(_ reason: String, file: StaticString = #fileID, line: UInt = #line) -> Exception {
-        Exception("🐞 Inconsistency: \"\(reason)\".", file: file, line: line)
-    }
-    
-    public static func illegal(_ operation: String, file: StaticString = #fileID, line: UInt = #line) -> Exception {
-        Exception("⛔️ Illegal operation: \"\(operation)\".", file: file, line: line)
-    }
-    
-    public static func unimplemented(_ operation: String, file: StaticString = #fileID, line: UInt = #line) -> Exception {
-        Exception("🚧 Unimplemented: \"\(operation)\".", file: file, line: line)
-    }
-    
-    static func moreContext(_ moreContext: String, for error: Error, file: StaticString = #fileID, line: UInt = #line) -> Exception {
-        if let decodingError = error as? DecodingError {
-            return Exception(
-                """
-                ⬇️
-                🛑 \(moreContext)
-                
-                🔎 Pretty error: \(pretty(error: decodingError))
-                
-                ⚙️ Original error: \(decodingError)
-                """,
-                file: file,
-                line: line
-            )
-        } else {
-            return Exception(
-                """
-                ⬇️
-                🛑 \(moreContext)
-                
-                ⚙️ Original error: \(error)
-                """,
-                file: file,
-                line: line
-            )
-        }
+        self.id = nil
+        self.title = nil
+        self.description = description
+        self.properties = properties
+        self.additionalProperties = additionalProperties
+        self.required = required ? (properties?.keys).map({ Array($0) }) : nil
+        self.type = type
+        self.enum = nil
+        self.const = nil
+        self.items = items
+        self.readOnly = nil
+        self.ref = nil
+        self.allOf = nil
+        self.anyOf = nil
+        self.oneOf = nil
     }
 }
 
-public extension Optional {
-    func unwrapOrThrow(_ exception: Exception) throws -> Wrapped {
-        switch self {
-            case .some(let unwrappedValue):
-                return unwrappedValue
-            case .none:
-                throw exception
-        }
-    }
-    
-    func ifNotNil<T>(_ closure: (Wrapped) throws -> T) rethrows -> T? {
-        if case .some(let unwrappedValue) = self {
-            return try closure(unwrappedValue)
-        } else {
-            return nil
-        }
-    }
-}
-
-extension Array where Element: Hashable {
-    func asSet() -> Set<Element> {
-        return Set(self)
-    }
-}
+// MARK: - Diagnostics
 
 internal func withErrorContext<T>(context: String, block: () throws -> T) throws -> T {
     do {
         return try block()
     } catch let error {
-        throw Exception.moreContext(context, for: error)
+        throw JSONSchema.Exception.moreContext(context, for: error)
     }
 }
 
 // MARK: - `Swift.DecodingError` pretty formatting
 
 /// Returns pretty description of given `DecodingError`.
-private func pretty(error: DecodingError) -> String {
+func pretty(error: DecodingError) -> String {
     var description = "✋ description is unavailable"
     var context: DecodingError.Context?
     

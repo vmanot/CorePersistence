@@ -82,7 +82,7 @@ public final class _FileBundle_KeyedFileProperty<Parent, Contents>: _FileBundle_
             let configuration = self.configuration(parent)
             
             if let assignedValue = self.assignedValue {
-                configuration.serialization.initialValue = .init(assignedValue)
+                configuration.serialization?.initialValue = .init(assignedValue)
             }
             
             return configuration
