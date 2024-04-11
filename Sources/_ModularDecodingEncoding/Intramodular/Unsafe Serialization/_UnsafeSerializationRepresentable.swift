@@ -77,7 +77,7 @@ extension HeterogeneousDictionary: _UnsafeSerializationRepresentable {
             func decodeValue<Value>(_: Value.Type) throws -> Any {
                 try _unwrapPossiblyOptionalAny(container.decode(_UnsafelySerialized<Value>.self, forKey: .value).wrappedValue)
             }
-                        
+            
             self.value = try _openExistential(_key.wrappedValue._opaque_Value.self, do: decodeValue)
         }
         
@@ -88,7 +88,7 @@ extension HeterogeneousDictionary: _UnsafeSerializationRepresentable {
             try container.encode(_value, forKey: .value)
         }
     }
-
+    
     var _unsafeSerializationRepresentation: [_UnsafelySerializedKeyValuePair] {
         get throws {
             try map {
@@ -199,7 +199,7 @@ extension _HashableExistentialArray: _UnsafeSerializationRepresentable {
 
 extension IdentifierIndexingArray: _UnsafeSerializationRepresentable {
     typealias _UnsafeSerializationRepresentation = Array<_TypeSerializingAnyCodable>
-
+    
     var _unsafeSerializationRepresentation: _UnsafeSerializationRepresentation {
         get throws {
             try map({ try _TypeSerializingAnyCodable($0) })
@@ -211,9 +211,30 @@ extension IdentifierIndexingArray: _UnsafeSerializationRepresentable {
     ) throws {
         if let type = Self.self as? any _UnsafelySerializationRepresentableIdentifierIndexingArray.Type {
             self = try cast(type.init(_unsafeSerializationRepresentation: representation))
+        } else if let elementType = Element.self as? any Identifiable.Type, ID.self == elementType._opaque_ID.self {
+            self = try elementType._decodeIdentifierIndexingArray(Self.self, from: representation)
         } else {
             throw Never.Reason.unavailable
         }
+    }
+}
+
+extension Identifiable {
+    fileprivate static var _opaque_ID: Any.Type {
+        ID.self
+    }
+    
+    fileprivate static func _decodeIdentifierIndexingArray<T, U>(
+        _ type: IdentifierIndexingArray<T, U>.Type,
+        from representation: Array<_TypeSerializingAnyCodable>
+    ) throws -> IdentifierIndexingArray<T, U> {
+        assert(T.self == Self.self)
+        assert(U.self == Self.ID.self)
+        
+        return try IdentifierIndexingArray<T, U>(
+            representation.map({ try unsafeBitCast($0.decode(Self.self), to: T.self) }),
+            id: { unsafeBitCast(unsafeBitCast($0, to: Self.self).id, to: U.self) }
+        )
     }
 }
 

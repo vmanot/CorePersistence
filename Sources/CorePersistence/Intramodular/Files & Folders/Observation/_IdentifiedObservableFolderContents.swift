@@ -14,6 +14,7 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable>: Muta
     
     public typealias WrappedValue = IdentifierIndexingArray<Item, ID>
     
+    public let cocoaFileManager = FileManager.default
     public let folder: any _FileOrFolderRepresenting
     public let fileConfiguration: (Element) throws -> _RelativeFileConfiguration<Item>
     public let id: (Item) -> ID
@@ -55,7 +56,7 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable>: Muta
         } set {
             objectWillChange.send()
             
-            try! FileManager.default.withUserGrantedAccess(to: folderURL) { folderURL in
+            try! cocoaFileManager.withUserGrantedAccess(to: folderURL) { folderURL in
                 try! _setNewValue(newValue, withFolderURL: folderURL)
             }
         }
@@ -78,14 +79,14 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable>: Muta
             let folderURL = try self.folderURL
             
             do {
-                if !FileManager.default.fileExists(at: folderURL) {
-                    try FileManager.default.createDirectory(at: folderURL, withIntermediateDirectories: true)
+                if !cocoaFileManager.fileExists(at: folderURL) {
+                    try cocoaFileManager.createDirectory(at: folderURL, withIntermediateDirectories: true)
                 }
             } catch {
                 runtimeIssue(error)
             }
             
-            try FileManager.default.withUserGrantedAccess(to: folderURL) { url in
+            try cocoaFileManager.withUserGrantedAccess(to: folderURL) { url in
                 try _initialize(withFolderURL: url)
             }
         }
@@ -95,14 +96,20 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable>: Muta
     private func _initialize(
         withFolderURL folderURL: URL
     ) throws {
-        try FileManager.default.createDirectoryIfNecessary(at: folderURL, withIntermediateDirectories: true)
+        try cocoaFileManager.createDirectoryIfNecessary(at: folderURL, withIntermediateDirectories: true)
         
-        let urls = try FileManager.default.contentsOfDirectory(at: folderURL)
+        let urls = try cocoaFileManager.contentsOfDirectory(at: folderURL)
         
         for url in urls {
             do {
-                if FileManager.default.isDirectory(at: url) {
+                guard !cocoaFileManager.isDirectory(at: url) else {
                     continue
+                }
+                
+                if let filename = url._fileNameWithExtension {
+                    guard !cocoaFileManager._practicallyIgnoredFilenames.contains(filename) else {
+                        continue
+                    }
                 }
                 
                 var fileConfiguration = try self.fileConfiguration(.url(FileURL(url)))
@@ -126,7 +133,7 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable>: Muta
                 
                 self._wrappedValue.append(element)
             } catch {
-                runtimeIssue("An error occurred while reading \(url)")
+                runtimeIssue("An error occurred while reading \(url): \(error)")
             }
         }
     }
@@ -184,14 +191,14 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable>: Muta
             
             let fileURL = try storage[key].unwrap().fileSystemResource._toURL()
             
-            assert(FileManager.default.regularFileExists(at: fileURL))
+            assert(cocoaFileManager.regularFileExists(at: fileURL))
             
             storage[key]?.discard()
             storage[key] = nil
             
             updatedNewValue[id: key] = nil
             
-            try FileManager.default.removeItemIfNecessary(at: fileURL)
+            try cocoaFileManager.removeItemIfNecessary(at: fileURL)
         }
         
         for key in difference.insertions {
@@ -206,7 +213,7 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable>: Muta
             
             fileConfiguration.serialization?.initialValue = .available(element)
             
-            try FileManager.default.createDirectory(at: folderURL, withIntermediateDirectories: true)
+            try cocoaFileManager.createDirectory(at: folderURL, withIntermediateDirectories: true)
             
             let fileCoordinator = try! _FileStorageCoordinators.RegularFile<MutableValueBox<Item>, Item>(
                 fileSystemResource: FileURL(fileURL),

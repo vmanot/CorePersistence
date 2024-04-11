@@ -63,7 +63,6 @@ public struct _TypeSerializingAnyCodable: CustomDebugStringConvertible {
 }
 
 extension _TypeSerializingAnyCodable {
-    
     public func decode<T>(_ type: T.Type = T.self) throws -> T {
         if let type = type as? any _UnwrappableTypeEraser.Type {
             func _decodeAsAny<A>(_ type: A.Type) throws -> Any {

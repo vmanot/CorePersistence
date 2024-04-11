@@ -174,7 +174,7 @@ extension _ModularDecoder.TopLevelProxyDecodable {
             })
             
             guard hasUnsafeSerializationPlugin || hasTypeDiscriminatorCodingPlugin else {
-                throw _ModularDecodingError.unsafeSerializationUnsupported(concreteType)
+                throw _ModularDecodingError.unsafeSerializationUnsupported(concreteType, value: nil)
             }
         }
     }
@@ -259,7 +259,7 @@ extension _ModularDecoder.TopLevelProxyDecodable {
                     throw Never.Reason.unexpected
                 }
             } else {
-                throw _ModularDecodingError.unsafeSerializationUnsupported(type)
+                throw _ModularDecodingError.unsafeSerializationUnsupported(type, value: nil)
             }
         }
     }

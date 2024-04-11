@@ -152,7 +152,7 @@ extension _ModularEncoder {
                         
                         if !encodedDiscriminator {
                             guard encoder.configuration.plugins.contains(where: { $0 is _UnsafeSerializationPlugin }) else {
-                                throw _ModularDecodingError.unsafeSerializationUnsupported(valueType)
+                                throw _ModularDecodingError.unsafeSerializationUnsupported(valueType, value: unwrappedBase)
                             }
                         }
                         
