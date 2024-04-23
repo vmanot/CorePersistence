@@ -96,7 +96,7 @@ extension _FileBundle_KeyedFileProperty {
         wrappedValue: Contents,
         _ path: String,
         options: FileStorageOptions = nil
-    ) where Contents: _FileDocumentProtocol {
+    ) where Contents: _FileDocument {
         self.init(
             configuration: try! _RelativeFileConfiguration(
                 path: path,
@@ -111,7 +111,7 @@ extension _FileBundle_KeyedFileProperty {
     convenience public init(
         _ path: String,
         options: FileStorageOptions = nil
-    ) where Contents: _FileDocumentProtocol & Initiable {
+    ) where Contents: _FileDocument & Initiable {
         let initialValue = Contents()
         
         self.init(
@@ -129,7 +129,7 @@ extension _FileBundle_KeyedFileProperty {
         wrappedValue: Contents? = nil,
         _ path: String,
         options: FileStorageOptions = nil
-    ) where Contents: Initiable, Contents: _FileDocumentProtocol {
+    ) where Contents: Initiable, Contents: _FileDocument {
         self.init(
             configuration: try! _RelativeFileConfiguration(
                 path: path,
@@ -145,7 +145,7 @@ extension _FileBundle_KeyedFileProperty {
         wrappedValue: Contents = .init(nilLiteral: ()),
         _ path: String,
         options: FileStorageOptions = nil
-    ) where Contents: OptionalProtocol, Contents.Wrapped: _FileDocumentProtocol {
+    ) where Contents: OptionalProtocol, Contents.Wrapped: _FileDocument {
         self.init(
             configuration: try! _RelativeFileConfiguration(
                 path: path,

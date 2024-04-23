@@ -79,6 +79,15 @@ extension _FileStorageCoordinators {
                 fileSystemResource: try fileSystemResource(),
                 configuration: configuration
             )
+                                    
+            // scheduleEagerRead() // FIXME: !!! disabled because it's maxing out CPU
+            
+            setUpReadWrite()
+            setUpAppRunningStateObserver()
+        }
+        
+        private func setUpReadWrite() {
+            var _strongSelf: AnyObject? = self
             
             self.read = { [weak self] () -> UnwrappedValue in
                 guard let `self` = self else {
@@ -87,21 +96,33 @@ extension _FileStorageCoordinators {
                     throw Never.Reason.unexpected
                 }
                 
-                let rawContents: Any? = try _withLogicalParent(self._enclosingInstance) {
-                    let resource: any _FileOrFolderRepresenting = try fileSystemResource()
+                _ = _strongSelf
+                
+                _strongSelf = nil
+                
+                var result: UnwrappedValue? = try _withLogicalParent(self._enclosingInstance) { () -> UnwrappedValue? in
+                    let resource: any _FileOrFolderRepresenting = self.fileSystemResource
                     
-                    if let serialization = configuration.serialization {
-                        return try resource.decode(using: serialization.coder)
+                    if let serialization = self.configuration.serialization {
+                        guard let decoded: Any = try resource.decode(using: serialization.coder) else {
+                            return nil
+                        }
+                        
+                        return try cast(decoded, to: UnwrappedValue.self)
                     } else {
                         return nil // FIXME
                     }
                 }
-
-                guard let rawContents else {
-                    return try configuration.serialization?.initialValue().unwrap() ?? _generatePlaceholder(ofType: UnwrappedValue.self)
+                
+                if result == nil {
+                    let initialValue = try configuration.serialization?.initialValue().unwrap() ?? _generatePlaceholder(ofType: UnwrappedValue.self)
+                    
+                    _writeValue(initialValue, immediately: true)
+                    
+                    result = initialValue
                 }
                 
-                return try cast(rawContents, to: UnwrappedValue.self)
+                return try result.unwrap()
             }
             
             self.write = { [weak self] newValue in
@@ -110,7 +131,7 @@ extension _FileStorageCoordinators {
                 }
                 
                 try _withLogicalParent(self._enclosingInstance) {
-                    if let serialization = configuration.serialization {
+                    if let serialization = self.configuration.serialization {
                         try self.fileSystemResource.encode(
                             newValue,
                             using: serialization.coder
@@ -118,10 +139,6 @@ extension _FileStorageCoordinators {
                     }
                 }
             }
-                        
-            // scheduleEagerRead() // FIXME: !!! disabled because it's maxing out CPU
-            
-            setUpAppRunningStateObserver()
         }
         
         private func setUpAppRunningStateObserver() {

@@ -41,7 +41,16 @@ public class _AnyFileStorageCoordinator<ValueType, UnwrappedValue>: ObservableOb
         qos: .default
     )
     
-    var fileSystemResource: any _FileOrFolderRepresenting
+    var resolveFileSystemResource: () throws -> any _FileOrFolderRepresenting
+    
+    var fileSystemResource: any _FileOrFolderRepresenting {
+        get {
+            try! resolveFileSystemResource()
+        } set {
+            resolveFileSystemResource = { newValue }
+        }
+    }
+    
     var configuration: _RelativeFileConfiguration<UnwrappedValue>
     
     @MainActor(unsafe)
@@ -55,10 +64,19 @@ public class _AnyFileStorageCoordinator<ValueType, UnwrappedValue>: ObservableOb
     
     @MainActor
     init(
-        fileSystemResource: any _FileOrFolderRepresenting,
+        fileSystemResource: @escaping () throws -> any _FileOrFolderRepresenting,
         configuration: _RelativeFileConfiguration<UnwrappedValue>
     ) throws {
-        self.fileSystemResource = fileSystemResource
+        self.resolveFileSystemResource = fileSystemResource
+        self.configuration = configuration
+    }
+    
+    @MainActor
+    init(
+        fileSystemResource: @autoclosure @escaping () throws -> any _FileOrFolderRepresenting,
+        configuration: _RelativeFileConfiguration<UnwrappedValue>
+    ) throws {
+        self.resolveFileSystemResource = fileSystemResource
         self.configuration = configuration
     }
     
@@ -89,12 +107,12 @@ extension _FileStorageCoordinators.RegularFile {
     @MainActor
     convenience init(
         initialValue: UnwrappedValue?,
-        file: any _FileOrFolderRepresenting,
+        file: @autoclosure @escaping () throws -> any _FileOrFolderRepresenting,
         coder: _AnyConfiguredFileCoder,
         options: FileStorageOptions
     ) throws {
         try self.init(
-            fileSystemResource: file,
+            fileSystemResource: file(),
             configuration: try! _RelativeFileConfiguration(
                 path: nil,
                 coder: coder,

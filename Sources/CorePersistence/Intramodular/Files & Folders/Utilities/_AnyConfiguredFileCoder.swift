@@ -8,7 +8,7 @@ import UniformTypeIdentifiers
 
 public struct _AnyConfiguredFileCoder {
     public enum RawValue {
-        case document(_FileDocumentProtocol.Type)
+        case document(_FileDocument.Type)
         case topLevelData(_AnyTopLevelDataCoder)
     }
     
@@ -26,8 +26,14 @@ public struct _AnyConfiguredFileCoder {
     }
     
     public init(
-        _ documentType: any _FileDocumentProtocol.Type,
-        supportedTypes: [any _FileDocumentProtocol.Type] = []
+        _ documentType: any _FileDocument.Type,
+        supportedTypes: [any _FileDocument.Type] = []
+    ) {
+        self.init(rawValue: .document(documentType))
+    }
+    
+    public init(
+        documentType: any _FileDocument.Type
     ) {
         self.init(rawValue: .document(documentType))
     }
@@ -72,7 +78,15 @@ extension FileManager {
     ) throws -> Any? {
         switch coder.rawValue {
             case .document(let document):
-                return try document.init(configuration: .init(url: url))
+                do {
+                    return try document.init(configuration: .init(url: url))
+                } catch {
+                    if fileExists(at: url) {
+                        throw error
+                    } else {
+                        return nil
+                    }
+                }
             case .topLevelData(let coder):
                 guard let data = try fileExists(at: url) ? contents(of: url) : nil else {
                     return nil

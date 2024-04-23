@@ -6,14 +6,14 @@ import Swallow
 import UniformTypeIdentifiers
 
 public protocol DocumentContentSelection: Codable, Hashable, Sendable {
-    associatedtype Document: _FileDocumentProtocol
+    associatedtype Document: _FileDocument
 }
 
-public enum DefaultDocumentContentSelection<Document: _FileDocumentProtocol>: DocumentContentSelection {
+public enum DefaultDocumentContentSelection<Document: _FileDocument>: DocumentContentSelection {
     case wholeDocument
 }
 
-public struct _ContentSelectionSpecified<Base: _FileDocumentProtocol, ContentSelection: DocumentContentSelection>: ContentSelectingDocument, _FileDocumentProtocol where ContentSelection.Document == Base {
+public struct _ContentSelectionSpecified<Base: _FileDocument, ContentSelection: DocumentContentSelection>: ContentSelectingDocument, _FileDocument where ContentSelection.Document == Base {
     public static var readableContentTypes: [UTType] {
         Base.readableContentTypes
     }
@@ -28,21 +28,15 @@ public struct _ContentSelectionSpecified<Base: _FileDocumentProtocol, ContentSel
         self.base = base
     }
     
-    public init(configuration: _FileDocumentReadConfiguration) throws {
+    public init(
+        configuration: _FileDocumentReadConfiguration
+    ) throws {
         try self.init(base: .init(configuration: configuration))
     }
     
-    public func _fileWrapper(configuration: _FileDocumentWriteConfiguration) throws -> FileWrapper {
+    public func fileWrapper(
+        configuration: _FileDocumentWriteConfiguration
+    ) throws -> FileWrapper {
         try base._fileWrapper(configuration: configuration)
-    }
-}
-
-extension _ContentSelectionSpecified: _FileDocument where Base: _FileDocument {
-    public init(configuration: Base.ReadConfiguration) throws {
-        try self.init(base: .init(configuration: configuration))
-    }
-    
-    public func fileWrapper(configuration: Base.WriteConfiguration) throws -> FileWrapper {
-        try base.fileWrapper(configuration: configuration)
     }
 }

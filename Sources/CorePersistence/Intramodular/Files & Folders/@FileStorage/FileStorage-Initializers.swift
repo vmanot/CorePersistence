@@ -11,7 +11,7 @@ extension FileStorage {
     @MainActor
     public convenience init<Coder: TopLevelDataCoder>(
         wrappedValue: UnwrappedType,
-        location: () throws -> URL,
+        location: @escaping () throws -> URL,
         coder: Coder,
         options: FileStorageOptions
     ) where UnwrappedType: Codable, ValueType == MutableValueBox<UnwrappedType> {
@@ -24,11 +24,11 @@ extension FileStorage {
             )
         )
     }
-    
+        
     @MainActor
     public convenience init<Coder: TopLevelDataCoder>(
         wrappedValue: UnwrappedType = nil,
-        url: @autoclosure () throws -> URL,
+        url: @autoclosure @escaping () throws -> URL,
         coder: Coder
     ) where UnwrappedType: Codable & OptionalProtocol, ValueType == MutableValueBox<UnwrappedType> {
         self.init(
@@ -85,10 +85,85 @@ extension FileStorage {
 
 extension FileStorage {
     @MainActor
+    public convenience init(
+        wrappedValue: UnwrappedType,
+        location: @escaping () throws -> URL,
+        options: FileStorageOptions = nil
+    ) where UnwrappedType: _FileDocument, ValueType == MutableValueBox<UnwrappedType> {
+        self.init(
+            coordinator: try _FileStorageCoordinators.RegularFile(
+                initialValue: wrappedValue,
+                file: FileURL(location()),
+                coder: _AnyConfiguredFileCoder(documentType: UnwrappedType.self),
+                options: options
+            )
+        )
+    }
+    
+    @MainActor
+    public convenience init(
+        wrappedValue: UnwrappedType,
+        location: @escaping () throws -> CanonicalFileDirectory,
+        options: FileStorageOptions = nil
+    ) where UnwrappedType: _FileDocument, ValueType == MutableValueBox<UnwrappedType> {
+        self.init(
+            coordinator: try _FileStorageCoordinators.RegularFile(
+                initialValue: wrappedValue,
+                file: FileURL(location()),
+                coder: _AnyConfiguredFileCoder(documentType: UnwrappedType.self),
+                options: options
+            )
+        )
+    }
+    
+    @MainActor
+    public convenience init(
+        wrappedValue: UnwrappedType,
+        location: @autoclosure @escaping () -> CanonicalFileDirectory,
+        options: FileStorageOptions = nil
+    ) where UnwrappedType: _FileDocument, ValueType == MutableValueBox<UnwrappedType> {
+        self.init(
+            wrappedValue: wrappedValue,
+            location: location,
+            options: options
+        )
+    }
+    
+    @MainActor
+    public convenience init(
+        location: @autoclosure @escaping () -> CanonicalFileDirectory,
+        options: FileStorageOptions = nil
+    ) where UnwrappedType: _FileDocument & Initiable, ValueType == MutableValueBox<UnwrappedType> {
+        self.init(
+            wrappedValue: .init(),
+            location: location,
+            options: options
+        )
+    }
+    
+    @MainActor
+    public convenience init(
+        wrappedValue: UnwrappedType,
+        location: @escaping () throws -> URL,
+        options: FileStorageOptions = nil
+    ) where UnwrappedType: Codable & _FileDocument, ValueType == MutableValueBox<UnwrappedType> {
+        self.init(
+            coordinator: try _FileStorageCoordinators.RegularFile(
+                initialValue: wrappedValue,
+                file: FileURL(location()),
+                coder: _AnyConfiguredFileCoder(documentType: UnwrappedType.self),
+                options: options
+            )
+        )
+    }
+}
+
+extension FileStorage {
+    @MainActor
     @_disfavoredOverload
     public convenience init<Coder: TopLevelDataCoder>(
         wrappedValue: UnwrappedType,
-        location: () throws -> URL,
+        location: @escaping () throws -> URL,
         coder: Coder,
         options: FileStorageOptions = nil
     ) where ValueType == _UnsafelySerialized<UnwrappedType> {
@@ -162,6 +237,38 @@ extension FileStorage {
     @MainActor
     @_disfavoredOverload
     public convenience init<Coder: TopLevelDataCoder>(
+        location: @escaping () throws -> URL,
+        path: String,
+        coder: Coder,
+        options: FileStorageOptions = nil
+    ) where ValueType == _UnsafelySerialized<UnwrappedType>, UnwrappedType: Initiable {
+        self.init(
+            wrappedValue: UnwrappedType(),
+            location: { try location().appending(URL.PathComponent(path)) },
+            coder: coder,
+            options: options
+        )
+    }
+    
+    @MainActor
+    @_disfavoredOverload
+    public convenience init<Coder: TopLevelDataCoder>(
+        location: @autoclosure @escaping () throws -> URL,
+        path: String,
+        coder: Coder,
+        options: FileStorageOptions = nil
+    ) where ValueType == _UnsafelySerialized<UnwrappedType>, UnwrappedType: Initiable {
+        self.init(
+            wrappedValue: UnwrappedType(),
+            location: { try location().appending(URL.PathComponent(path)) },
+            coder: coder,
+            options: options
+        )
+    }
+    
+    @MainActor
+    @_disfavoredOverload
+    public convenience init<Coder: TopLevelDataCoder>(
         _ location: CanonicalFileDirectory,
         path: String,
         coder: Coder,
@@ -174,7 +281,7 @@ extension FileStorage {
             options: options
         )
     }
-
+    
     @MainActor
     @_disfavoredOverload
     public convenience init<Coder: TopLevelDataCoder, Element>(
@@ -269,11 +376,11 @@ extension FileStorage {
 extension FileStorage {
     @MainActor
     public convenience init<Item, ID>(
-        directory: () throws -> URL,
-        file: @escaping (_ObservableIdentifiedFolderContents<Item, ID>.Element) -> _RelativeFileConfiguration<Item>,
+        directory: @escaping () throws -> URL,
+        file: @escaping (_ObservableIdentifiedFolderContents<Item, ID, UnwrappedType>.Element) -> _RelativeFileConfiguration<Item>,
         id: KeyPath<Item, ID>,
         options: FileStorageOptions = nil
-    ) where ValueType == _ObservableIdentifiedFolderContents<Item, ID>, UnwrappedType == ValueType.WrappedValue {
+    ) where ValueType == _ObservableIdentifiedFolderContents<Item, ID, UnwrappedType>, UnwrappedType == IdentifierIndexingArray<Item, ID> {
         self.init(
             coordinator: try _FileStorageCoordinators.Directory(
                 base: .init(
@@ -292,7 +399,7 @@ extension FileStorage {
         coder: Coder,
         id: KeyPath<Item, ID>,
         options: FileStorageOptions = nil
-    ) where Item: Codable, ValueType == _ObservableIdentifiedFolderContents<Item, ID>, UnwrappedType == ValueType.WrappedValue {
+    ) where Item: Codable, ValueType == _ObservableIdentifiedFolderContents<Item, ID, UnwrappedType>, UnwrappedType == IdentifierIndexingArray<Item, ID> {
         self.init(
             coordinator: try _FileStorageCoordinators.Directory(
                 base: _ObservableIdentifiedFolderContents(
@@ -328,7 +435,7 @@ extension FileStorage {
         coder: Coder,
         id: KeyPath<Item, ID>,
         options: FileStorageOptions = nil
-    ) where Item: Codable, ValueType == _ObservableIdentifiedFolderContents<Item, ID>, UnwrappedType == ValueType.WrappedValue {
+    ) where Item: Codable, ValueType == _ObservableIdentifiedFolderContents<Item, ID, UnwrappedType>, UnwrappedType == IdentifierIndexingArray<Item, ID> {
         self.init(
             directory: { directory },
             filename: { $0[keyPath: filename] },
@@ -345,7 +452,7 @@ extension FileStorage {
         coder: Coder,
         id: KeyPath<Item, ID>,
         options: FileStorageOptions = nil
-    ) where Item: Codable, ValueType == _ObservableIdentifiedFolderContents<Item, ID>, UnwrappedType == ValueType.WrappedValue {
+    ) where Item: Codable, ValueType == _ObservableIdentifiedFolderContents<Item, ID, UnwrappedType>, UnwrappedType == IdentifierIndexingArray<Item, ID> {
         self.init(
             directory: { directory },
             filename: { _ in Filename.random().filenameProvider },
@@ -356,12 +463,80 @@ extension FileStorage {
     }
     
     @MainActor
+    public convenience init<Item, ID, Filename: CustomFilenameConvertible & Randomnable, Coder: TopLevelDataCoder>(
+        directory: URL,
+        filename: Filename.Type,
+        coder: Coder,
+        options: FileStorageOptions = nil
+    ) where Item: Codable & Identifiable, ValueType == _ObservableIdentifiedFolderContents<Item, ID, UnwrappedType>, UnwrappedType == IdentifierIndexingArray<Item, ID>, Item.ID == ID {
+        self.init(
+            directory: { directory },
+            filename: { _ in Filename.random().filenameProvider },
+            coder: coder,
+            id: \.id,
+            options: options
+        )
+    }
+    
+    @MainActor
+    public convenience init<Item, ID, Filename: CustomFilenameConvertible & Randomnable, Coder: TopLevelDataCoder>(
+        directory: URL,
+        path: String,
+        filename: Filename.Type,
+        id: KeyPath<Item, ID>,
+        coder: Coder,
+        options: FileStorageOptions = nil
+    ) where Item: Codable & Identifiable, ValueType == _ObservableIdentifiedFolderContents<Item, ID, UnwrappedType>, UnwrappedType == IdentifierIndexingArray<Item, ID>, Item.ID == ID {
+        self.init(
+            directory: { directory.appendingPathComponent(path, conformingTo: .directory) },
+            filename: { _ in Filename.random().filenameProvider },
+            coder: coder,
+            id: \.id,
+            options: options
+        )
+    }
+
+    @MainActor
+    public convenience init<Item, ID, Filename: CustomFilenameConvertible & Randomnable, Coder: TopLevelDataCoder>(
+        directory: URL,
+        path: String,
+        filename: Filename.Type,
+        coder: Coder,
+        options: FileStorageOptions = nil
+    ) where Item: Codable & Identifiable, ValueType == _ObservableIdentifiedFolderContents<Item, ID, UnwrappedType>, UnwrappedType == IdentifierIndexingArray<Item, ID>, Item.ID == ID {
+        self.init(
+            directory: { directory.appendingPathComponent(path, conformingTo: .directory) },
+            filename: { _ in Filename.random().filenameProvider },
+            coder: coder,
+            id: \.id,
+            options: options
+        )
+    }
+    
+    @MainActor
+    public convenience init<Item, ID, Filename: CustomFilenameConvertible & Randomnable, Coder: TopLevelDataCoder>(
+        directory: CanonicalFileDirectory,
+        path: String,
+        filename: Filename.Type,
+        coder: Coder,
+        options: FileStorageOptions = nil
+    ) where Item: Codable & Identifiable, ValueType == _ObservableIdentifiedFolderContents<Item, ID, UnwrappedType>, UnwrappedType == IdentifierIndexingArray<Item, ID>, Item.ID == ID {
+        self.init(
+            directory: { try directory.toURL().appendingPathComponent(path, conformingTo: .directory) },
+            filename: { _ in Filename.random().filenameProvider },
+            coder: coder,
+            id: \.id,
+            options: options
+        )
+    }
+
+    @MainActor
     public convenience init<Item, Filename: CustomFilenameConvertible & Randomnable, Coder: TopLevelDataCoder>(
         directory: URL,
         filename: Filename.Type,
         coder: Coder,
         options: FileStorageOptions = nil
-    ) where Item: Codable & Identifiable, ValueType == _ObservableIdentifiedFolderContents<Item, Item.ID>, UnwrappedType == ValueType.WrappedValue {
+    ) where Item: Codable & Identifiable, ValueType == _ObservableIdentifiedFolderContents<Item, ID, UnwrappedType>, UnwrappedType == IdentifierIndexingArray<Item, ID>, ID == Item.ID {
         self.init(
             directory: { directory },
             filename: { _ in Filename.random().filenameProvider },
@@ -378,7 +553,7 @@ extension FileStorage {
         filename: Filename.Type,
         coder: Coder,
         options: FileStorageOptions = nil
-    ) where Item: Codable & Identifiable, ValueType == _ObservableIdentifiedFolderContents<Item, Item.ID>, UnwrappedType == ValueType.WrappedValue {
+    ) where Item: Codable & Identifiable, ValueType == _ObservableIdentifiedFolderContents<Item, ID, UnwrappedType>, UnwrappedType == IdentifierIndexingArray<Item, ID>, ID == Item.ID {
         self.init(
             directory: { try directory.toURL().appendingDirectoryPathComponent(path) },
             filename: { _ in Filename.random().filenameProvider },
@@ -394,7 +569,7 @@ extension FileStorage {
         directory: String,
         coder: Coder,
         options: FileStorageOptions = nil
-    ) where Item: Codable & Identifiable, Item.ID: CustomFilenameConvertible, ID == Item.ID, ValueType == _ObservableIdentifiedFolderContents<Item, ID>, UnwrappedType == ValueType.WrappedValue {
+    ) where Item: Codable & Identifiable, Item.ID: CustomFilenameConvertible, ID == Item.ID, ValueType == _ObservableIdentifiedFolderContents<Item, ID, UnwrappedType>, UnwrappedType == IdentifierIndexingArray<Item, ID>, ID == Item.ID {
         self.init(
             directory: { try location().appendingPathComponent(directory) },
             filename: \.id.filenameProvider,
@@ -409,7 +584,7 @@ extension FileStorage {
         directory: @escaping () throws -> URL,
         coder: Coder,
         options: FileStorageOptions = nil
-    ) where Item: Codable & PersistentIdentifierConvertible, Item.PersistentID: CustomFilenameConvertible, ID == Item.PersistentID, ValueType == _ObservableIdentifiedFolderContents<Item, ID>, UnwrappedType == ValueType.WrappedValue {
+    ) where Item: Codable & PersistentIdentifierConvertible, Item.PersistentID: CustomFilenameConvertible, ID == Item.PersistentID, ValueType == _ObservableIdentifiedFolderContents<Item, ID, UnwrappedType>, UnwrappedType == IdentifierIndexingArray<Item, ID> {
         self.init(
             directory: directory,
             filename: \.persistentID.filenameProvider,
@@ -425,7 +600,7 @@ extension FileStorage {
         directory: @escaping () throws -> URL,
         coder: Coder,
         options: FileStorageOptions = nil
-    ) where Item: Codable & Identifiable, Item.ID: CustomFilenameConvertible, ID == Item.ID, ValueType == _ObservableIdentifiedFolderContents<Item, ID>, UnwrappedType == ValueType.WrappedValue {
+    ) where Item: Codable & Identifiable, Item.ID: CustomFilenameConvertible, ID == Item.ID, ValueType == _ObservableIdentifiedFolderContents<Item, ID, UnwrappedType>, UnwrappedType == IdentifierIndexingArray<Item, ID>, ID == Item.ID {
         assert(wrappedValue.isEmpty)
         
         self.init(
@@ -444,7 +619,7 @@ extension FileStorage {
         directory: String,
         coder: Coder,
         options: FileStorageOptions = nil
-    ) where Item: Codable & Identifiable, Item.ID: CustomFilenameConvertible, ID == Item.ID, ValueType == _ObservableIdentifiedFolderContents<Item, ID>, UnwrappedType == ValueType.WrappedValue {
+    ) where Item: Codable & Identifiable, Item.ID: CustomFilenameConvertible, ID == Item.ID, ValueType == _ObservableIdentifiedFolderContents<Item, ID, UnwrappedType>, UnwrappedType == IdentifierIndexingArray<Item, ID>, ID == Item.ID {
         assert(wrappedValue.isEmpty)
         
         self.init(
@@ -460,9 +635,9 @@ extension FileStorage {
     public convenience init<Item, ID>(
         _ location: CanonicalFileDirectory,
         directory: String,
-        file: @escaping (_ObservableIdentifiedFolderContents<Item, ID>.Element) -> _RelativeFileConfiguration<Item>,
+        file: @escaping (_ObservableIdentifiedFolderContents<Item, ID, UnwrappedType>.Element) -> _RelativeFileConfiguration<Item>,
         id: KeyPath<Item, ID>
-    ) where ValueType == _ObservableIdentifiedFolderContents<Item, ID>, UnwrappedType == ValueType.WrappedValue {
+    ) where ValueType == _ObservableIdentifiedFolderContents<Item, ID, UnwrappedType>, UnwrappedType == IdentifierIndexingArray<Item, ID> {
         self.init(
             directory: {
                 try location.toURL().appendingPathComponent(directory, isDirectory: true)
@@ -471,15 +646,15 @@ extension FileStorage {
             id: id
         )
     }
-
+    
     @MainActor
     public convenience init<Item, ID>(
         wrappedValue: UnwrappedType,
         _ location: CanonicalFileDirectory,
         directory: String,
-        file: @escaping (_ObservableIdentifiedFolderContents<Item, ID>.Element) -> _RelativeFileConfiguration<Item>,
+        file: @escaping (_ObservableIdentifiedFolderContents<Item, ID, UnwrappedType>.Element) -> _RelativeFileConfiguration<Item>,
         id: KeyPath<Item, ID>
-    ) where ValueType == _ObservableIdentifiedFolderContents<Item, ID>, UnwrappedType == ValueType.WrappedValue {
+    ) where ValueType == _ObservableIdentifiedFolderContents<Item, ID, UnwrappedType>, UnwrappedType == IdentifierIndexingArray<Item, ID> {
         assert(wrappedValue.isEmpty)
         
         self.init(

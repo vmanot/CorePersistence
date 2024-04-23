@@ -2,6 +2,7 @@
 // Copyright (c) Vatsal Manot
 //
 
+import Dispatch
 import Merge
 import Swallow
 import System
@@ -13,19 +14,23 @@ public final class _DirectoryEventsPublisher: Cancellable, ConnectablePublisher 
     public let url: URL
     public let filePath: FilePath
     
-    private let queue = DispatchQueue.global(qos: .utility)
+    private let queue: DispatchQueue
     private let eventsPublisher = PassthroughSubject<Void, Error>()
     private var fileDescriptor: FileDescriptor?
     private var source: DispatchSourceProtocol?
     private var lastContentsSnapshot: Set<URL>?
     
-    init(url: URL) throws {
+    public init(url: URL, queue: DispatchQueue?) throws {
         self.url = url
+        self.queue = queue ?? DispatchQueue.global(qos: .utility)
         self.filePath = try FilePath(url: url).unwrap()
         
         refreshSnapshot()
     }
     
+    /// Starts monitoring the directory for changes.
+    ///
+    /// - Throws: An error if the file descriptor cannot be opened.
     public func start() throws {
         guard fileDescriptor == nil || source == nil else {
             assert(fileDescriptor == nil && source == nil)
@@ -64,6 +69,7 @@ public final class _DirectoryEventsPublisher: Cancellable, ConnectablePublisher 
         source.resume()
     }
     
+    /// Cancels the monitoring of the directory.
     public func cancel()  {
         guard let source, let fileDescriptor else {
             return
@@ -119,4 +125,3 @@ public final class _DirectoryEventsPublisher: Cancellable, ConnectablePublisher 
         return self
     }
 }
-

@@ -44,6 +44,16 @@ extension FileManager {
         try T(configuration :_FileDocumentReadConfiguration(url: url))
     }
     
+    public func decode<T: _FileDocument>(
+        _ type: Optional<T>.Type,
+        from url: URL
+    ) throws -> Optional<T> {
+        if fileExists(at: url) {
+            return try decode(T.self, from: url)
+        } else {
+            return nil
+        }
+    }
     
     public func decode<T: _FileDocument>(
         _ documents: [URL.RelativePath: T].Type,

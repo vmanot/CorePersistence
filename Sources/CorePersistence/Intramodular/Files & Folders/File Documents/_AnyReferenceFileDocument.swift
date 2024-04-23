@@ -14,9 +14,9 @@ public final class _AnyReferenceFileDocument: ObservableObject {
         case unsupportedTypeCast(to: Any.Type)
     }
     
-    @Published private var _base: any _FileDocumentProtocol
+    @Published private var _base: any _FileDocument
     
-    public var base: any _FileDocumentProtocol {
+    public var base: any _FileDocument {
         get {
             _base
         } set {
@@ -24,7 +24,7 @@ public final class _AnyReferenceFileDocument: ObservableObject {
         }
     }
     
-    init(base: any _FileDocumentProtocol) {
+    init(base: any _FileDocument) {
         self._base = base
     }
 }
@@ -45,7 +45,11 @@ extension _AnyReferenceFileDocument {
     }
     
     public convenience init(_ value: Any) throws {
-        if let value = value as? _FileDocumentProtocol {
+        if value is _AnyReferenceFileDocument {
+            assertionFailure()
+        }
+        
+        if let value = value as? _FileDocument {
             self.init(base: value)
         } else if let value = value as? Codable {
             self.init(_codable: value)
@@ -55,7 +59,7 @@ extension _AnyReferenceFileDocument {
     }
     
     private convenience init<T: Codable>(_codable value: T) {
-        assert(!(value is _FileDocumentProtocol))
+        assert(!(value is _FileDocument))
         
         self.init(base: _JSONCodingDocument(value: value))
     }
@@ -80,7 +84,7 @@ extension _AnyReferenceFileDocument {
 extension _AnyReferenceFileDocument {
     public func _typedAccessor<T>(_ type: T.Type) -> _NonAsyncAndAsyncAccessor<Void, T> {
         func _setSynchronously(_ newValue: T) throws {
-            if let newValue = newValue as? _FileDocumentProtocol {
+            if let newValue = newValue as? _FileDocument {
                 self.base = newValue
             } else if let newValue = newValue as? Codable {
                 try newValue._opaque_encode(toJSONCodingDocument: &self.base)
@@ -123,7 +127,7 @@ extension _AnyReferenceFileDocument {
         to type: T.Type,
         preserveResultInPlace: Bool
     ) async throws -> T {
-        if let type = type as? _FileDocumentProtocol.Type {
+        if let type = type as? _FileDocument.Type {
             return try await Swallow.cast(_cast(to: type, preserveResultInPlace: preserveResultInPlace), to: T.self)
         } else if let type = type as? Codable.Type {
             return try await Swallow.cast(_cast(to: type, preserveResultInPlace: preserveResultInPlace), to: T.self)
@@ -150,7 +154,7 @@ extension _AnyReferenceFileDocument {
         }
     }
     
-    private func _cast<T: _FileDocumentProtocol>(
+    private func _cast<T: _FileDocument>(
         to type: T.Type,
         preserveResultInPlace: Bool
     ) async throws -> T {
@@ -183,7 +187,7 @@ extension _AnyReferenceFileDocument {
         to type: T.Type,
         preserveResultInPlace: Bool
     ) throws -> T {
-        if let type = type as? _FileDocumentProtocol.Type {
+        if let type = type as? _FileDocument.Type {
             return try Swallow.cast(_castSynchronously(to: type, preserveResultInPlace: preserveResultInPlace), to: T.self)
         } else if let type = type as? Codable.Type {
             return try Swallow.cast(_castSynchronously(to: type, preserveResultInPlace: preserveResultInPlace), to: T.self)
@@ -208,7 +212,7 @@ extension _AnyReferenceFileDocument {
         }
     }
     
-    private func _castSynchronously<T: _FileDocumentProtocol>(
+    private func _castSynchronously<T: _FileDocument>(
         to type: T.Type,
         preserveResultInPlace: Bool
     ) throws -> T {
@@ -273,7 +277,7 @@ extension _AnyReferenceFileDocument: _ReferenceFileDocument {
 
 extension Decodable where Self: Encodable {
     fileprivate static func _opaque_decode(
-        fromJSONCodingDocument document: _FileDocumentProtocol
+        fromJSONCodingDocument document: _FileDocument
     ) throws -> Any {
         if let document = document as? _FileWrapperDocument {
             return try _JSONCodingDocument<Self>(
@@ -288,7 +292,7 @@ extension Decodable where Self: Encodable {
     }
     
     fileprivate func _opaque_encode(
-        toJSONCodingDocument document: inout _FileDocumentProtocol
+        toJSONCodingDocument document: inout _FileDocument
     ) throws {
         try _tryAssert(document is _JSONCodingDocument<Self> || document is _FileWrapperDocument)
         

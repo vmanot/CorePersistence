@@ -24,7 +24,10 @@ public enum _FileStorageReadErrorRecoveryStrategy: String, Codable, Hashable, Se
 public final class FileStorage<ValueType, UnwrappedType> {
     public typealias Coordinator = _AnyFileStorageCoordinator<ValueType, UnwrappedType>
     
-    private let coordinator: Coordinator
+    private var makeCoordinator: () throws -> Coordinator
+    private lazy var coordinator: Coordinator = {
+       try! makeCoordinator()
+    }()
     private var objectWillChangeConduit: AnyCancellable?
     
     public var wrappedValue: UnwrappedType {
@@ -45,6 +48,14 @@ public final class FileStorage<ValueType, UnwrappedType> {
         }
     }
     
+    public func setLocation(_ url: URL) throws {
+        coordinator.fileSystemResource = FileURL(url)
+    }
+    
+    public func setLocation(_ directory: CanonicalFileDirectory, path: String) throws {
+        try setLocation(directory.toURL().appending(URL.PathComponent(path)))
+    }
+
     public static subscript<EnclosingSelf>(
         _enclosingInstance instance: EnclosingSelf,
         wrapped wrappedKeyPath: ReferenceWritableKeyPath<EnclosingSelf, UnwrappedType>,
@@ -88,9 +99,9 @@ public final class FileStorage<ValueType, UnwrappedType> {
     }
     
     init(
-        coordinator: @autoclosure () throws -> FileStorage.Coordinator
+        coordinator: @autoclosure @escaping () throws -> FileStorage.Coordinator
     ) {
-        self.coordinator = try! coordinator()
+        self.makeCoordinator = coordinator
     }
 }
 
@@ -147,5 +158,29 @@ extension FileStorage: _FileOrFolderRepresenting {
         using coder: _AnyConfiguredFileCoder
     ) throws {
         throw Never.Reason.illegal
+    }
+}
+
+extension FileStorage: Equatable where UnwrappedType: Equatable {
+    public static func == (lhs: FileStorage, rhs: FileStorage) -> Bool {
+        do {
+            return (try lhs.url) == (try rhs.url) && lhs.coordinator.wrappedValue == rhs.coordinator.wrappedValue
+        } catch {
+            runtimeIssue(error)
+            
+            return false
+        }
+    }
+}
+
+extension FileStorage: Hashable where UnwrappedType: Hashable {
+    public func hash(into hasher: inout Hasher) {
+        do {
+            try hasher.combine(url)
+        } catch {
+            runtimeIssue(error)
+        }
+        
+        hasher.combine(wrappedValue)
     }
 }

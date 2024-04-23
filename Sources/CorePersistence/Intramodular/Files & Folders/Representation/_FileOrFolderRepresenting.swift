@@ -90,6 +90,10 @@ public struct FileURL: _FileOrFolderRepresenting {
         self.init(base: url)
     }
     
+    public init(_ directory: CanonicalFileDirectory) throws {
+        try self.init(base: directory.toURL())
+    }
+
     public func _toURL() throws -> URL {
         base
     }
@@ -110,7 +114,7 @@ public struct FileURL: _FileOrFolderRepresenting {
     @_spi(Internal)
     @available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *)
     public func streamChildren() throws -> AsyncThrowingStream<AnyAsyncSequence<Child>, Error> {
-        try _DirectoryEventsPublisher(url: base)
+        try _DirectoryEventsPublisher(url: base, queue: nil)
             .autoconnect()
             .prepend(())
             .values

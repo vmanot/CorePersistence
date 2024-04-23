@@ -7,8 +7,8 @@ import Merge
 import Swallow
 
 extension _FileStorageCoordinators {
-    public final class Directory<Item, ID: Hashable>: _AnyFileStorageCoordinator<_ObservableIdentifiedFolderContents<Item, ID>, _ObservableIdentifiedFolderContents<Item, ID>.WrappedValue> {
-        public typealias Base = _ObservableIdentifiedFolderContents<Item, ID>
+    public final class Directory<Item, ID: Hashable, WrappedValue>: _AnyFileStorageCoordinator<_ObservableIdentifiedFolderContents<Item, ID, WrappedValue>, WrappedValue> {
+        public typealias Base = _ObservableIdentifiedFolderContents<Item, ID, WrappedValue>
         
         @MainActor
         @PublishedObject var base: Base
@@ -17,7 +17,7 @@ extension _FileStorageCoordinators {
         public var _hasReadWithLogicalParentAtLeastOnce = false
         
         @MainActor(unsafe)
-        public override var wrappedValue: _ObservableIdentifiedFolderContents<Item, ID>.WrappedValue {
+        public override var wrappedValue: WrappedValue {
             get {
                 guard _hasReadWithLogicalParentAtLeastOnce else {
                     guard let _enclosingInstance else {
