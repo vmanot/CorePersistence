@@ -26,6 +26,12 @@ public struct AnyPersistentIdentifier: Hashable, Sendable {
 
 // MARK: - Conformances
 
+extension AnyPersistentIdentifier: CustomStringConvertible {
+    public var description: String {
+        String(describing: rawValue)
+    }
+}
+
 extension AnyPersistentIdentifier: Codable {
     public init(from decoder: Decoder) throws {
         do {
