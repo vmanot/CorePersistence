@@ -244,14 +244,12 @@ extension _AnyReferenceFileDocument: _ReferenceFileDocument {
     public func snapshot(
         configuration: SnapshotConfiguration
     ) throws -> Snapshot {
-        if let base = base as? _FileDocument {
-            return .document(base)
-        } else if let base = base as? any _ReferenceFileDocument {
+        if let base = base as? any _ReferenceFileDocument {
             let snapshot = try base.snapshot(configuration: configuration)
             
             return .documentSnapshot(snapshot, document: base)
         } else {
-            throw Never.Reason.unexpected
+            return .document(base)
         }
     }
     

@@ -113,8 +113,14 @@ extension FileStorage {
     }
 }
 
-// MARK: - Implemented Conformances
+// MARK: - Conformances
 
+extension FileStorage: ObservableObject {
+    public var objectWillChange: AnyObjectWillChangePublisher {
+        coordinator.eraseObjectWillChangePublisher()
+    }
+}
+ 
 extension FileStorage: Publisher {
     public typealias Output = UnwrappedType
     public typealias Failure = Never
