@@ -17,7 +17,7 @@ public struct _SerializedTypeIdentity: Hashable, @unchecked Sendable {
     public enum _Error: Error {
         case failedToResolveSwiftTypeByName(String)
     }
-
+    
     /// The version of this serialization format.
     ///
     /// This is **not** a representation of the version of the type identity being serialized.
@@ -47,8 +47,9 @@ public struct _SerializedTypeIdentity: Hashable, @unchecked Sendable {
         self._swift_typeName = _swift_typeName
         self._objectiveC_className = _objectiveC_className
         self._CorePersistence_persistentTypeRepresentation = _CorePersistence_persistentTypeRepresentation
+        self._resolvedType = (try? resolveType())
         
-        if (try? resolveType()) == nil {
+        if _resolvedType == nil {
             runtimeIssue("Failed deseriaize type named: \(_swift_typeName ?? _swift_mangledTypeName ?? "<error>")")
         }
     }
@@ -149,6 +150,7 @@ extension _SerializedTypeIdentity {
         _CorePersistence_persistentTypeRepresentation?.hash(into: &hasher)
     }
 }
+
 // MARK: - Auxiliary
 
 extension _SerializedTypeIdentity {
