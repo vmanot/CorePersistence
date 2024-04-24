@@ -311,7 +311,11 @@ extension _UnsafelySerialized {
                 case .representable(let value):
                     value.hash(into: &hasher)
                 case .anything(let value):
-                    value.hash(into: &hasher)
+                    if let value = value.data as? any Hashable {
+                        hasher.combine(value)
+                    } else {
+                        value.hash(into: &hasher)
+                    }
             }
         }
     }

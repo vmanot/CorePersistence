@@ -13,8 +13,8 @@ public struct _TypeSerializingAnyCodable: CustomDebugStringConvertible {
         case attemptedToDecodeUnsupportedType(Any.Type)
     }
     
-    private let typeRepresentation: _SerializedTypeIdentity
-    private let data: (any Codable)?
+    package let typeRepresentation: _SerializedTypeIdentity
+    package let data: (any Codable)?
     
     public var description: String {
         if let data {

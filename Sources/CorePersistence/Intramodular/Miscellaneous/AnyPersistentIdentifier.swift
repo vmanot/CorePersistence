@@ -18,7 +18,9 @@ public struct AnyPersistentIdentifier: Hashable, Sendable {
     public init<T: Codable & Hashable & Sendable>(erasing value: T) {
         self.init(rawValue: value)
     }
-    
+}
+
+extension AnyPersistentIdentifier {
     public func `as`<T>(_ type: T.Type) throws -> T {
         try cast(rawValue, to: type)
     }

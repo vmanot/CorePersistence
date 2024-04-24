@@ -140,6 +140,15 @@ extension _SerializedTypeIdentity: Codable {
     }
 }
 
+extension _SerializedTypeIdentity {
+    public func hash(into hasher: inout Hasher) {
+        if let type = _resolvedType ?? (try? resolveType()) {
+            ObjectIdentifier(type).hash(into: &hasher)
+        }
+        
+        _CorePersistence_persistentTypeRepresentation?.hash(into: &hasher)
+    }
+}
 // MARK: - Auxiliary
 
 extension _SerializedTypeIdentity {
