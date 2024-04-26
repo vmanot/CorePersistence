@@ -173,4 +173,10 @@ class _KeyedFileBundleChildFile<Contents>: _KeyedFileBundleChildGenericBase<Cont
         
         parent?.childDidUpdate(self)
     }
+    
+    func child(
+        at path: URL.RelativePath
+    ) throws -> FilesystemChild {
+        throw Never.Reason.illegal
+    }
 }

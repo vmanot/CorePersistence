@@ -42,7 +42,7 @@ final class _ConcreteFolderAsyncStorageBase<Resource: _AsyncResourceCoordinator>
         self.resource = resource
         
         self.base = .init(
-            stream: try directory._opaque_streamChildren().map {
+            stream: try directory._opaque_observeFilesystemChildrenAsynchronously().map {
                 $0.compactMap {
                     guard let element = try await resource($0) else {
                         return nil

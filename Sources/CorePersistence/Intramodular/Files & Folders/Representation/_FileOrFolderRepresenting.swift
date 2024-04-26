@@ -9,7 +9,7 @@ import System
 
 /// A type that represents a file or folder.
 public protocol _FileOrFolderRepresenting: Identifiable {
-    associatedtype Child: _FileOrFolderRepresenting = FileURL
+    associatedtype FilesystemChild: _FileOrFolderRepresenting = FileURL
     
     func _toURL() throws -> URL
     
@@ -17,18 +17,16 @@ public protocol _FileOrFolderRepresenting: Identifiable {
     
     mutating func encode<T>(_ contents: T, using coder: _AnyConfiguredFileCoder) throws
     
-    func child(at path: String) throws -> Child
+    func child(at path: URL.RelativePath) throws -> FilesystemChild
     
-    @_spi(Internal)
     @available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *)
-    func streamChildren() throws -> AsyncThrowingStream<AnyAsyncSequence<Child>, Error>
+    func observeFilesystemChildrenAsynchronously() throws -> AsyncThrowingStream<AnyAsyncSequence<FilesystemChild>, Error>
 }
 
 extension _FileOrFolderRepresenting {
-    @_spi(Internal)
     @available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *)
-    public func _opaque_streamChildren() throws -> AsyncThrowingStream<AnyAsyncSequence<any _FileOrFolderRepresenting>, Error> {
-        try streamChildren().map { sequence in
+    public func _opaque_observeFilesystemChildrenAsynchronously() throws -> AsyncThrowingStream<AnyAsyncSequence<any _FileOrFolderRepresenting>, Error> {
+        try observeFilesystemChildrenAsynchronously().map { sequence in
             sequence
                 .map {
                     $0 as (any _FileOrFolderRepresenting)
@@ -62,77 +60,37 @@ extension _FileOrFolderRepresenting {
     
     @_spi(Internal)
     @available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *)
-    public func streamChildren() throws -> AsyncThrowingStream<AnyAsyncSequence<Child>, Error> {
-        throw Never.Reason.unimplemented
-    }
-    
-    public func child(
-        at path: String
-    ) throws -> Child {
+    public func observeFilesystemChildrenAsynchronously() throws -> AsyncThrowingStream<AnyAsyncSequence<FilesystemChild>, Error> {
         throw Never.Reason.unimplemented
     }
 }
 
-public struct FileURL: _FileOrFolderRepresenting {
-    public typealias Child = Self
-    
-    public let base: URL
-    
-    public var id: AnyHashable {
-        base
-    }
-    
-    init(base: URL) {
-        self.base = base
-    }
-    
-    public init(_ url: URL) {
-        self.init(base: url)
-    }
-    
-    public init(_ directory: CanonicalFileDirectory) throws {
-        try self.init(base: directory.toURL())
-    }
-
+extension FileWrapper: _FileOrFolderRepresenting {
     public func _toURL() throws -> URL {
-        base
+        throw Never.Reason.illegal
     }
     
     public func decode(
         using coder: _AnyConfiguredFileCoder
     ) throws -> Any? {
-        try FileManager.default._decode(from: base, coder: coder)
+        throw Never.Reason.illegal
     }
     
     public func encode<T>(
         _ contents: T,
         using coder: _AnyConfiguredFileCoder
     ) throws {
-        try FileManager.default._encode(contents, to: base, coder: coder)
+        throw Never.Reason.illegal
     }
     
-    @_spi(Internal)
     @available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *)
-    public func streamChildren() throws -> AsyncThrowingStream<AnyAsyncSequence<Child>, Error> {
-        try _DirectoryEventsPublisher(url: base, queue: nil)
-            .autoconnect()
-            .prepend(())
-            .values
-            .eraseToThrowingStream()
-            .map {
-                AnyAsyncSequence {
-                    _AsyncDirectoryIterator(directoryURL: base)
-                }
-                .map {
-                    FileURL(base: $0)
-                }
-                .eraseToAnyAsyncSequence()
-            }
-            .eraseToThrowingStream()
+    public func observeFilesystemChildrenAsynchronously() throws -> AsyncThrowingStream<AnyAsyncSequence<FilesystemChild>, Error> {
+        throw Never.Reason.illegal
     }
     
-    @available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
-    public func child(at path: String) -> Self {
-        .init(base: base.appending(path: path))
+    public func child(
+        at path: URL.RelativePath
+    ) throws -> FilesystemChild {
+        throw Never.Reason.illegal
     }
 }

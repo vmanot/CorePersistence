@@ -107,12 +107,12 @@ public struct _FileRepresentingFileWrapper<ID: Hashable>: _FileOrFolderRepresent
         }
     }
     
-    public func streamChildren() throws -> AsyncThrowingStream<AnyAsyncSequence<Child>, Error> {
+    public func observeFilesystemChildrenAsynchronously() throws -> AsyncThrowingStream<AnyAsyncSequence<Child>, Error> {
         throw Never.Reason.illegal
     }
     
     public func child(
-        at path: String
+        at path: URL.RelativePath
     ) throws -> Child {
         throw Never.Reason.illegal
     }

@@ -41,6 +41,12 @@ extension _FileBundleBackingObject: _FileOrFolderRepresenting {
     ) throws {
         throw Never.Reason.illegal
     }
+    
+    public func child(
+        at path: URL.RelativePath
+    ) throws -> FilesystemChild {
+        throw Never.Reason.illegal
+    }
 }
 
 @available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)

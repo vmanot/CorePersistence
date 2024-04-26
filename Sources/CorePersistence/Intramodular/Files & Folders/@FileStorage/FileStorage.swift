@@ -165,6 +165,12 @@ extension FileStorage: _FileOrFolderRepresenting {
     ) throws {
         throw Never.Reason.illegal
     }
+
+    public func child(
+        at path: URL.RelativePath
+    ) throws -> FilesystemChild {
+        throw Never.Reason.illegal
+    }
 }
 
 extension FileStorage: Equatable where UnwrappedType: Equatable {
