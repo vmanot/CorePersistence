@@ -132,7 +132,7 @@ class _KeyedFileBundleChildFile<Contents>: _KeyedFileBundleChildGenericBase<Cont
     }
     
     func decode(
-        using coder: _AnyConfiguredFileCoder
+        using coder: some _TopLevelFileDecoderEncoder
     ) throws -> Any? {
         guard let fileWrapper else {
             if wantsCreation {
@@ -154,7 +154,7 @@ class _KeyedFileBundleChildFile<Contents>: _KeyedFileBundleChildGenericBase<Cont
     
     func encode<T>(
         _ contents: T,
-        using coder: _AnyConfiguredFileCoder
+        using coder: some _TopLevelFileDecoderEncoder
     ) throws {
         guard !stateFlags.contains(.deletedByParent) else {
             return

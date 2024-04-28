@@ -31,7 +31,7 @@ public struct FolderStorageConfiguration<Item: Codable> {
                     if filter(url) {
                         return .init(
                             file: file,
-                            coder: _AnyConfiguredFileCoder(.topLevelDataCoder(coder, forType: Item.self))
+                            coder: _AnyTopLevelFileDecoderEncoder(.topLevelDataCoder(coder, forType: Item.self))
                         )
                     } else {
                         return nil
@@ -39,7 +39,7 @@ public struct FolderStorageConfiguration<Item: Codable> {
                 } else {
                     return .init(
                         file: file,
-                        coder: _AnyConfiguredFileCoder(.topLevelDataCoder(coder, forType: Item.self))
+                        coder: _AnyTopLevelFileDecoderEncoder(.topLevelDataCoder(coder, forType: Item.self))
                     )
                 }
             }

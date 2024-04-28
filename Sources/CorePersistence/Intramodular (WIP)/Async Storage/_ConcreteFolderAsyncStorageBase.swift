@@ -71,13 +71,13 @@ public class _AsyncFileResourceCoordinator<Value>: _AsyncMutableResourceCoordina
     
     var file: any _FileOrFolderRepresenting
     
-    let coder: _AnyConfiguredFileCoder
+    let coder: any _TopLevelFileDecoderEncoder
     
     public var id: AnyHashable {
         file.id.erasedAsAnyHashable
     }
     
-    init(file: any _FileOrFolderRepresenting, coder: _AnyConfiguredFileCoder) {
+    init(file: any _FileOrFolderRepresenting, coder: any _TopLevelFileDecoderEncoder) {
         self.file = file
         self.coder = coder
     }

@@ -11,7 +11,7 @@ public enum _FileStorageCoordinators: _StaticNamespaceType {
     
 }
 
-public class _AnyFileStorageCoordinator<ValueType, UnwrappedValue>: ObservableObject, @unchecked Sendable {
+public class _AnyFileStorageCoordinator<ValueType, UnwrappedValue>: _ObservableObjectX, @unchecked Sendable {
     public enum StateFlag {
         case initialReadComplete
         case latestWritten
@@ -35,7 +35,7 @@ public class _AnyFileStorageCoordinator<ValueType, UnwrappedValue>: ObservableOb
     let lock = OSUnfairLock()
     
     public internal(set) var stateFlags: Set<StateFlag> = []
-
+    
     let writeQueue = DispatchQueue(
         label: "com.vmanot.Data.FileStorage.Coordinator.write",
         qos: .default
@@ -96,7 +96,7 @@ public class _AnyFileStorageCoordinator<ValueType, UnwrappedValue>: ObservableOb
         guard !stateFlags.contains(.discarded) else {
             return
         }
-
+        
         commit()
     }
 }
@@ -108,7 +108,7 @@ extension _FileStorageCoordinators.RegularFile {
     convenience init(
         initialValue: UnwrappedValue?,
         file: @autoclosure @escaping () throws -> any _FileOrFolderRepresenting,
-        coder: _AnyConfiguredFileCoder,
+        coder: (any _TopLevelFileDecoderEncoder),
         options: FileStorageOptions
     ) throws {
         try self.init(

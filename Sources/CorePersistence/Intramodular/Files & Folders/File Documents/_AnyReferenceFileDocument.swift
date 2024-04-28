@@ -73,7 +73,9 @@ extension _AnyReferenceFileDocument {
             if let base = base as? _FileWrapperDocument {
                 return try base.regularFileContents
             } else {
-                let fileWrapper = try _fileWrapper(configuration: .init(contentType: nil, existingFile: nil))
+                let fileWrapper = try _fileWrapper(
+                    configuration: .init(contentType: nil, existingFile: nil)
+                )
                 
                 return try _FileWrapperDocument(fileWrapper: fileWrapper).regularFileContents
             }
@@ -234,7 +236,7 @@ extension _AnyReferenceFileDocument {
 
 // MARK: - Conformances
 
-extension _AnyReferenceFileDocument: _ReferenceFileDocument {
+extension _AnyReferenceFileDocument: _FileDocument, _ReferenceFileDocument {
     public enum Snapshot {
         case data(Data)
         case document(any _FileDocument)
@@ -268,6 +270,17 @@ extension _AnyReferenceFileDocument: _ReferenceFileDocument {
                     configuration: configuration
                 )
         }
+    }
+    
+    public func fileWrapper(
+        configuration: WriteConfiguration
+    ) throws -> FileWrapper {
+        let snapshot: Snapshot = try snapshot(configuration: .init(contentType: configuration.contentType))
+        
+        return try fileWrapper(
+            snapshot: snapshot,
+            configuration: configuration
+        )
     }
 }
 

@@ -31,13 +31,15 @@ extension _FileBundleBackingObject: _FileOrFolderRepresenting {
         try knownFileURL.unwrap()
     }
     
-    public func decode(using coder: _AnyConfiguredFileCoder) throws -> Any? {
+    public func decode(
+        using coder: some _TopLevelFileDecoderEncoder
+    ) throws -> Any? {
         throw Never.Reason.illegal
     }
     
     public func encode<T>(
         _ contents: T,
-        using coder: _AnyConfiguredFileCoder
+        using coder: some _TopLevelFileDecoderEncoder
     ) throws {
         throw Never.Reason.illegal
     }

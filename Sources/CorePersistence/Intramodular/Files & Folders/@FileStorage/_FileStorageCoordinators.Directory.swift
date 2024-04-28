@@ -51,7 +51,7 @@ extension _FileStorageCoordinators {
                     path: nil,
                     serialization: .init(
                         contentType: nil,
-                        coder: _AnyConfiguredFileCoder(rawValue: .topLevelData(.topLevelDataCoder(JSONCoder(), forType: Never.self))),
+                        coder: _AnyTopLevelFileDecoderEncoder(.topLevelDataCoder(JSONCoder(), forType: Never.self)),
                         initialValue: nil
                     ),
                     readWriteOptions: .init(

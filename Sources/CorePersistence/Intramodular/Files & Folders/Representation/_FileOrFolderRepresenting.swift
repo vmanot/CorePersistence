@@ -13,9 +13,9 @@ public protocol _FileOrFolderRepresenting: Identifiable {
     
     func _toURL() throws -> URL
     
-    func decode(using coder: _AnyConfiguredFileCoder) throws -> Any?
+    func decode(using coder: some _TopLevelFileDecoderEncoder) throws -> Any?
     
-    mutating func encode<T>(_ contents: T, using coder: _AnyConfiguredFileCoder) throws
+    mutating func encode<T>(_ contents: T, using coder: some _TopLevelFileDecoderEncoder) throws
     
     func child(at path: URL.RelativePath) throws -> FilesystemChild
     
@@ -42,14 +42,17 @@ extension _FileOrFolderRepresenting {
     }
     
     public func decode(
-        using coder: _AnyConfiguredFileCoder
+        using coder: some _TopLevelFileDecoderEncoder
     ) throws -> Any? {
-        throw Never.Reason.unimplemented
+        let url: URL = try self._toURL()
+        let coder: _AnyTopLevelFileDecoderEncoder<Any> = try coder.__conversion()
+        
+        return try FileManager.default._decode(from: url, coder: coder)
     }
     
     public func decode<T>(
         _ type: T.Type,
-        using coder: _AnyConfiguredFileCoder
+        using coder: some _TopLevelFileDecoderEncoder
     ) throws -> T? {
         guard let contents = try self.decode(using: coder) else {
             return nil
@@ -71,14 +74,14 @@ extension FileWrapper: _FileOrFolderRepresenting {
     }
     
     public func decode(
-        using coder: _AnyConfiguredFileCoder
+        using coder: some _TopLevelFileDecoderEncoder
     ) throws -> Any? {
         throw Never.Reason.illegal
     }
     
     public func encode<T>(
         _ contents: T,
-        using coder: _AnyConfiguredFileCoder
+        using coder: some _TopLevelFileDecoderEncoder
     ) throws {
         throw Never.Reason.illegal
     }

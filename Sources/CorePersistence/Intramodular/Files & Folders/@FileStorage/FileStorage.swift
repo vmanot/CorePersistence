@@ -26,7 +26,7 @@ public final class FileStorage<ValueType, UnwrappedType> {
     
     private var makeCoordinator: () throws -> Coordinator
     private lazy var coordinator: Coordinator = {
-       try! makeCoordinator()
+        try! makeCoordinator()
     }()
     private var objectWillChangeConduit: AnyCancellable?
     
@@ -55,7 +55,7 @@ public final class FileStorage<ValueType, UnwrappedType> {
     public func setLocation(_ directory: CanonicalFileDirectory, path: String) throws {
         try setLocation(directory.toURL().appending(URL.PathComponent(path)))
     }
-
+    
     public static subscript<EnclosingSelf>(
         _enclosingInstance instance: EnclosingSelf,
         wrapped wrappedKeyPath: ReferenceWritableKeyPath<EnclosingSelf, UnwrappedType>,
@@ -115,12 +115,16 @@ extension FileStorage {
 
 // MARK: - Conformances
 
-extension FileStorage: ObservableObject {
+extension FileStorage: _ObservableObjectX {
     public var objectWillChange: AnyObjectWillChangePublisher {
         coordinator.eraseObjectWillChangePublisher()
     }
+    
+    public var objectDidChange: _ObjectDidChangePublisher {
+        coordinator.objectDidChange
+    }
 }
- 
+
 extension FileStorage: Publisher {
     public typealias Output = UnwrappedType
     public typealias Failure = Never
@@ -132,40 +136,18 @@ extension FileStorage: Publisher {
     }
 }
 
-// MARK: - Auxiliary
-
-extension FileStorage {
-    public typealias ReadErrorRecoveryStrategy = _FileStorageReadErrorRecoveryStrategy
-}
-
-public struct FileStorageOptions: Codable, ExpressibleByNilLiteral, Hashable {
-    public typealias ReadErrorRecoveryStrategy = _FileStorageReadErrorRecoveryStrategy
-    
-    public var readErrorRecoveryStrategy: ReadErrorRecoveryStrategy?
-    
-    public init(
-        readErrorRecoveryStrategy: ReadErrorRecoveryStrategy?
-    ) {
-        self.readErrorRecoveryStrategy = readErrorRecoveryStrategy
-    }
-    
-    public init(nilLiteral: ()) {
-        self.readErrorRecoveryStrategy = nil
-    }
-}
-
-extension FileStorage: _FileOrFolderRepresenting {    
+extension FileStorage: _FileOrFolderRepresenting {
     public func _toURL() throws -> URL {
         try url
     }
     
     public func encode<T>(
         _ contents: T,
-        using coder: _AnyConfiguredFileCoder
+        using coder: some _TopLevelFileDecoderEncoder
     ) throws {
         throw Never.Reason.illegal
     }
-
+    
     public func child(
         at path: URL.RelativePath
     ) throws -> FilesystemChild {
@@ -194,5 +176,27 @@ extension FileStorage: Hashable where UnwrappedType: Hashable {
         }
         
         hasher.combine(wrappedValue)
+    }
+}
+
+// MARK: - Auxiliary
+
+extension FileStorage {
+    public typealias ReadErrorRecoveryStrategy = _FileStorageReadErrorRecoveryStrategy
+}
+
+public struct FileStorageOptions: Codable, ExpressibleByNilLiteral, Hashable {
+    public typealias ReadErrorRecoveryStrategy = _FileStorageReadErrorRecoveryStrategy
+    
+    public var readErrorRecoveryStrategy: ReadErrorRecoveryStrategy?
+    
+    public init(
+        readErrorRecoveryStrategy: ReadErrorRecoveryStrategy?
+    ) {
+        self.readErrorRecoveryStrategy = readErrorRecoveryStrategy
+    }
+    
+    public init(nilLiteral: ()) {
+        self.readErrorRecoveryStrategy = nil
     }
 }

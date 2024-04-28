@@ -8,13 +8,13 @@ import UniformTypeIdentifiers
 
 public struct _FileOrFolderSerializationConfiguration<Value> {
     let contentType: UTType?
-    let coder: _AnyConfiguredFileCoder
+    let coder: any _TopLevelFileDecoderEncoder
     @ReferenceBox
     var initialValue: _ThrowingMaybeLazy<Value?>
     
     init(
         contentType: UTType?,
-        coder: _AnyConfiguredFileCoder,
+        coder: any _TopLevelFileDecoderEncoder,
         initialValue: @escaping () throws -> Value
     ) {
         self.contentType = contentType
@@ -24,7 +24,7 @@ public struct _FileOrFolderSerializationConfiguration<Value> {
     
     init(
         contentType: UTType?,
-        coder: _AnyConfiguredFileCoder,
+        coder: any _TopLevelFileDecoderEncoder,
         initialValue: @escaping () throws -> Value?
     ) {
         self.contentType = contentType
@@ -34,7 +34,7 @@ public struct _FileOrFolderSerializationConfiguration<Value> {
     
     init(
         contentType: UTType?,
-        coder: _AnyConfiguredFileCoder,
+        coder: any _TopLevelFileDecoderEncoder,
         initialValue: Value?
     ) {
         self.contentType = contentType

@@ -3,6 +3,7 @@
 //
 
 import Foundation
+@_spi(Internal) import _SwallowSwiftOverlay
 @_spi(Internal) import Swallow
 
 protocol _UnsafeSerializationRepresentable {

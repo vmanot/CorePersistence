@@ -50,13 +50,13 @@ extension _RelativeFileConfiguration {
     public init(
         path: String? = nil,
         contentType: UTType? = nil,
-        coder fileCoder: _AnyConfiguredFileCoder? = nil,
+        coder fileCoder: (any _TopLevelFileDecoderEncoder)? = nil,
         readWriteOptions: FileStorageOptions,
         initialValue: Value?
     ) throws {
-        let coder: _AnyConfiguredFileCoder
+        let coder: (_AnyTopLevelFileDecoderEncoder<Any>)
         
-        if let fileCoder {
+        if let fileCoder: _AnyTopLevelFileDecoderEncoder<Any> = try fileCoder?.__conversion() {
             coder = fileCoder
         } else {
             let topLevelCoder: (any TopLevelDataCoder)?
@@ -73,7 +73,10 @@ extension _RelativeFileConfiguration {
                 topLevelCoder = nil
             }
             
-            coder = _AnyConfiguredFileCoder(topLevelCoder ?? JSONCoder(), for: try cast(Value.self, to: (any Codable.Type).self))
+            coder = _AnyTopLevelFileDecoderEncoder(
+                topLevelCoder ?? JSONCoder(),
+                for: try cast(Value.self, to: (any Codable.Type).self)
+            )
         }
         self.path = path
         self.serialization = .init(
@@ -87,7 +90,7 @@ extension _RelativeFileConfiguration {
     public init(
         fileURL: some _FileOrFolderRepresenting,
         contentType: UTType? = nil,
-        coder: _AnyConfiguredFileCoder? = nil,
+        coder: (any _TopLevelFileDecoderEncoder)? = nil,
         readWriteOptions: FileStorageOptions,
         initialValue: Value?
     ) throws {

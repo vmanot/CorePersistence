@@ -100,7 +100,7 @@ extension _FileBundle_KeyedFileProperty {
         self.init(
             configuration: try! _RelativeFileConfiguration(
                 path: path,
-                coder: .init(Contents.self),
+                coder: _AnyTopLevelFileDecoderEncoder(Contents.self),
                 readWriteOptions: options,
                 initialValue: wrappedValue
             ),
@@ -117,7 +117,7 @@ extension _FileBundle_KeyedFileProperty {
         self.init(
             configuration: try! _RelativeFileConfiguration(
                 path: path,
-                coder: .init(Contents.self),
+                coder: _AnyTopLevelFileDecoderEncoder(Contents.self),
                 readWriteOptions: options,
                 initialValue: initialValue
             ),
@@ -133,7 +133,7 @@ extension _FileBundle_KeyedFileProperty {
         self.init(
             configuration: try! _RelativeFileConfiguration(
                 path: path,
-                coder: .init(Contents.self),
+                coder: _AnyTopLevelFileDecoderEncoder(Contents.self),
                 readWriteOptions: options,
                 initialValue: wrappedValue ?? .init()
             ),
@@ -149,7 +149,7 @@ extension _FileBundle_KeyedFileProperty {
         self.init(
             configuration: try! _RelativeFileConfiguration(
                 path: path,
-                coder: .init(Contents.Wrapped.self),
+                coder: _AnyTopLevelFileDecoderEncoder(Contents.Wrapped.self),
                 readWriteOptions: options,
                 initialValue: wrappedValue
             ),
@@ -166,7 +166,7 @@ extension _FileBundle_KeyedFileProperty {
         self.init(
             configuration: try! _RelativeFileConfiguration(
                 path: path,
-                coder: .init(.topLevelDataCoder(coder, forType: Contents.self)),
+                coder: _AnyTopLevelFileDecoderEncoder(.topLevelDataCoder(coder, forType: Contents.self)),
                 readWriteOptions: options,
                 initialValue: wrappedValue
             ),
@@ -184,7 +184,7 @@ extension _FileBundle_KeyedFileProperty {
         self.init(
             configuration: try! _RelativeFileConfiguration(
                 path: path,
-                coder: .init(.topLevelDataCoder(coder, forType: Contents.self)),
+                coder: _AnyTopLevelFileDecoderEncoder(.topLevelDataCoder(coder, forType: Contents.self)),
                 readWriteOptions: options,
                 initialValue: initialValue
             ),

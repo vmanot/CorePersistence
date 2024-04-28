@@ -5,11 +5,19 @@
 import Foundation
 import Swallow
 
-public struct FileURL {
+public struct FileURL: Codable, Hashable, Sendable {
     public let base: URL
     
     fileprivate init(base: URL) {
         self.base = base
+    }
+    
+    public init(from decoder: any Decoder) throws {
+        self.init(base: try URL(from: decoder))
+    }
+    
+    public func encode(to encoder: any Encoder) throws {
+       try base.encode(to: encoder)
     }
 }
 
@@ -35,14 +43,14 @@ extension FileURL: _FileOrFolderRepresenting {
     }
 
     public func decode(
-        using coder: _AnyConfiguredFileCoder
+        using coder: some _TopLevelFileDecoderEncoder
     ) throws -> Any? {
         try FileManager.default._decode(from: base, coder: coder)
     }
     
     public func encode<T>(
         _ contents: T,
-        using coder: _AnyConfiguredFileCoder
+        using coder: some _TopLevelFileDecoderEncoder
     ) throws {
         try FileManager.default._encode(contents, to: base, coder: coder)
     }

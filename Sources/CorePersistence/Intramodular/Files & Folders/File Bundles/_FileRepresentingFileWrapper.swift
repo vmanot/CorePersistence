@@ -26,7 +26,7 @@ public struct _FileRepresentingFileWrapper<ID: Hashable>: _FileOrFolderRepresent
     
     public init<T>(
         contents: T,
-        coder: _AnyConfiguredFileCoder,
+        coder: any _TopLevelFileDecoderEncoder,
         id: ID,
         preferredFileName: String
     ) throws {
@@ -46,8 +46,10 @@ public struct _FileRepresentingFileWrapper<ID: Hashable>: _FileOrFolderRepresent
     }
     
     public func decode(
-        using coder: _AnyConfiguredFileCoder
+        using coder: some _TopLevelFileDecoderEncoder
     ) throws -> Any? {
+        let coder: _AnyTopLevelFileDecoderEncoder<Any> = try coder.__conversion()
+
         if !base.isDirectory, base.regularFileContents?.isEmpty == true {
             return nil
         }
@@ -66,8 +68,10 @@ public struct _FileRepresentingFileWrapper<ID: Hashable>: _FileOrFolderRepresent
     
     public mutating func encode<T>(
         _ contents: T,
-        using coder: _AnyConfiguredFileCoder
+        using coder: some _TopLevelFileDecoderEncoder
     ) throws {
+        let coder: _AnyTopLevelFileDecoderEncoder<Any> = try coder.__conversion()
+
         guard let preferredFileName = base.preferredFileName else {
             assertionFailure()
             

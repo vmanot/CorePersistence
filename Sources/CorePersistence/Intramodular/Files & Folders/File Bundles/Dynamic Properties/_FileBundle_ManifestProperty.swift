@@ -59,7 +59,7 @@ extension _FileBundle_ManifestProperty {
         self.init(
             configuration: try! _RelativeFileConfiguration(
                 path: path,
-                coder: .init(.topLevelDataCoder(coder, forType: Value.self)),
+                coder: _AnyTopLevelFileDecoderEncoder(.topLevelDataCoder(coder, forType: Value.self)),
                 readWriteOptions: options,
                 initialValue: wrappedValue
             )
@@ -74,7 +74,7 @@ extension _FileBundle_ManifestProperty {
         self.init(
             configuration: try! _RelativeFileConfiguration(
                 path: path,
-                coder: .init(.topLevelDataCoder(JSONCoder(), forType: Value.self)),
+                coder: _AnyTopLevelFileDecoderEncoder(.topLevelDataCoder(JSONCoder(), forType: Value.self)),
                 readWriteOptions: options,
                 initialValue: wrappedValue
             )

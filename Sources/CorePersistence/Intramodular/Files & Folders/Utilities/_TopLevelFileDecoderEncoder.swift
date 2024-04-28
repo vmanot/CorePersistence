@@ -6,11 +6,20 @@ import FoundationX
 import Swallow
 import UniformTypeIdentifiers
 
-public struct _AnyConfiguredFileCoder {
-    public enum RawValue {
-        case document(_FileDocument.Type)
-        case topLevelData(_AnyTopLevelDataCoder)
-    }
+public protocol _TopLevelFileDecoderEncoder {
+    associatedtype DataType
+    
+    func __conversion<T>() throws -> _AnyTopLevelFileDecoderEncoder<T>
+}
+
+@_documentation(visibility: internal)
+public enum __AnyTopLevelFileDecoderEncoder_RawValue {
+    case document(_FileDocument.Type)
+    case topLevelData(_AnyTopLevelDataCoder)
+}
+
+public struct _AnyTopLevelFileDecoderEncoder<DataType>: _TopLevelFileDecoderEncoder {
+    public typealias RawValue = __AnyTopLevelFileDecoderEncoder_RawValue
     
     public let rawValue: RawValue
     
@@ -18,6 +27,14 @@ public struct _AnyConfiguredFileCoder {
         self.rawValue = rawValue
     }
     
+    public func __conversion<T>() throws -> _AnyTopLevelFileDecoderEncoder<T> {
+        _AnyTopLevelFileDecoderEncoder<T>(rawValue: rawValue)
+    }
+}
+
+// MARK: - Initializers
+
+extension _AnyTopLevelFileDecoderEncoder where DataType == Any {
     public init(
         _ coder: any TopLevelDataCoder,
         for type: any Codable.Type
@@ -44,9 +61,7 @@ public struct _AnyConfiguredFileCoder {
     ) {
         self.init(rawValue: .topLevelData(coder))
     }
-}
 
-extension _AnyConfiguredFileCoder {
     public init<Coder: TopLevelDataCoder, T>(
         _ coder: Coder,
         forUnsafelySerialized type: T.Type
@@ -65,17 +80,17 @@ extension _AnyConfiguredFileCoder {
         
         self.init(rawValue: .topLevelData(coder))
     }
-    
 }
-
 
 // MARK: - Auxiliary
 
 extension FileManager {
     func _decode(
         from url: URL,
-        coder: _AnyConfiguredFileCoder
+        coder: some _TopLevelFileDecoderEncoder
     ) throws -> Any? {
+        let coder: _AnyTopLevelFileDecoderEncoder<Any> = try coder.__conversion()
+
         switch coder.rawValue {
             case .document(let document):
                 do {
@@ -88,7 +103,7 @@ extension FileManager {
                     }
                 }
             case .topLevelData(let coder):
-                guard let data = try fileExists(at: url) ? contents(of: url) : nil else {
+                guard let data = try fileExists(at: url) ? contents(ofSecurityScopedResource: url) : nil else {
                     return nil
                 }
                 
@@ -99,8 +114,9 @@ extension FileManager {
     func _encode<T>(
         _ value: T,
         to url: URL,
-        coder: _AnyConfiguredFileCoder
+        coder: some _TopLevelFileDecoderEncoder
     ) throws {
+        let coder: _AnyTopLevelFileDecoderEncoder<T> = try coder.__conversion()
         var url = url
         var endSecurityScopedAccess: (() -> Void)? = nil
         
@@ -112,7 +128,7 @@ extension FileManager {
         }
         
         if !isReadableAndWritable(at: url) {
-            if let securityScopedURL = try? URL._BookmarksCache.cachedURL(for: url) {
+            if let securityScopedURL = try? URL._BookmarkCache.cachedURL(for: url) {
                 if isReadableAndWritable(at: securityScopedURL) {
                     url = securityScopedURL
                 }
@@ -152,36 +168,5 @@ extension FileManager {
         }
         
         endSecurityScopedAccess?()
-    }
-}
-
-extension URL {
-    func _suggestedTopLevelDataCoder(
-        contentType: UTType?
-    ) -> (any TopLevelDataCoder)? {
-        let detectedContentType: UTType
-        
-        if let contentType {
-            detectedContentType = contentType
-        } else if let inferredContentType = UTType(from: self) {
-            detectedContentType = inferredContentType
-        } else {
-            return nil
-        }
-        
-        return detectedContentType._suggestedTopLevelDataCoder()
-    }
-}
-
-extension UTType {
-    public func _suggestedTopLevelDataCoder() -> (any TopLevelDataCoder)? {
-        switch self {
-            case .propertyList:
-                return PropertyListCoder()
-            case .json:
-                return JSONCoder()
-            default:
-                return nil
-        }
     }
 }

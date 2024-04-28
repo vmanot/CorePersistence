@@ -62,6 +62,8 @@ extension _FileStorageCoordinators {
                 setUpObservableObjectObserver()
             }
             
+            objectDidChange.send()
+            
             _writeValue(newValue)
         }
         

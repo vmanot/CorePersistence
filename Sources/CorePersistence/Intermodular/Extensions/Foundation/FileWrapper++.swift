@@ -61,3 +61,21 @@ extension FileWrapper {
         }
     }
 }
+
+extension FileWrapper {
+    public static func encodingRegularFileContents<T: Encodable>(
+        _ x: T,
+        coder: some TopLevelDataCoder
+    ) throws -> FileWrapper {
+        let data: Data = try coder.encode(x)
+        
+        return FileWrapper(regularFileWithContents: data)
+    }
+    
+    public func decodeRegularFileContents<T: Decodable>(
+        as type: T.Type = T.self,
+        coder: some TopLevelDataCoder
+    ) throws -> T {
+        try coder.decode(from: regularFileContents.unwrap())
+    }
+}
