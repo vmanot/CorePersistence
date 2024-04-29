@@ -5,7 +5,6 @@
 #if canImport(Cocoa)
 import Cocoa
 #endif
-
 import FoundationX
 import Swallow
 import System
@@ -48,9 +47,9 @@ extension FileManager {
         #if os(macOS)
         let openPanel = NSOpenPanel()
         #else
-        let NSOpenPanel_Type = unsafeBitCast(NSClassFromString("NSOpenPanel"), to: NSOpenPanelProtocol.Type.self)
+        let NSOpenPanel_Type = unsafeBitCast(NSClassFromString("NSOpenPanel"), to: _NSOpenPanelProtocol.Type.self)
 
-        let openPanel = NSOpenPanel_Type.init()
+        let openPanel = _NSOpenPanel_Type.init()
         #endif
         
         openPanel.directoryURL = location.url
@@ -78,7 +77,7 @@ extension FileManager {
                 let alert = NSAlert()
                 alert.alertStyle = .informational
                 #else
-                let alert = NSAlert_Type.init()
+                let alert = _NSAlert_Type.init()
                 alert.alertStyle = 1
                 #endif
                 
@@ -118,5 +117,39 @@ extension FileManager {
         
     }
 }
+
+#endif
+
+// MARK: - Internal
+
+#if targetEnvironment(macCatalyst)
+
+@objc fileprivate protocol _NSAlertProtocol: NSObjectProtocol {
+    @objc var alertStyle: UInt { get set }
+    @objc var messageText: String { get set }
+    @objc var informativeText: String { get set }
+    
+    @objc func addButton(withTitle: String)
+    @objc func runModal()
+    
+    init()
+}
+
+@objc fileprivate protocol _NSOpenPanelProtocol: NSObjectProtocol {
+    @objc var directoryURL: URL? { get set }
+    @objc var message: String? { get set }
+    @objc var prompt: String? { get set }
+    @objc var allowedFileTypes: [String]? { get set }
+    @objc var allowsOtherFileTypes: Bool { get set }
+    @objc var canChooseDirectories: Bool { get set }
+    @objc var urls: [URL] { get set }
+    
+    @objc func runModal()
+    
+    init()
+}
+
+fileprivate let _NSAlert_Type = unsafeBitCast(NSClassFromString("NSAlert"), to: _NSAlertProtocol.Type.self)
+fileprivate let _NSOpenPanel_Type = unsafeBitCast(NSClassFromString("NSOpenPanel"), to: _NSOpenPanelProtocol.Type.self)
 
 #endif
