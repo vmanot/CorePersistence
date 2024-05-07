@@ -33,7 +33,7 @@ extension FSEvent.Flags: CustomStringConvertibleOptionSet {
     public static let rootChanged = with(rawValue: kFSEventStreamEventFlagRootChanged)
     public static let mount = with(rawValue: kFSEventStreamEventFlagMount)
     public static let unmount = with(rawValue: kFSEventStreamEventFlagUnmount)
-    public static let created = with(rawValue: kFSEventStreamEventFlagItemCreated)
+    public static let itemCreated = with(rawValue: kFSEventStreamEventFlagItemCreated)
     public static let itemRemoved = with(rawValue: kFSEventStreamEventFlagItemRemoved)
     public static let itemInodeMetaMod = with(rawValue: kFSEventStreamEventFlagItemInodeMetaMod)
     public static let itemRenamed = with(rawValue: kFSEventStreamEventFlagItemRenamed)
@@ -58,7 +58,7 @@ extension FSEvent.Flags: CustomStringConvertibleOptionSet {
         .rootChanged: "root changed",
         .mount: "mount",
         .unmount: "unmount",
-        .created: "created",
+        .itemCreated: "created",
         .itemRemoved: "item removed",
         .itemInodeMetaMod: "item inode metadata modified",
         .itemRenamed: "item renamed",

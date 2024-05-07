@@ -14,7 +14,7 @@ public class FSEventObserver: ObservableObject {
     private let paths: [FilePath]
     private let latency: CFTimeInterval
     private let queue: DispatchQueue?
-    private let flags: FSEventStreamCreateFlags
+    private let createFlags: FSEventStream.CreateFlags
     
     private var runLoop: CFRunLoop = CFRunLoopGetMain()
     private var stream: FSEventStream?
@@ -25,13 +25,13 @@ public class FSEventObserver: ObservableObject {
     public init(
         paths: [FilePath],
         sinceWhen: FSEventStreamEventId = FSEvent.nowEventID,
-        flags: FSEventStreamCreateFlags = [.useCFTypes, .fileEvents],
+        flags: FSEventStream.CreateFlags = [.useCFTypes, .fileEvents],
         latency: CFTimeInterval = 0,
         queue: DispatchQueue? = nil
     ) {
         self.lastEventId = sinceWhen
         self.paths = paths
-        self.flags = flags
+        self.createFlags = flags
         self.latency = latency
         self.queue = queue
     }
@@ -74,7 +74,7 @@ public class FSEventObserver: ObservableObject {
             paths.map({ $0.stringValue }) as CFArray,
             lastEventId,
             latency,
-            UInt32(flags.rawValue)
+            UInt32(createFlags.rawValue)
         ) else {
             return
         }

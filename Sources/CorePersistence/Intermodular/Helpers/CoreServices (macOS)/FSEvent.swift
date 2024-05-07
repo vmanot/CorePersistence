@@ -20,3 +20,4 @@ public struct FSEvent {
     public var path: FilePath
     public var flags: Flags
 }
+

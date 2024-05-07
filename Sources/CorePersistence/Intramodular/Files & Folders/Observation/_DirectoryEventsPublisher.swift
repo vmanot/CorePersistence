@@ -7,7 +7,7 @@ import Merge
 import Swallow
 import System
 
-public final class _DirectoryEventsPublisher: Cancellable, ConnectablePublisher {
+public final class _DirectoryEventPublisher: Cancellable, ConnectablePublisher {
     public typealias Output = Void
     public typealias Failure = Error
 

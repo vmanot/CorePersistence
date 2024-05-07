@@ -232,6 +232,8 @@ extension _FileStorageCoordinators {
                 self.stateFlags += [.initialReadComplete, .latestWritten]
             }
             
+            self.objectDidChange.send()
+            
             return value
         }
         

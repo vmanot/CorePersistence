@@ -130,7 +130,8 @@ extension FileStorage: Publisher {
     public typealias Failure = Never
     
     public func receive<S: Subscriber<UnwrappedType, Never>>(subscriber: S) {
-        coordinator.objectWillChange
+        coordinator
+            .objectDidChange
             .compactMap({ [weak coordinator] in coordinator?.wrappedValue })
             .receive(subscriber: subscriber)
     }

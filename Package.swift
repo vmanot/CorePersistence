@@ -21,9 +21,9 @@ let package = Package(
                 "_ModularDecodingEncoding",
                 "_SWXMLHash",
                 "_XMLCoder",
-                "CorePersistence",
                 "Proquint",
-                "UUIDv6"
+                "UUIDv6",
+                "CorePersistence"
             ]
         )
     ],
