@@ -81,9 +81,17 @@ public class DirectoryEventStream {
     }
     
     private let eventStreamCallback: FSEventStreamCallback = { streamRef, clientCallBackInfo, numEvents, eventPaths, eventFlags, eventIds in
-        guard let clientCallBackInfo else { return }
+        guard let clientCallBackInfo else {
+            return
+        }
+        
         let eventStream = Unmanaged<DirectoryEventStream>.fromOpaque(clientCallBackInfo).takeUnretainedValue()
-        eventStream.handleEvents(numEvents: numEvents, eventPaths: eventPaths, eventFlags: eventFlags)
+       
+        eventStream.handleEvents(
+            numEvents: numEvents,
+            eventPaths: eventPaths,
+            eventFlags: eventFlags
+        )
     }
     
     private func handleEvents(numEvents: Int, eventPaths: UnsafeMutableRawPointer, eventFlags: UnsafePointer<FSEventStreamEventFlags>) {
@@ -100,7 +108,7 @@ public class DirectoryEventStream {
                 continue
             }
             
-            events.append(.init(filePath: path, eventType: event))
+            events.append(DirectoryEventStream.Event(filePath: path, eventType: event))
         }
         
         callback(events)
@@ -196,13 +204,17 @@ public final class _DirectoryEventObserver {
         lock.relinquish()
         
         for observation in observations.compactMap({ $0.wrappedValue }) {
-            let filteredEvents = events.filter { event in
-                observation.directories.contains(event.url.deletingLastPathComponent())
+            let filteredEvents: [DirectoryEventStream.Event] = events.filter { event in
+                observation.directories.contains(where: { (directory: URL) in
+                    directory.isAncestor(of: event.url)
+                })
             }
             
-            if !filteredEvents.isEmpty {
-                observation.eventHandler(filteredEvents)
+            guard !filteredEvents.isEmpty else {
+                continue
             }
+            
+            observation.eventHandler(filteredEvents)
         }
     }
     

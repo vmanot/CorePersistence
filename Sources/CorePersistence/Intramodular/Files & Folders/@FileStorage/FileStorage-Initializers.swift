@@ -185,19 +185,23 @@ extension FileStorage {
         coder: Coder,
         options: FileStorageOptions = nil
     ) where ValueType == _UnsafelySerialized<UnwrappedType> {
-        let directoryURL = try! location().deletingLastPathComponent()
-        let url = try! FileURL(location())
-        
-        try! FileManager.default.withUserGrantedAccess(to: directoryURL, scope: .directory) {
-            try FileManager.default.createDirectory(at: $0, withIntermediateDirectories: true)
+        func getURL() -> FileURL {
+            let directoryURL = try! location().deletingLastPathComponent()
+            let url = try! FileURL(location())
             
-            assert(FileManager.default.directoryExists(at: directoryURL))
+            try! FileManager.default.withUserGrantedAccess(to: directoryURL, scope: .directory) {
+                try FileManager.default.createDirectory(at: $0, withIntermediateDirectories: true)
+                
+                assert(FileManager.default.directoryExists(at: directoryURL))
+            }
+            
+            return url
         }
         
         self.init(
             coordinator: try _FileStorageCoordinators.RegularFile(
                 initialValue: wrappedValue,
-                file: url,
+                file: getURL(),
                 coder: _AnyTopLevelFileDecoderEncoder(coder, forUnsafelySerialized: UnwrappedType.self),
                 options: options
             )
