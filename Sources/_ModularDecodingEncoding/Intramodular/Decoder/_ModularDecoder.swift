@@ -5,28 +5,58 @@
 import Foundation
 import Swallow
 
-struct _ModularDecoder: Decoder {
-    struct Configuration {
+public struct _ModularDecoder: Decoder {
+    public struct Configuration {
+        var codingPath: [AnyCodingKey] = []
+        var hiddenCodingPaths: Set<[AnyCodingKey]> = []
         var plugins: [any _ModularCodingPlugin] = []
         
         var allowsUnsafeSerialization: Bool {
             plugins.contains(where: { $0 is _UnsafeSerializationPlugin })
         }
+        
+        func hides(
+            _ key: some CodingKey,
+            at codingPath: [CodingKey]
+        ) -> Bool {
+            guard !hiddenCodingPaths.isEmpty else {
+                return false
+            }
+            
+            let codingPathForKey = codingPath.map({ AnyCodingKey(erasing: $0) }).appending(AnyCodingKey(erasing: key))
+            
+            if hiddenCodingPaths.contains(codingPathForKey) {
+                return true
+            } else {
+                return false
+            }
+        }
+        
+        func nested(forKey key: some CodingKey) -> Self {
+            var result = self
+            
+            result.codingPath.append(AnyCodingKey(erasing: key))
+            result.hiddenCodingPaths._forEach(mutating: {
+                $0.removeFirst()
+            })
+            
+            return result
+        }
     }
     
-    struct Context {
+    public struct Context {
         let type: Any.Type?
     }
     
     let base: Decoder
-    let configuration: Configuration
+    var configuration: Configuration
     let context: Context
     
-    var codingPath: [CodingKey] {
+    public var codingPath: [CodingKey] {
         base.codingPath
     }
     
-    var userInfo: [CodingUserInfoKey: Any] {
+    public var userInfo: [CodingUserInfoKey: Any] {
         base.userInfo
     }
     
@@ -40,7 +70,19 @@ struct _ModularDecoder: Decoder {
         self.context = context
     }
     
-    func container<Key: CodingKey>(
+    public init(wrapping decoder: Decoder) {
+        if let decoder = decoder as? Self {
+            self = decoder
+        } else {
+            self.init(base: decoder, configuration: .init(), context: .init(type: nil))
+        }
+    }
+    
+    public mutating func hideCodingPath<T: CodingKey>(_ path: [T]) {
+        self.configuration.hiddenCodingPaths.insert(path.map({ AnyCodingKey(erasing: $0) }))
+    }
+    
+    public func container<Key: CodingKey>(
         keyedBy type: Key.Type
     ) throws -> KeyedDecodingContainer<Key> {
         .init(
@@ -51,14 +93,14 @@ struct _ModularDecoder: Decoder {
         )
     }
     
-    func unkeyedContainer() throws -> UnkeyedDecodingContainer {
+    public func unkeyedContainer() throws -> UnkeyedDecodingContainer {
         UnkeyedContainer(
             base: try base.unkeyedContainer(),
             parent: self
         )
     }
     
-    func singleValueContainer() throws -> SingleValueDecodingContainer {
+    public func singleValueContainer() throws -> SingleValueDecodingContainer {
         SingleValueContainer(
             try base.singleValueContainer(),
             parent: self
@@ -82,5 +124,15 @@ extension Decoder {
             }
         })
         .unwrap()
+    }
+}
+
+extension Decoder {
+    public func _hidingCodingKey(_ key: some CodingKey) -> Decoder {
+        var result = _ModularDecoder(wrapping: self)
+        
+        result.hideCodingPath([key])
+        
+        return result
     }
 }

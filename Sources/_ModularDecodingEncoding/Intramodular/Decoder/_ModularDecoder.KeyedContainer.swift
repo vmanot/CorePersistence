@@ -34,11 +34,17 @@ extension _ModularDecoder {
             try base.decodeNil(forKey: key)
         }
         
-        func decode<T: CoderPrimitive>(_ type: T.Type, forKey key: Key) throws -> T {
+        func decode<T: CoderPrimitive>(
+            _ type: T.Type,
+            forKey key: Key
+        ) throws -> T {
             try base._decodePrimitive(type, forKey: key)
         }
         
-        func decode<T: Decodable>(_ type: T.Type, forKey key: Key) throws -> T {
+        func decode<T: Decodable>(
+            _ type: T.Type,
+            forKey key: Key
+        ) throws -> T {
             guard !(type is Date.Type) else {
                 return try base.decode(T.self, forKey: key)
             }
@@ -84,7 +90,14 @@ extension _ModularDecoder {
             }
         }
         
-        func decodeIfPresent<T: Decodable>(_ type: T.Type, forKey key: Key) throws -> T? {
+        func decodeIfPresent<T: Decodable>(
+            _ type: T.Type,
+            forKey key: Key
+        ) throws -> T? {
+            if parent.configuration.hides(key, at: base.codingPath) {
+                return nil
+            }
+            
             guard !(type is Date.Type) else {
                 return try base.decodeIfPresent(T.self, forKey: key)
             }
@@ -104,7 +117,10 @@ extension _ModularDecoder {
             return try base.decodeIfPresent(KeyedContainerProxyDecodable<T>.self, forKey: key)?.value
         }
         
-        func nestedContainer<NestedKey: CodingKey>(keyedBy type: NestedKey.Type, forKey key: Key) throws -> KeyedDecodingContainer<NestedKey>  {
+        func nestedContainer<NestedKey: CodingKey>(
+            keyedBy type: NestedKey.Type,
+            forKey key: Key
+        ) throws -> KeyedDecodingContainer<NestedKey>  {
             .init(
                 KeyedContainer<NestedKey>(
                     base: try base.nestedContainer(keyedBy: type, forKey: key),
@@ -113,7 +129,9 @@ extension _ModularDecoder {
             )
         }
         
-        func nestedUnkeyedContainer(forKey key: Key) throws -> UnkeyedDecodingContainer {
+        func nestedUnkeyedContainer(
+            forKey key: Key
+        ) throws -> UnkeyedDecodingContainer {
             UnkeyedContainer(
                 base: try base.nestedUnkeyedContainer(forKey: key),
                 parent: parent

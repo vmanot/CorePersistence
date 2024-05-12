@@ -15,10 +15,20 @@ public protocol _UnsafelySerializedType: Codable, ParameterlessPropertyWrapper {
 
 @propertyWrapper
 public struct _UnsafelySerialized<Value>: _UnsafelySerializedType, ParameterlessPropertyWrapper {
-    public var wrappedValue: Value
+    public var wrappedValue: Value {
+        didSet {
+            if _cachedHashValue != nil {
+                self._cachedHashValue = nil
+            }
+        }
+    }
+    private var _wrappedValueDeclaredType: Any.Type?
     private var _cachedHashValue: Int?
     
-    private init(wrappedValue: Value, _cachedHashValue: Int?) {
+    private init(
+        wrappedValue: Value,
+        _cachedHashValue: Int?
+    ) {
         self.wrappedValue = wrappedValue
         self._cachedHashValue = _cachedHashValue
     }
@@ -43,6 +53,15 @@ public struct _UnsafelySerialized<Value>: _UnsafelySerializedType, Parameterless
         }
         
         _recomputeCachedHashValue()
+    }
+    
+    public init<T>(
+        wrappedValue: Value,
+        declaredAs declaredType: T.Type
+    )  {
+        self.init(wrappedValue: wrappedValue)
+        
+        self._wrappedValueDeclaredType = declaredType
     }
     
     public init(_ value: Value) {
@@ -71,9 +90,7 @@ extension _UnsafelySerialized: Codable {
     }
     
     public func encode(to encoder: Encoder) throws {
-        let intermediateRepresentation = try _IntermediateRepresentation(wrappedValue)
-        
-        try intermediateRepresentation.encode(to: encoder)
+        try _makeIntermediateRepresentation().encode(to: encoder)
     }
 }
 
@@ -100,8 +117,8 @@ extension _UnsafelySerialized: Equatable {
         }
         
         do {
-            let _lhs = try _IntermediateRepresentation(lhs.wrappedValue)
-            let _rhs = try _IntermediateRepresentation(rhs.wrappedValue)
+            let _lhs = try lhs._makeIntermediateRepresentation()
+            let _rhs = try rhs._makeIntermediateRepresentation()
             
             return _lhs == _rhs
         } catch {
@@ -129,7 +146,7 @@ extension _UnsafelySerialized: Hashable {
                 try wrappedValue._unsafelyHash(into: &hasher)
             } else {
                 do {
-                    hasher.combine(try _IntermediateRepresentation(wrappedValue))
+                    hasher.combine(try _makeIntermediateRepresentation())
                 } catch {
                     if let wrappedValue = wrappedValue as? (any _UnsafeSerializationRepresentable) {
                         try wrappedValue._unsafeSerializationRepresentation.hash(into: &hasher)
@@ -169,6 +186,7 @@ extension _UnsafelySerialized: Initiable where Value: Initiable {
 // MARK: - Auxiliary
 
 extension _UnsafelySerialized {
+    @frozen
     private enum _IntermediateRepresentation: Codable, Hashable {
         case metatype(_SerializedTypeIdentity?)
         case representable(any Hashable & Codable)
@@ -200,7 +218,10 @@ extension _UnsafelySerialized {
             }
         }
         
-        init(_ value: Any) throws {
+        init<T>(
+            _ value: T,
+            declaredAs declaredType: Any.Type?
+        ) throws {
             let declaredValueType = Metatype(Value.self)
             
             if let isMetatype = Self.isMetatypeContainer, isMetatype {
@@ -222,7 +243,12 @@ extension _UnsafelySerialized {
                 
                 self = .metatype(_SerializedTypeIdentity(from: type))
             } else {
-                self = try .anything(_TypeSerializingAnyCodable(value))
+                self = try .anything(
+                    _TypeSerializingAnyCodable(
+                        value,
+                        declaredAs: declaredType
+                    )
+                )
             }
         }
         
@@ -318,6 +344,14 @@ extension _UnsafelySerialized {
                     }
             }
         }
+    }
+    private func _makeIntermediateRepresentation() throws -> _IntermediateRepresentation {
+        let intermediateRepresentation = try _IntermediateRepresentation(
+            wrappedValue,
+            declaredAs: _wrappedValueDeclaredType
+        )
+        
+        return intermediateRepresentation
     }
 }
 

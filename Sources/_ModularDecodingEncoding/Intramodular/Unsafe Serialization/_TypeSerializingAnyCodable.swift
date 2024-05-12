@@ -2,7 +2,9 @@
 // Copyright (c) Vatsal Manot
 //
 
+import Diagnostics
 import Foundation
+import Runtime
 @_spi(Internal) import Swallow
 
 public struct _TypeSerializingAnyCodable: CustomDebugStringConvertible {
@@ -13,6 +15,7 @@ public struct _TypeSerializingAnyCodable: CustomDebugStringConvertible {
         case attemptedToDecodeUnsupportedType(Any.Type)
     }
     
+    package let declaredTypeRepresentation: _SerializedTypeIdentity?
     package let typeRepresentation: _SerializedTypeIdentity
     package let data: (any Codable)?
     
@@ -30,20 +33,25 @@ public struct _TypeSerializingAnyCodable: CustomDebugStringConvertible {
         return "_TypeSerializingAnyCodable(\(data))"
     }
     
-    public init(_ data: any Codable) {
+    public init(_data data: any Codable) {
         assert(!(data is _TypeSerializingAnyCodable))
         
-        self.typeRepresentation = .init(of: data)
+        self.declaredTypeRepresentation = nil
+        self.typeRepresentation = _SerializedTypeIdentity(of: data)
         self.data = data
     }
     
-    public init(_ data: Any) throws {
+    public init<T>(
+        _ data: T,
+        declaredAs declaredType: Any.Type?
+    ) throws {
         var data = Optional(_unwrapping: data)
         
         if data is Codable && !(type(of: data) is Codable.Type) {
             data = try _openExistentialAndCast(data, to: Codable.self)
         }
         
+        declaredTypeRepresentation = declaredType.map({ _SerializedTypeIdentity(from: $0 )}) ?? _SerializedTypeIdentity(from: T.self)
         typeRepresentation = .init(of: data)
         
         let type = try typeRepresentation.resolveType()
@@ -59,6 +67,12 @@ public struct _TypeSerializingAnyCodable: CustomDebugStringConvertible {
         } else {
             self.data = nil
         }
+    }
+    
+    public init<T>(
+        _ data: T
+    ) throws {
+        try self.init(data, declaredAs: nil)
     }
 }
 
@@ -94,7 +108,7 @@ extension _TypeSerializingAnyCodable {
     public func decode() throws -> Codable? {
         data
     }
-
+    
     private func _decode<T>(_ type: T.Type = T.self) throws -> T {
         if data == nil, let type = type as? any OptionalProtocol.Type {
             let resolvedType = try typeRepresentation.resolveType()
@@ -140,7 +154,7 @@ extension _TypeSerializingAnyCodable {
             throw _Error.attemptedToDecodeUnsupportedType(type)
         }
     }
-        
+    
     private func _attemptStructuralDecode<T>(_ type: T.Type) throws -> T {
         let data = try self.data.unwrap()
         let encoded = try ObjectEncoder().encode(data)
@@ -154,6 +168,7 @@ extension _TypeSerializingAnyCodable {
 
 extension _TypeSerializingAnyCodable: Codable {
     public enum CodingKeys: String, CodingKey {
+        case declaredTypeRepresentation
         case typeRepresentation
         case data
     }
@@ -161,31 +176,59 @@ extension _TypeSerializingAnyCodable: Codable {
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
+        self.declaredTypeRepresentation = _expectNoThrow {
+            try container.decodeIfPresent(
+                _SerializedTypeIdentity.self,
+                forKey: .declaredTypeRepresentation
+            )
+        }
         self.typeRepresentation = try container.decode(
             _SerializedTypeIdentity.self,
             forKey: .typeRepresentation
         )
         
-        let resolvedType = try self.typeRepresentation.resolveType()
+        let resolvedDeclaredType: Any.Type? = try? self.declaredTypeRepresentation?.resolveType()
+        let resolvedType: Any.Type = try self.typeRepresentation.resolveType()
         
-        if let dataType = resolvedType as? Codable.Type {
-            self.data = try container.decode(dataType, forKey: .data)
-        } else if let resolvedType = resolvedType as? any _UnsafeSerializationRepresentable.Type {
-            self.data = try resolvedType._opaque_decodeUnsafeSerializationRepresentation(from: decoder)
-        } else if resolvedType == Any.self, !container.allKeys.contains(.data) {
-            self.data = nil
-        } else {
-            if try container.decodeNil(forKey: .data) {
-                self.data = nil
+        func decodeData(from type: Any.Type) throws -> (any Codable)? {
+            if let dataType = type as? Codable.Type {
+                if type == resolvedDeclaredType {
+                    let container = try decoder
+                        ._hidingCodingKey(CodingKeys.declaredTypeRepresentation)
+                        .container(keyedBy: CodingKeys.self)
+                    
+                    return try container.decode(dataType, forKey: .data)
+                } else {
+                    return try container.decode(dataType, forKey: .data)
+                }
+            } else if let type = type as? any _UnsafeSerializationRepresentable.Type {
+                return try type._opaque_decodeUnsafeSerializationRepresentation(from: decoder)
+            } else if type == Any.self, !container.allKeys.contains(.data) {
+                return nil
             } else {
-                throw _Error.attemptedToDecodeFromNonCodableType(resolvedType)
+                if try container.decodeNil(forKey: .data) {
+                    return nil
+                } else {
+                    throw _Error.attemptedToDecodeFromNonCodableType(resolvedType)
+                }
             }
         }
+         
+        var data: (any Codable)? = try decodeData(from: resolvedType)
+        
+        if let resolvedDeclaredType {
+            if let _data = data, let declaredType = resolvedDeclaredType as? (any _UnwrappableTypeEraser.Type), let erasedData = try? declaredType.init(_opaque_erasing: _data) as? (any Codable) {
+                data = erasedData
+            }
+        }
+        
+        self.data = data
     }
     
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         
+        try container.encodeIfPresent(declaredTypeRepresentation, forKey: .declaredTypeRepresentation)
         try container.encode(typeRepresentation, forKey: .typeRepresentation)
         
         if let data {
