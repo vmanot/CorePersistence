@@ -20,9 +20,11 @@ public struct _ModularTopLevelDecoder<Input>: TopLevelDecoder, @unchecked Sendab
         }
     }
     
-    public init<Decoder: TopLevelDecoder>(from decoder: Decoder) where Decoder.Input == Input {
+    public init<Decoder: TopLevelDecoder>(
+        from decoder: Decoder
+    ) where Decoder.Input == Input {
         self.base = .init(erasing: decoder)
-        self.configuration = .init()
+        self.configuration = nil
     }
     
     public func decode<T>(
@@ -75,7 +77,7 @@ extension _ModularDecoder.TopLevelProxyDecodable {
         
         let decoder = _ModularDecoder(
             base: _decoder,
-            configuration: try _ModularDecoder.TaskLocalValues.configuration.unwrap(),
+            configuration: _ModularDecoder.TaskLocalValues.configuration,
             context: .init(type: T.self)
         )
         

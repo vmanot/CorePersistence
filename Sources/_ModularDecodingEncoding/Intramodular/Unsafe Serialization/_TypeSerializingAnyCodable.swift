@@ -74,6 +74,12 @@ public struct _TypeSerializingAnyCodable: CustomDebugStringConvertible {
     ) throws {
         try self.init(data, declaredAs: nil)
     }
+    
+    public init<T: Codable>(
+        _ data: T
+    ) {
+        self.init(data)
+    }
 }
 
 extension _TypeSerializingAnyCodable {
@@ -193,11 +199,15 @@ extension _TypeSerializingAnyCodable: Codable {
         func decodeData(from type: Any.Type) throws -> (any Codable)? {
             if let dataType = type as? Codable.Type {
                 if type == resolvedDeclaredType {
-                    let container = try decoder
+                    let _container = try decoder
                         ._hidingCodingKey(CodingKeys.declaredTypeRepresentation)
                         .container(keyedBy: CodingKeys.self)
                     
-                    return try container.decode(dataType, forKey: .data)
+                    do {
+                        return try _container.decode(dataType, forKey: .data)
+                    } catch {
+                        return try container.decode(dataType, forKey: .data)
+                    }
                 } else {
                     return try container.decode(dataType, forKey: .data)
                 }

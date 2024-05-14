@@ -6,13 +6,17 @@ import Foundation
 import Swallow
 
 public struct _ModularDecoder: Decoder {
-    public struct Configuration {
+    public struct Configuration: ExpressibleByNilLiteral {
         var codingPath: [AnyCodingKey] = []
         var hiddenCodingPaths: Set<[AnyCodingKey]> = []
         var plugins: [any _ModularCodingPlugin] = []
         
         var allowsUnsafeSerialization: Bool {
             plugins.contains(where: { $0 is _UnsafeSerializationPlugin })
+        }
+        
+        public init(nilLiteral: ()) {
+            
         }
         
         func hides(
@@ -62,11 +66,11 @@ public struct _ModularDecoder: Decoder {
     
     init(
         base: Decoder,
-        configuration: Configuration,
+        configuration: Configuration?,
         context: Context
     ) {
         self.base = base
-        self.configuration = configuration
+        self.configuration = configuration ?? nil
         self.context = context
     }
     
@@ -74,11 +78,13 @@ public struct _ModularDecoder: Decoder {
         if let decoder = decoder as? Self {
             self = decoder
         } else {
-            self.init(base: decoder, configuration: .init(), context: .init(type: nil))
+            self.init(base: decoder, configuration: nil, context: .init(type: nil))
         }
     }
     
-    public mutating func hideCodingPath<T: CodingKey>(_ path: [T]) {
+    public mutating func hideCodingPath<T: CodingKey>(
+        _ path: [T]
+    ) {
         self.configuration.hiddenCodingPaths.insert(path.map({ AnyCodingKey(erasing: $0) }))
     }
     

@@ -235,6 +235,10 @@ extension JSON: DataDecodableWithDefaultStrategy {
             self.keyDecodingStrategy = keyDecodingStrategy
             self.nonComformingFloatDecodingStrategy = nonComformingFloatDecodingStrategy
         }
+        
+        public static var convertFromSnakeCase: Self {
+            Self(keyDecodingStrategy: .convertFromSnakeCase)
+        }
     }
     
     public static var defaultDataDecodingStrategy: DataDecodingStrategy {
@@ -256,6 +260,13 @@ extension JSON: DataDecodableWithDefaultStrategy {
         decoder.nonConformingFloatDecodingStrategy =?? strategy.nonComformingFloatDecodingStrategy
         
         self = try decoder.decode(JSON.self, from: data, allowFragments: true)
+    }
+    
+    public init(jsonString: String, using strategy: DataDecodingStrategy) throws {
+        try self.init(
+            data: jsonString.toJSONData(),
+            using: strategy
+        )
     }
 }
 
