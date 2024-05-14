@@ -78,7 +78,7 @@ public struct _TypeSerializingAnyCodable: CustomDebugStringConvertible {
     public init<T: Codable>(
         _ data: T
     ) {
-        self.init(data)
+        self.init(_data: data)
     }
 }
 
