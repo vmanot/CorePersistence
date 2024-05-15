@@ -67,21 +67,25 @@ extension _ModularDecoder {
 
 extension _ModularDecoder.TopLevelProxyDecodable {
     init(from _decoder: Decoder) throws {
-        let type = T.self
-        
-        guard !(type is _ModularDecodableProxyType.Type) else {
-            fatalError()
+        do {
+            let type = T.self
+            
+            guard !(type is _ModularDecodableProxyType.Type) else {
+                fatalError()
+            }
+            
+            assert(!(_decoder is _ModularDecoder))
+            
+            let decoder = _ModularDecoder(
+                base: _decoder,
+                configuration: _ModularDecoder.TaskLocalValues.configuration,
+                context: .init(type: T.self)
+            )
+            
+            try self.init(from: decoder)
+        } catch {
+            throw error
         }
-        
-        assert(!(_decoder is _ModularDecoder))
-        
-        let decoder = _ModularDecoder(
-            base: _decoder,
-            configuration: _ModularDecoder.TaskLocalValues.configuration,
-            context: .init(type: T.self)
-        )
-        
-        try self.init(from: decoder)
     }
     
     private init(from decoder: _ModularDecoder) throws {

@@ -24,16 +24,45 @@ public struct _SerializedTypeIdentity: Hashable, @unchecked Sendable {
     private let version: Version
     
     /// The mangled type name of a Swift type as returned by `_mangledTypeName`.
-    public let _swift_mangledTypeName: String?
+    public private(set) var _swift_mangledTypeName: String?
     /// The mangled type name of a Swift type as returned by `_typeName`.
-    public let _swift_typeName: String?
+    public private(set) var _swift_typeName: String?
     /// The Objective-C class name of this type as returned by `NSStringFromClass`, if applicable.
-    public let _objectiveC_className: String?
+    public private(set) var _objectiveC_className: String?
     
     /// The persistent type representation of the type (if any).
     public let _CorePersistence_persistentTypeRepresentation: AnyCodable?
     
-    @NonCodingProperty private var _resolvedType: Any.Type?
+    @NonCodingProperty private var _resolvedType: Any.Type? {
+        didSet {
+            guard _resolvedType != oldValue else {
+                return
+            }
+            
+            self._swift_mangledTypeName = nil
+            self._swift_typeName = nil
+            self._objectiveC_className = nil
+        }
+    }
+    
+    var _swift_demangledTypeName: String? {
+        if let _swift_typeName {
+            return _swift_typeName
+        } else if let _swift_mangledTypeName {
+            return _stdlib_demangleName(_swift_mangledTypeName)
+        }
+        
+        return nil
+    }
+    
+    public enum _RuntimeIssue: Error {
+        case typeNameMissing
+        case failedToDeserializeTypeByName(String)
+        case failedToRecoverFromCorruptTypeName(String)
+        case recoveringFromCorruptTypeName(String, using: Any.Type)
+        case typeResolutionFailed
+        case failedToDeserializePersistentTypeRepresentation(Error)
+    }
     
     private init(
         version: _SerializedTypeIdentity.Version,
@@ -41,16 +70,46 @@ public struct _SerializedTypeIdentity: Hashable, @unchecked Sendable {
         _swift_typeName: String?,
         _objectiveC_className: String?,
         _CorePersistence_persistentTypeRepresentation: AnyCodable?
-    ) {
+    ) throws {
         self.version = version
         self._swift_mangledTypeName = _swift_mangledTypeName
         self._swift_typeName = _swift_typeName
         self._objectiveC_className = _objectiveC_className
         self._CorePersistence_persistentTypeRepresentation = _CorePersistence_persistentTypeRepresentation
-        self._resolvedType = (try? resolveType())
         
-        if _resolvedType == nil {
-            runtimeIssue("Failed deseriaize type named: \(_swift_typeName ?? _swift_mangledTypeName ?? "<error>")")
+        do {
+            let _resolvedType: Any.Type = try resolveType()
+            
+            self._resolvedType = _resolvedType
+        } catch {
+            if let _swift_demangledTypeName {
+                runtimeIssue(_RuntimeIssue.failedToDeserializeTypeByName(_swift_demangledTypeName))
+                
+                let _swift_demangledTypeName2: String = _swift_demangledTypeName.dropFirstComponent(separatedBy: ".")
+                
+                if let type = try? TypeMetadata._queryAll(.pureSwift).firstAndOnly(where: {
+                    let typeName: String = TypeMetadata($0)._qualifiedName
+                    
+                    return typeName.contains(_swift_demangledTypeName2)
+                }) {
+                    runtimeIssue(_RuntimeIssue.recoveringFromCorruptTypeName(_swift_demangledTypeName, using: type))
+                    
+                    self._swift_mangledTypeName = _mangledTypeName(type)
+                    self._swift_typeName = _typeName(type)
+                    self._objectiveC_className = (type as? AnyObject.Type).map(NSStringFromClass)
+                    self._resolvedType = type
+                    
+                    return
+                } else {
+                    runtimeIssue(_RuntimeIssue.failedToRecoverFromCorruptTypeName(_swift_demangledTypeName))
+                    
+                    throw error
+                }
+            } else {
+                runtimeIssue(_RuntimeIssue.typeNameMissing)
+                
+                throw error
+            }
         }
     }
     
@@ -120,12 +179,22 @@ extension _SerializedTypeIdentity: Codable {
             case .v0_0_1:
                 self = try PreviousVersions.v0_0_1(from: decoder).migrate()
             case .v0_0_2:
-                self.init(
+                let persistentTypeRepresentation: AnyCodable?
+                 
+                do {
+                    persistentTypeRepresentation = try container.decodeIfPresent(forKey: ._CorePersistence_persistentTypeRepresentation)
+                } catch {
+                    runtimeIssue(_RuntimeIssue.failedToDeserializePersistentTypeRepresentation(error))
+
+                    persistentTypeRepresentation = nil
+                }
+                
+                try self.init(
                     version: version,
                     _swift_mangledTypeName: try container.decodeIfPresent(forKey: ._swift_mangledTypeName),
                     _swift_typeName: try container.decodeIfPresent(forKey: ._swift_typeName),
                     _objectiveC_className: try container.decodeIfPresent(forKey: ._objectiveC_className),
-                    _CorePersistence_persistentTypeRepresentation: try container.decodeIfPresent(forKey: ._CorePersistence_persistentTypeRepresentation)
+                    _CorePersistence_persistentTypeRepresentation: persistentTypeRepresentation
                 )
         }
     }
@@ -166,8 +235,8 @@ extension _SerializedTypeIdentity {
             let objCClassName: String
             let typeRepresentation: AnyCodable?
             
-            func migrate() -> _SerializedTypeIdentity {
-                .init(
+            func migrate() throws -> _SerializedTypeIdentity {
+                try .init(
                     version: .v0_0_2,
                     _swift_mangledTypeName: _swift_mangledTypeName,
                     _swift_typeName: nil,
