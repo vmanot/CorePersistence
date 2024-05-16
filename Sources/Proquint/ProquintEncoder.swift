@@ -24,11 +24,11 @@ public struct ProquintEncoder {
             let elements = UnsafeBufferPointer<UInt16>(start: .init(OpaquePointer(bytes.baseAddress!)), count: data.count / 2)
             
             for n in elements {
-                let c1 = n & 0x0f
-                let v1 = (n >> 4)  & 0x03
-                let c2 = (n >> 6)  & 0x0f
-                let v2 = (n >> 10) & 0x03
-                let c3 = (n >> 12) & 0x0f
+                let c1: UInt16 = n & 0x0f
+                let v1: UInt16 = (n >> 4) & 0x03
+                let c2: UInt16 = (n >> 6) & 0x0f
+                let v2: UInt16 = (n >> 10) & 0x03
+                let c3: UInt16 = (n >> 12) & 0x0f
                 
                 let characters: [Character] = [
                     consonants[Int(c1)],
@@ -45,7 +45,9 @@ public struct ProquintEncoder {
         return result.joined(separator: "-")
     }
     
-    public func encode<T: Trivial>(_ value: T) throws -> String {
+    public func encode<T: Trivial>(
+        _ value: T
+    ) throws -> String {
         try encode(value.bytes)
     }
 }

@@ -39,7 +39,7 @@ extension _FileStorageCoordinators {
             }
         }
         
-        @MainActor
+        @MainActor(unsafe)
         public init(
             base: Base
         ) throws {

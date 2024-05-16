@@ -104,7 +104,6 @@ public class _AnyFileStorageCoordinator<ValueType, UnwrappedValue>: _ObservableO
 // MARK: - Initializers
 
 extension _FileStorageCoordinators.RegularFile {
-    @MainActor
     convenience init(
         initialValue: UnwrappedValue?,
         file: @autoclosure @escaping () throws -> any _FileOrFolderRepresenting,

@@ -127,7 +127,7 @@ extension _ModularEncoder {
                             )
                         }
                         
-                        let baseUnwrappedProxy = _openExistential(unwrappedBase, do: _reifiedProxy)
+                        let baseUnwrappedProxy: any Encodable = _openExistential(unwrappedBase, do: _reifiedProxy)
                         
                         try baseUnwrappedProxy.encode(to: encoder)
                         
@@ -160,14 +160,14 @@ extension _ModularEncoder {
                         
                         encoded = true
                     } else if
-                        let base = base as? (any _UnsafelySerializedType),
-                        let unwrappedBase = base.wrappedValue as? Any.Type
+                        let base: (any _UnsafelySerializedType) = base as? (any _UnsafelySerializedType),
+                        let unwrappedBase: Any.Type = base.wrappedValue as? Any.Type
                     {
-                        let metatypePlugin = try encoder.configuration.plugins
+                        let metatypePlugin: (any _MetatypeCodingPlugin) = try encoder.configuration.plugins
                             .first(byUnwrapping: { $0 as? (any _MetatypeCodingPlugin) })
                             .unwrap()
                         
-                        let encodedMetatype = try metatypePlugin.codableRepresentation(
+                        let encodedMetatype: any Decodable & Encodable = try metatypePlugin.codableRepresentation(
                             for: unwrappedBase,
                             context: .init()
                         )

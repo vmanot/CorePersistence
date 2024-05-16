@@ -8,7 +8,6 @@ import Swallow
 // MARK: - Regular Files
 
 extension FileStorage {
-    @MainActor
     public convenience init<Coder: TopLevelDataCoder>(
         wrappedValue: UnwrappedType,
         location: @escaping () throws -> URL,
@@ -25,7 +24,6 @@ extension FileStorage {
         )
     }
     
-    @MainActor
     public convenience init<Coder: TopLevelDataCoder>(
         wrappedValue: UnwrappedType = nil,
         url: @autoclosure @escaping () throws -> URL,
@@ -39,7 +37,6 @@ extension FileStorage {
         )
     }
     
-    @MainActor
     public convenience init<Coder: TopLevelDataCoder>(
         wrappedValue: UnwrappedType,
         location: @autoclosure @escaping () throws -> URL,
@@ -66,7 +63,6 @@ extension FileStorage {
         )
     }
     
-    @MainActor
     public convenience init<Coder: TopLevelDataCoder>(
         wrappedValue: UnwrappedType,
         _ location: CanonicalFileDirectory,
@@ -84,7 +80,6 @@ extension FileStorage {
 }
 
 extension FileStorage {
-    @MainActor
     public convenience init(
         wrappedValue: UnwrappedType,
         location: @escaping () throws -> URL,
@@ -100,7 +95,6 @@ extension FileStorage {
         )
     }
     
-    @MainActor
     public convenience init(
         wrappedValue: UnwrappedType,
         location: @escaping () throws -> CanonicalFileDirectory,
@@ -116,7 +110,6 @@ extension FileStorage {
         )
     }
     
-    @MainActor
     public convenience init(
         wrappedValue: UnwrappedType,
         location: @autoclosure @escaping () -> CanonicalFileDirectory,
@@ -129,7 +122,6 @@ extension FileStorage {
         )
     }
     
-    @MainActor
     public convenience init(
         location: @autoclosure @escaping () -> CanonicalFileDirectory,
         options: FileStorageOptions = nil
@@ -141,7 +133,6 @@ extension FileStorage {
         )
     }
     
-    @MainActor
     public convenience init(
         wrappedValue: UnwrappedType,
         location: @escaping () throws -> URL,
@@ -159,7 +150,6 @@ extension FileStorage {
 }
 
 extension FileStorage {
-    @MainActor
     @_disfavoredOverload
     public convenience init<Coder: TopLevelDataCoder>(
         wrappedValue: UnwrappedType,
@@ -177,7 +167,6 @@ extension FileStorage {
         )
     }
     
-    @MainActor
     @_disfavoredOverload
     public convenience init<Coder: TopLevelDataCoder>(
         wrappedValue: UnwrappedType,
@@ -208,7 +197,6 @@ extension FileStorage {
         )
     }
     
-    @MainActor
     @_disfavoredOverload
     public convenience init<Coder: TopLevelDataCoder>(
         wrappedValue: UnwrappedType,
@@ -225,7 +213,6 @@ extension FileStorage {
         )
     }
     
-    @MainActor
     @_disfavoredOverload
     public convenience init<Coder: TopLevelDataCoder>(
         location: @autoclosure @escaping () throws -> URL,
@@ -240,7 +227,6 @@ extension FileStorage {
         )
     }
     
-    @MainActor
     @_disfavoredOverload
     public convenience init<Coder: TopLevelDataCoder>(
         location: @escaping () throws -> URL,
@@ -256,7 +242,6 @@ extension FileStorage {
         )
     }
     
-    @MainActor
     @_disfavoredOverload
     public convenience init<Coder: TopLevelDataCoder>(
         location: @autoclosure @escaping () throws -> URL,
@@ -272,7 +257,6 @@ extension FileStorage {
         )
     }
     
-    @MainActor
     @_disfavoredOverload
     public convenience init<Coder: TopLevelDataCoder>(
         _ location: CanonicalFileDirectory,
@@ -288,7 +272,6 @@ extension FileStorage {
         )
     }
     
-    @MainActor
     @_disfavoredOverload
     public convenience init<Coder: TopLevelDataCoder, Element>(
         location: @autoclosure @escaping () throws -> URL,
@@ -303,7 +286,6 @@ extension FileStorage {
         )
     }
     
-    @MainActor
     @_disfavoredOverload
     public convenience init<Coder: TopLevelDataCoder, Element>(
         _ location: CanonicalFileDirectory,
@@ -322,7 +304,6 @@ extension FileStorage {
 }
 
 extension FileStorage {
-    @MainActor
     public convenience init(
         wrappedValue: UnwrappedType,
         _ location: CanonicalFileDirectory,
@@ -347,7 +328,6 @@ extension FileStorage {
         )
     }
     
-    @MainActor
     public convenience init<Coder: TopLevelDataCoder>(
         _ location: CanonicalFileDirectory,
         path: String,
@@ -362,7 +342,6 @@ extension FileStorage {
         )
     }
     
-    @MainActor
     public convenience init<Coder: TopLevelDataCoder>(
         url: URL,
         coder: Coder,
@@ -380,7 +359,6 @@ extension FileStorage {
 // MARK: - Directories
 
 extension FileStorage {
-    @MainActor
     public convenience init<Item, ID>(
         directory: @escaping () throws -> URL,
         file: @escaping (_ObservableIdentifiedFolderContents<Item, ID, UnwrappedType>.Element) -> _RelativeFileConfiguration<Item>,
@@ -389,7 +367,7 @@ extension FileStorage {
     ) where ValueType == _ObservableIdentifiedFolderContents<Item, ID, UnwrappedType>, UnwrappedType == IdentifierIndexingArray<Item, ID> {
         self.init(
             coordinator: try _FileStorageCoordinators.Directory(
-                base: .init(
+                base: _ObservableIdentifiedFolderContents(
                     folder: FileURL(try directory()),
                     fileConfiguration: file,
                     id: { $0[keyPath: id] }
@@ -398,7 +376,6 @@ extension FileStorage {
         )
     }
     
-    @MainActor
     public convenience init<Item, ID, Coder: TopLevelDataCoder>(
         directory: @escaping () throws -> URL,
         filename: @escaping (Item) -> FilenameProvider,
@@ -434,7 +411,6 @@ extension FileStorage {
         )
     }
     
-    @MainActor
     public convenience init<Item, ID, Coder: TopLevelDataCoder>(
         directory: URL,
         filename: KeyPath<Item, FilenameProvider>,
@@ -451,7 +427,6 @@ extension FileStorage {
         )
     }
     
-    @MainActor
     public convenience init<Item, ID, Filename: CustomFilenameConvertible & Randomnable, Coder: TopLevelDataCoder>(
         directory: URL,
         filename: Filename.Type,
@@ -468,7 +443,6 @@ extension FileStorage {
         )
     }
     
-    @MainActor
     public convenience init<Item, ID, Filename: CustomFilenameConvertible & Randomnable, Coder: TopLevelDataCoder>(
         directory: URL,
         filename: Filename.Type,
@@ -484,7 +458,6 @@ extension FileStorage {
         )
     }
     
-    @MainActor
     public convenience init<Item, ID, Filename: CustomFilenameConvertible & Randomnable, Coder: TopLevelDataCoder>(
         directory: URL,
         path: String,
@@ -502,7 +475,6 @@ extension FileStorage {
         )
     }
     
-    @MainActor
     public convenience init<Item, ID, Filename: CustomFilenameConvertible & Randomnable, Coder: TopLevelDataCoder>(
         directory: URL,
         path: String,
@@ -519,7 +491,6 @@ extension FileStorage {
         )
     }
     
-    @MainActor
     public convenience init<Item, ID, Filename: CustomFilenameConvertible & Randomnable, Coder: TopLevelDataCoder>(
         directory: CanonicalFileDirectory,
         path: String,
@@ -536,7 +507,6 @@ extension FileStorage {
         )
     }
     
-    @MainActor
     public convenience init<Item, Filename: CustomFilenameConvertible & Randomnable, Coder: TopLevelDataCoder>(
         directory: URL,
         filename: Filename.Type,
@@ -552,7 +522,6 @@ extension FileStorage {
         )
     }
     
-    @MainActor
     public convenience init<Item, Filename: CustomFilenameConvertible & Randomnable, Coder: TopLevelDataCoder>(
         directory: CanonicalFileDirectory,
         path: String?,
@@ -569,7 +538,6 @@ extension FileStorage {
         )
     }
     
-    @MainActor
     public convenience init<Item, ID, Coder: TopLevelDataCoder>(
         location: @escaping () throws -> URL,
         directory: String,
@@ -585,7 +553,6 @@ extension FileStorage {
         )
     }
     
-    @MainActor
     public convenience init<Item, ID, Coder: TopLevelDataCoder>(
         directory: @escaping () throws -> URL,
         coder: Coder,
@@ -600,7 +567,6 @@ extension FileStorage {
         )
     }
     
-    @MainActor
     public convenience init<Item, ID, Coder: TopLevelDataCoder>(
         wrappedValue: UnwrappedType = [],
         directory: @escaping () throws -> URL,
@@ -618,7 +584,6 @@ extension FileStorage {
         )
     }
     
-    @MainActor
     public convenience init<Item, ID, Coder: TopLevelDataCoder>(
         wrappedValue: UnwrappedType = [],
         _ location: CanonicalFileDirectory,
@@ -637,7 +602,6 @@ extension FileStorage {
         )
     }
     
-    @MainActor
     public convenience init<Item, ID>(
         _ location: CanonicalFileDirectory,
         directory: String,
@@ -653,7 +617,6 @@ extension FileStorage {
         )
     }
     
-    @MainActor
     public convenience init<Item, ID>(
         wrappedValue: UnwrappedType,
         _ location: CanonicalFileDirectory,

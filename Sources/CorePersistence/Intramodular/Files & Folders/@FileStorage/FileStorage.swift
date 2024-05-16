@@ -30,6 +30,7 @@ public final class FileStorage<ValueType, UnwrappedType> {
     }()
     private var objectWillChangeConduit: AnyCancellable?
     
+    @MainActor
     public var wrappedValue: UnwrappedType {
         get {
             coordinator.wrappedValue
@@ -56,6 +57,7 @@ public final class FileStorage<ValueType, UnwrappedType> {
         try setLocation(directory.toURL().appending(URL.PathComponent(path)))
     }
     
+    @MainActor
     public static subscript<EnclosingSelf>(
         _enclosingInstance instance: EnclosingSelf,
         wrapped wrappedKeyPath: ReferenceWritableKeyPath<EnclosingSelf, UnwrappedType>,
@@ -169,6 +171,7 @@ extension FileStorage: Equatable where UnwrappedType: Equatable {
 }
 
 extension FileStorage: Hashable where UnwrappedType: Hashable {
+    @MainActor(unsafe)
     public func hash(into hasher: inout Hasher) {
         do {
             try hasher.combine(url)

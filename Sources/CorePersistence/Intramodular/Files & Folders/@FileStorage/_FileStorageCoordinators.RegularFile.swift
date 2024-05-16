@@ -67,7 +67,7 @@ extension _FileStorageCoordinators {
             _writeValue(newValue)
         }
         
-        @MainActor
+        @MainActor(unsafe)
         init(
             fileSystemResource: @autoclosure @escaping () throws -> any _FileOrFolderRepresenting,
             configuration: _RelativeFileConfiguration<UnwrappedValue>,

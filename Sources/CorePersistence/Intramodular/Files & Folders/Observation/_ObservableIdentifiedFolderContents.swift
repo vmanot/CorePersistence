@@ -91,7 +91,6 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable, Wrapp
         }
     }
     
-    @MainActor
     package init(
         folder: any _FileOrFolderRepresenting,
         fileConfiguration: @escaping (Element) throws -> _RelativeFileConfiguration<Item>,
