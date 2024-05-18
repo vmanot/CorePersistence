@@ -7,18 +7,10 @@ import Diagnostics
 import FoundationX
 import Swallow
 
-public final class _ObservableFileURL: AsyncSequence, ObservableObject, Publisher, URLConvertible {
-    public typealias Output = DispatchSource.FileSystemEvent
-    public typealias Failure = Never
-    public typealias Element = DispatchSource.FileSystemEvent
-    public typealias AsyncIterator = AsyncStream<DispatchSource.FileSystemEvent>.Iterator
+public final class _ObservableFileURL: ObservableObject, URLConvertible {
+    public typealias AsyncIterator = AnyAsyncIterator<DispatchSource.FileSystemEvent>
     
-    private var source: DispatchSourceFileSystemObject?
-    private var watchedFileDescriptor: Int32?
-    private var subject = PassthroughSubject<DispatchSource.FileSystemEvent, Never>()
-    private var continuation: AsyncStream<DispatchSource.FileSystemEvent>.Continuation?
-    
-    private let fileIdentifier: FileSystemIdentifier
+    private var observation: DispatchSourceFileSystemObjectObservation!
     
     @MainActor
     @Published
@@ -27,6 +19,8 @@ public final class _ObservableFileURL: AsyncSequence, ObservableObject, Publishe
     @MainActor
     @Published
     private var bookmark: URL.Bookmark
+    
+    private let fileIdentifier: FileSystemIdentifier
     
     @MainActor(unsafe)
     public init(
@@ -65,7 +59,14 @@ public final class _ObservableFileURL: AsyncSequence, ObservableObject, Publishe
             try _tryAssert(self.fileIdentifier == existingFileIdentifier)
         }
         
-        startWatching()
+        observation = try DispatchSourceFileSystemObjectObservation(
+            filePath: _bookmark.path,
+            onEvent: { [weak self] _ in
+                Task { @MainActor in
+                    self?._fileDidUpdate()
+                }
+            }
+        )
     }
     
     @MainActor(unsafe)
@@ -73,93 +74,32 @@ public final class _ObservableFileURL: AsyncSequence, ObservableObject, Publishe
         try self.init(url: url, bookmark: nil, fileIdentifier: nil)
     }
     
-    deinit {
-        stopWatching()
-    }
-    
     @MainActor
-    private func startWatching() {
-        do {
-            guard let path = try bookmark.path.cString(using: .utf8) else {
-                return
-            }
+    private func _fileDidUpdate() {
+        _expectNoThrow {
+            let fileDescriptor = try observation.fileDescriptor.unwrap()
             
-            let fileDescriptor = open(path, O_EVTONLY)
+            var buffer = [UInt8](repeating: 0, count: Int(PATH_MAX))
             
-            guard fileDescriptor != -1 else {
-                runtimeIssue("Failed to open file descriptor.")
+            if fcntl(fileDescriptor, F_GETPATH, &buffer) != -1 {
+                let path = String(cString: buffer)
                 
-                return
+                self.bookmark = try URL.Bookmark(for: URL(fileURLWithPath: path))
+                self.url = try bookmark.toURL()
             }
-            
-            watchedFileDescriptor = fileDescriptor
-            
-            source = DispatchSource.makeFileSystemObjectSource(fileDescriptor: fileDescriptor, eventMask: [.write, .rename, .delete, .extend, .attrib], queue: DispatchQueue.global())
-            
-            source?.setEventHandler { [weak self] in
-                guard let self = self else { return }
-                let event = self.source?.data ?? []
-                self.subject.send(event)
-                self.continuation?.yield(event)
-                if event.contains(.rename) {
-                    Task { @MainActor in
-                        self.updateWatchedURL()
-                    }
-                }
-            }
-            
-            source?.setCancelHandler { [weak self] in
-                if let fileDescriptor = self?.watchedFileDescriptor {
-                    close(fileDescriptor)
-                }
-                self?.watchedFileDescriptor = nil
-                self?.source = nil
-                self?.continuation?.finish()
-            }
-            
-            source?.resume()
-        } catch {
-            runtimeIssue(error)
         }
     }
-    
-    public func stopWatching() {
-        source?.cancel()
-    }
-    
-    @MainActor
-    private func updateWatchedURL() {
-        do {
-            // Logic to update the URL when the watched file is renamed.
-            // This should use a method to resolve the new URL from the file descriptor.
-            if let fileDescriptor = watchedFileDescriptor {
-                var buffer = [UInt8](repeating: 0, count: Int(PATH_MAX))
-                if fcntl(fileDescriptor, F_GETPATH, &buffer) != -1 {
-                    let path = String(cString: buffer)
-                    self.bookmark = try URL.Bookmark(for: URL(fileURLWithPath: path))
-                    self.url = try bookmark.toURL()
-                }
-            }
-        } catch {
-            runtimeIssue(error)
-        }
-    }
-    
-    public func receive<S>(
-        subscriber: S
-    ) where S : Subscriber, Failure == S.Failure, Output == S.Input {
-        subject.receive(subscriber: subscriber)
-    }
+}
+
+// MARK: - Conformances
+
+extension _ObservableFileURL: AsyncSequence {
+    public typealias Element = DispatchSource.FileSystemEvent
     
     public func makeAsyncIterator() -> AsyncIterator {
-        let stream = AsyncStream<DispatchSource.FileSystemEvent> { continuation in
-            self.continuation = continuation
-            
-            Task { @MainActor in
-                self.startWatching()
-            }
+        AnyAsyncIterator {
+            self.observation.makeAsyncIterator()
         }
-        return stream.makeAsyncIterator()
     }
 }
 
@@ -214,3 +154,13 @@ extension _ObservableFileURL: Hashable {
     }
 }
 
+extension _ObservableFileURL: Publisher {
+    public typealias Output = DispatchSource.FileSystemEvent
+    public typealias Failure = Never
+    
+    public func receive<S: Subscriber<Output, Failure>>(
+        subscriber: S
+    ) {
+        observation.receive(subscriber: subscriber)
+    }
+}

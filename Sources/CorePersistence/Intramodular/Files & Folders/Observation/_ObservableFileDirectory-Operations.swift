@@ -8,7 +8,7 @@ public protocol _ObservableFileDirectoryOperation {
     
 }
 
-extension ObservableFileDirectoryType where Self: ObservableFileDirectory {
+extension ObservableFileDirectoryType where Self: _ObservableFileDirectory {
     public func copy<T: Collection>(
         _ keyPath: KeyPath<Self, T>,
         toDirectory directory: URLRepresentable,
@@ -34,7 +34,7 @@ extension ObservableFileDirectoryType where Self: ObservableFileDirectory {
     }
 }
 
-extension ObservableFileDirectory {
+extension _ObservableFileDirectory {
     public protocol FileOrFolderTargetExpression {
         
     }
@@ -78,6 +78,6 @@ extension ObservableFileDirectory {
     }
 }
 
-extension URL: ObservableFileDirectory.FileOrFolderTargetExpression {
+extension URL: _ObservableFileDirectory.FileOrFolderTargetExpression {
     
 }

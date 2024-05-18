@@ -11,14 +11,11 @@ public protocol ObservableFileDirectoryType: Logging, ObservableObject {
     var cocoaFileManager: FileManager { get }
 }
 
-open class ObservableFileDirectory: ObservableFileDirectoryType {
+open class _ObservableFileDirectory: ObservableFileDirectoryType {
     public let url: URL
     public let cocoaFileManager: FileManager
     
-    private var fileSource: DispatchSourceFileSystemObject?
-    
-    @Published private var directoryDescriptor: FileDescriptor?
-    @Published private var directorySource: DispatchSourceFileSystemObject?
+    private var observation: DispatchSourceFileSystemObjectObservation?
     
     @Published private(set) var children: [URL]?
     
@@ -56,43 +53,24 @@ open class ObservableFileDirectory: ObservableFileDirectoryType {
         
         TODO.unimplemented
     }
-
+    
     @MainActor
     private func beginObserving() throws {
         try stopObserving()
         
-        let directoryDescriptor = try FileDescriptor.open(FilePath(fileURL: url), .readOnly, options: .eventOnly)
-        let directorySource = DispatchSource.makeFileSystemObjectSource(fileDescriptor: directoryDescriptor.rawValue, eventMask: .all, queue: DispatchQueue.global(qos: .userInitiated))
-        
-        directorySource.setEventHandler { [weak self] in
-            guard let `self` = self else {
-                return
+        observation = try DispatchSourceFileSystemObjectObservation(
+            filePath: url.path,
+            onEvent: { [weak self] _ in
+                Task { @MainActor in
+                    self?.objectWillChange.send()
+                }
             }
-                        
-            Task { @MainActor in
-                self.objectWillChange.send()
-
-                self.populateChildren()
-            }
-        }
-        
-        directorySource.resume()
-        
-        self.directoryDescriptor = directoryDescriptor
-        self.directorySource = directorySource
+        )
     }
     
     @MainActor
     private func stopObserving() throws {
-        guard directoryDescriptor != nil else {
-            assert(directorySource == nil)
-            
-            return
-        }
-        
-        try directoryDescriptor?.closeAfter {
-            directorySource?.cancel()
-        }
+        observation = nil
     }
     
     @MainActor

@@ -8,7 +8,9 @@ import CoreServices
 import FoundationX
 @_spi(Internal) import Swallow
 
-public class DirectoryEventStream {
+public typealias DirectoryEventStream = _DirectoryEventStream
+
+public class _DirectoryEventStream {
     public typealias EventCallback = ([Event]) -> Void
     
     private var streamRef: FSEventStreamRef?
@@ -115,7 +117,7 @@ public class DirectoryEventStream {
     }
 }
 
-extension DirectoryEventStream {
+extension _DirectoryEventStream {
     public enum FSEvent {
         case changeInDirectory
         case rootChanged
