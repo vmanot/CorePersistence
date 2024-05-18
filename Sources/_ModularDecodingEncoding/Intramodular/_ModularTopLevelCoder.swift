@@ -55,6 +55,18 @@ extension _ModularTopLevelCoder: TopLevelDataCoder where EncodedRepresentation =
 
 // MARK: - Supplementary
 
+extension TopLevelDecoder {
+    public func _modular() -> _ModularTopLevelDecoder<Input> {
+        _ModularTopLevelDecoder(from: self)
+    }
+}
+
+extension TopLevelEncoder {
+    public func _modular() -> _ModularTopLevelEncoder<Output> {
+        _ModularTopLevelEncoder(from: self)
+    }
+}
+
 extension TopLevelDataCoder {
     public func _modular() -> _ModularTopLevelCoder<Data> {
         _ModularTopLevelCoder(coder: self)

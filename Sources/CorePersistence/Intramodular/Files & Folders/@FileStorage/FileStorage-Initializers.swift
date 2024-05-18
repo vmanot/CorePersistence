@@ -25,6 +25,19 @@ extension FileStorage {
     }
     
     public convenience init<Coder: TopLevelDataCoder>(
+        location: @escaping () throws -> URL,
+        coder: Coder,
+        options: FileStorageOptions
+    ) where UnwrappedType: Codable & Initiable, ValueType == MutableValueBox<UnwrappedType> {
+        self.init(
+            wrappedValue: .init(),
+            location: location,
+            coder: coder,
+            options: options
+        )
+    }
+    
+    public convenience init<Coder: TopLevelDataCoder>(
         wrappedValue: UnwrappedType = nil,
         url: @autoclosure @escaping () throws -> URL,
         coder: Coder
@@ -145,6 +158,58 @@ extension FileStorage {
                 coder: _AnyTopLevelFileDecoderEncoder(documentType: UnwrappedType.self),
                 options: options
             )
+        )
+    }
+    
+    public convenience init(
+        wrappedValue: UnwrappedType,
+        _ location: CanonicalFileDirectory,
+        path: String,
+        options: FileStorageOptions = nil
+    ) where UnwrappedType: DataCodableWithDefaultStrategies {
+        self.init(
+            coordinator: try _FileStorageCoordinators.RegularFile(
+                initialValue: wrappedValue,
+                file: try FileURL(location.toURL().appendingPathComponent(path, isDirectory: false)),
+                coder: _AnyTopLevelFileDecoderEncoder(
+                    .dataCodableType(
+                        UnwrappedType.self,
+                        strategy: (
+                            decoding: UnwrappedType.defaultDataDecodingStrategy,
+                            encoding: UnwrappedType.defaultDataEncodingStrategy
+                        )
+                    )
+                ),
+                options: options
+            )
+        )
+    }
+    
+    public convenience init<Coder: TopLevelDataCoder>(
+        _ location: CanonicalFileDirectory,
+        path: String,
+        coder: Coder,
+        options: FileStorageOptions = nil
+    ) where UnwrappedType: Codable & Initiable, ValueType == MutableValueBox<UnwrappedType> {
+        self.init(
+            wrappedValue: UnwrappedType(),
+            location,
+            path: path,
+            coder: coder,
+            options: options
+        )
+    }
+    
+    public convenience init<Coder: TopLevelDataCoder>(
+        url: URL,
+        coder: Coder,
+        options: FileStorageOptions = nil
+    ) where UnwrappedType: Codable & Initiable, ValueType == MutableValueBox<UnwrappedType> {
+        self.init(
+            wrappedValue: UnwrappedType(),
+            location: url,
+            coder: coder,
+            options: options
         )
     }
 }
@@ -297,59 +362,6 @@ extension FileStorage {
             wrappedValue: IdentifierIndexingArray(id: { ($0 as! (any Identifiable)).id.erasedAsAnyHashable }),
             location,
             path: path,
-            coder: coder,
-            options: options
-        )
-    }
-}
-
-extension FileStorage {
-    public convenience init(
-        wrappedValue: UnwrappedType,
-        _ location: CanonicalFileDirectory,
-        path: String,
-        options: FileStorageOptions
-    ) where UnwrappedType: DataCodableWithDefaultStrategies {
-        self.init(
-            coordinator: try _FileStorageCoordinators.RegularFile(
-                initialValue: wrappedValue,
-                file: try FileURL(location.toURL().appendingPathComponent(path, isDirectory: false)),
-                coder: _AnyTopLevelFileDecoderEncoder(
-                    .dataCodableType(
-                        UnwrappedType.self,
-                        strategy: (
-                            decoding: UnwrappedType.defaultDataDecodingStrategy,
-                            encoding: UnwrappedType.defaultDataEncodingStrategy
-                        )
-                    )
-                ),
-                options: options
-            )
-        )
-    }
-    
-    public convenience init<Coder: TopLevelDataCoder>(
-        _ location: CanonicalFileDirectory,
-        path: String,
-        coder: Coder,
-        options: FileStorageOptions
-    ) where UnwrappedType: Codable & Initiable, ValueType == MutableValueBox<UnwrappedType> {
-        self.init(
-            wrappedValue: UnwrappedType(),
-            location: try location.toURL().appendingPathComponent(path, isDirectory: false),
-            coder: coder,
-            options: options
-        )
-    }
-    
-    public convenience init<Coder: TopLevelDataCoder>(
-        url: URL,
-        coder: Coder,
-        options: FileStorageOptions
-    ) where UnwrappedType: Codable & Initiable, ValueType == MutableValueBox<UnwrappedType> {
-        self.init(
-            wrappedValue: UnwrappedType(),
-            location: url,
             coder: coder,
             options: options
         )
