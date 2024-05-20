@@ -14,11 +14,11 @@ import System
 public struct FileDirectoryView: FileLocationInitiable, View {
     public let location: BookmarkedURL
     
-    @StateObject var fileDirectory: ObservableFileDirectory
+    @StateObject var fileDirectory: _ObservableFileDirectory
     
     public init(_ location: BookmarkedURL) {
         self.location = location
-        self._fileDirectory = .init(wrappedValue: ObservableFileDirectory(url: location.url))
+        self._fileDirectory = .init(wrappedValue: .init(url: location.url))
     }
     
     public init(_ location: CanonicalFileDirectory) {
