@@ -25,11 +25,11 @@ public final class _FileBundle_KeyedChildrenProperty<Key: StringRepresentable, V
     @MainActor
     public var wrappedValue: [Key: Value] {
         get {
-            _expectNoThrow {
+            #try(.optimistic) {
                 try base.unwrap().contents
             } ?? [:]
         } set {
-            _expectNoThrow {
+            #try(.optimistic) {
                 let base = try self.base.unwrap()
                 
                 try base.setContents(newValue)

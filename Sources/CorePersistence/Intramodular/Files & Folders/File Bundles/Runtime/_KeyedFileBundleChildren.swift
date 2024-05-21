@@ -64,7 +64,7 @@ final class _KeyedFileBundleChildren<Key: StringRepresentable, Value, WrappedVal
                 return
             }
             
-            _expectNoThrow {
+            #try(.optimistic) {
                 try _removeFileWrapperFromParent(forReplacementWith: newValue)
             }
         } didSet {
@@ -72,7 +72,7 @@ final class _KeyedFileBundleChildren<Key: StringRepresentable, Value, WrappedVal
                 return
             }
             
-            _expectNoThrow {
+            #try(.optimistic) {
                 try _addFileWrapperToParent()
             }
         }
@@ -138,7 +138,7 @@ final class _KeyedFileBundleChildren<Key: StringRepresentable, Value, WrappedVal
                 initialValue: nil
             )
             
-            _expectNoThrow {
+            #try(.optimistic) {
                 do {
                     if let child = try configuration.makeChild(childParameters) {
                         let key = try Key(stringValue: child.key).unwrap()
@@ -241,7 +241,7 @@ final class _KeyedFileBundleChildren<Key: StringRepresentable, Value, WrappedVal
             
             try child._removeFileWrapperFromParent(forReplacementWith: nil)
             
-            _expectNoThrow {
+            #try(.optimistic) {
                 if let childURL = try child.knownFileURL {
                     try FileManager.default.removeItemIfNecessary(at: childURL)
                 }

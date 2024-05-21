@@ -182,7 +182,7 @@ extension _TypeSerializingAnyCodable: Codable {
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
-        self.declaredTypeRepresentation = _expectNoThrow {
+        self.declaredTypeRepresentation = #try(.optimistic) {
             try container.decodeIfPresent(
                 _SerializedTypeIdentity.self,
                 forKey: .declaredTypeRepresentation

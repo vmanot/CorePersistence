@@ -34,7 +34,7 @@ public final class _FileBundle_KeyedFileProperty<Parent, Contents>: _FileBundle_
             }
         } set {
             if let base {
-                _expectNoThrow {
+                #try(.optimistic) {
                     try base.setContents(newValue)
                 }
             } else {

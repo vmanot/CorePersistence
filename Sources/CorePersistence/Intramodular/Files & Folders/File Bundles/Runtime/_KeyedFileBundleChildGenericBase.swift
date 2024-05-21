@@ -24,7 +24,7 @@ class _KeyedFileBundleChildGenericBase<Contents>: Identifiable, _KeyedFileBundle
                 return
             }
             
-            _expectNoThrow {
+            #try(.optimistic) {
                 try _removeFileWrapperFromParent(forReplacementWith: newValue)
             }
         } didSet {
@@ -32,7 +32,7 @@ class _KeyedFileBundleChildGenericBase<Contents>: Identifiable, _KeyedFileBundle
                 return
             }
             
-            _expectNoThrow {
+            #try(.optimistic) {
                 try _addFileWrapperToParent()
             }
         }

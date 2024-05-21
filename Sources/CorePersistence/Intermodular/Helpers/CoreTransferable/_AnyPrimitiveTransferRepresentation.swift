@@ -88,7 +88,7 @@ public protocol _opaque_ProxyTransferRepresentation: _opaque_PrimitiveTransferRe
 @available(iOS 16.0, macOS 13.0, tvOS 16.0, watchOS 9.0, *)
 extension CodableRepresentation: _opaque_CodableTransferRepresentation {
     public var _opaque_contentType: UTType? {
-        _expectNoThrow {
+        #try(.optimistic) {
             try Mirror(reflecting: self).descendant("contentType").map({ try cast($0, to: UTType.self) })
         }
     }

@@ -44,7 +44,7 @@ public final class _ObservableFileURL: ObservableObject, URLConvertible {
             let fileIdentifier = try FileSystemIdentifier(url: url)
             let bookmarkFileIdentifier = try FileSystemIdentifier(bookmark: _bookmark)
             
-            _expectNoThrow {
+            #try(.optimistic) {
                 try _tryAssert(fileIdentifier == bookmarkFileIdentifier)
             }
         }
@@ -76,7 +76,7 @@ public final class _ObservableFileURL: ObservableObject, URLConvertible {
     
     @MainActor
     private func _fileDidUpdate() {
-        _expectNoThrow {
+        #try(.optimistic) {
             let fileDescriptor = try observation.fileDescriptor.unwrap()
             
             var buffer = [UInt8](repeating: 0, count: Int(PATH_MAX))
@@ -112,15 +112,15 @@ extension _ObservableFileURL: Codable {
     
     public convenience init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        let url: URL? = _expectNoThrow {
+        let url: URL? = #try(.optimistic) {
             try container.decodeIfPresent(URL.self, forKey: .url)
         }
-        var bookmark: URL.Bookmark? = _expectNoThrow {
+        var bookmark: URL.Bookmark? = #try(.optimistic) {
             try container.decodeIfPresent(URL.Bookmark.self, forKey: .bookmark)
         }
         let fileIdentifier: FileSystemIdentifier? = try container.decodeIfPresent(FileSystemIdentifier.self, forKey: .fileIdentifier)
         
-        _expectNoThrow {
+        #try(.optimistic) {
             try? bookmark?.renew()
         }
         

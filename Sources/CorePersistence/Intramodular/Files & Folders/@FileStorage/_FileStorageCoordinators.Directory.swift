@@ -31,7 +31,7 @@ extension _FileStorageCoordinators {
                 
                 return base.wrappedValue
             } set {
-                _expectNoThrow {
+                #try(.optimistic) {
                     try _withLogicalParent(_enclosingInstance) {
                         base.wrappedValue = newValue
                     }

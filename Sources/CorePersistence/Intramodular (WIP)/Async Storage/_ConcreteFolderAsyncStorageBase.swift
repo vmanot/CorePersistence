@@ -34,7 +34,7 @@ final class _ConcreteFolderAsyncStorageBase<Resource: _AsyncResourceCoordinator>
         directory: any _FileOrFolderRepresenting,
         resource: @escaping ResourceAccessor
     ) throws {
-        _expectNoThrow {
+        #try(.optimistic) {
             try FileManager.default.createDirectory(at: directory._toURL(), withIntermediateDirectories: true)
         }
         

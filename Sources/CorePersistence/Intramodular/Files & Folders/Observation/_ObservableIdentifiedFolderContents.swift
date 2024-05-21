@@ -103,7 +103,7 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable, Wrapp
     
     @MainActor
     private func _initializeResolvedWrappedValue() {
-        _expectNoThrow {
+        #try(.optimistic) {
             let folderURL = try self.folderURL
             
             do {

@@ -20,7 +20,7 @@ public final class _FileBundle_ManifestProperty<Value: Equatable & Sendable>: _F
         get {
             try! base.unwrap().contents
         } set {
-            _expectNoThrow {
+            #try(.optimistic) {
                 try base.unwrap().setContents(newValue)
             }
         }

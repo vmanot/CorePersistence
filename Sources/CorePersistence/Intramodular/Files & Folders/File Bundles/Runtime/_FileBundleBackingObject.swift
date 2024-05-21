@@ -95,7 +95,7 @@ extension _FileBundleBackingObject {
             }
             
             writeScheduler.schedule {
-                _expectNoThrow {
+                #try(.optimistic) {
                     try self.fileWrapper.unwrap().write(
                         to: self.directory.base,
                         options: [

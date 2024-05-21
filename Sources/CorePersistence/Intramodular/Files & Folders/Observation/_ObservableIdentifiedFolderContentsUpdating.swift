@@ -75,7 +75,7 @@ extension _ObservableIdentifiedFolderContentsUpdatingTypes {
                     configuration: fileConfiguration
                 )
                 
-                _expectNoThrow {
+                #try(.optimistic) {
                     try _withLogicalParent(ofType: AnyObject.self) {
                         fileCoordinator._enclosingInstance = $0
                     }

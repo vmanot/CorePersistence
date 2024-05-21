@@ -56,7 +56,7 @@ public struct _DotNetTypeIdentifierCodingPlugin<ID: Codable & PersistentIdentifi
         typeResolver: R1
     ) where R0.Output == ID, R1.Input == ID {
         self._resolveTypeForDiscriminator = { discriminator in
-            _expectNoThrow {
+            #try(.optimistic) {
                 let type = try typeResolver.resolve(from: discriminator).unwrap().value
                 
                 return try cast(type, to: Decodable.Type.self)

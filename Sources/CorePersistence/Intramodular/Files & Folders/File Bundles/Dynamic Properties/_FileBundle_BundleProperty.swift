@@ -23,7 +23,7 @@ public final class _FileBundle_BundleProperty<Parent, Contents: FileBundle>: _Fi
         get {
             try! base.unwrap().contents
         } set {
-            _expectNoThrow {
+            #try(.optimistic) {
                 try base.unwrap().setContents(newValue)
             }
         }

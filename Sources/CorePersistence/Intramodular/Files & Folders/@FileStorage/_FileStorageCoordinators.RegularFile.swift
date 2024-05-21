@@ -163,7 +163,7 @@ extension _FileStorageCoordinators {
         /// Schedules an eager read of the file into memory.
         private func scheduleEagerRead() {
             let _readInitialValue: (() async -> Void) = {
-                _expectNoThrow {
+                #try(.optimistic) {
                     _ = try self.readInitialValue()
                 }
             }
@@ -243,7 +243,7 @@ extension _FileStorageCoordinators {
             }
             
             guard let value = _cachedValue else {
-                _expectNoThrow {
+                #try(.optimistic) {
                     if !FileManager.default.fileExists(at: try fileSystemResource._toURL()) {
                         _writeValue(self.wrappedValue, immediately: true)
                     }
