@@ -9,7 +9,114 @@ import Swallow
 ///
 /// Based on: https://json-schema.org/draft/2019-09/json-schema-core.html it implements
 /// only concepts used in the `rum-events-format` schemas.
-public struct JSONSchema: Codable, Hashable, Sendable {
+public struct JSONSchema: Hashable, Sendable {
+    public enum SchemaType: String, Codable, Hashable, Sendable {
+        case boolean
+        case object
+        case array
+        case number
+        case string
+        case integer
+    }
+    
+    fileprivate init() {
+        
+    }
+    
+    public var id: String?
+    public var title: String?
+    public var description: String?
+    public var properties: [String: JSONSchema]?
+    @Indirect
+    public var additionalProperties: JSONSchema?
+    public var required: [String]?
+    public var type: SchemaType?
+    public var `enum`: [EnumValue]?
+    public var const: SchemaConstant?
+    @Indirect
+    public var items: JSONSchema?
+    public var readOnly: Bool?
+    
+    /// Reference to another schema.
+    /// https://json-schema.org/draft/2019-09/json-schema-core.html#ref
+    private var ref: String?
+    
+    /// Subschemas to be resolved.
+    /// https://json-schema.org/draft/2019-09/json-schema-core.html#rfc.section.9.2.1.1
+    var allOf: [JSONSchema]?
+    
+    /// Subschemas to be resolved.
+    /// https://json-schema.org/draft/2019-09/json-schema-core.html#rfc.section.9.2.1.2
+    var anyOf: [JSONSchema]?
+    
+    /// Subschemas to be resolved.
+    /// https://json-schema.org/draft/2019-09/json-schema-core.html#rfc.section.9.2.1.3
+    var oneOf: [JSONSchema]?
+
+    public subscript(property name: String) -> JSONSchema? {
+        get {
+            self.properties?[name]
+        } set {
+            self.properties![name] = newValue
+        }
+    }
+}
+
+extension JSONSchema {    
+    public init(
+        type: SchemaType?,
+        description: String? = nil,
+        properties: [String: JSONSchema]? = nil,
+        required: [String]? = nil,
+        additionalProperties: JSONSchema? = nil,
+        items: JSONSchema? = nil
+    ) {
+        self.id = nil
+        self.title = nil
+        self.description = description
+        self.properties = properties
+        self.additionalProperties = additionalProperties
+        self.required = required
+        self.type = type
+        self.enum = nil
+        self.const = nil
+        self.items = items
+        self.readOnly = nil
+        self.ref = nil
+        self.allOf = nil
+        self.anyOf = nil
+        self.oneOf = nil
+    }
+    
+    public init(
+        type: SchemaType?,
+        description: String? = nil,
+        properties: [String: JSONSchema]? = nil,
+        required: Bool,
+        additionalProperties: JSONSchema? = nil,
+        items: JSONSchema? = nil
+    ) {
+        self.id = nil
+        self.title = nil
+        self.description = description
+        self.properties = properties
+        self.additionalProperties = additionalProperties
+        self.required = required ? (properties?.keys).map({ Array($0) }) : nil
+        self.type = type
+        self.enum = nil
+        self.const = nil
+        self.items = items
+        self.readOnly = nil
+        self.ref = nil
+        self.allOf = nil
+        self.anyOf = nil
+        self.oneOf = nil
+    }
+}
+
+// MARK: - Conformances
+
+extension JSONSchema: Codable {
     public enum CodingKeys: String, CodingKey {
         case id = "$id"
         case title = "title"
@@ -26,50 +133,6 @@ public struct JSONSchema: Codable, Hashable, Sendable {
         case oneOf = "oneOf"
         case anyOf = "anyOf"
         case allOf = "allOf"
-    }
-    
-    public enum SchemaType: String, Codable, Hashable, Sendable {
-        case boolean
-        case object
-        case array
-        case number
-        case string
-        case integer
-    }
-    
-    public struct SchemaConstant: Codable, Hashable, Sendable {
-        public enum Value: Hashable, Sendable {
-            case integer(value: Int)
-            case string(value: String)
-        }
-        
-        public let value: Value
-        
-        public func encode(to encoder: Encoder) throws {
-            var container = encoder.singleValueContainer()
-            
-            switch value {
-                case .integer(let intValue):
-                    try container.encode(intValue)
-                case .string(let stringValue):
-                    try container.encode(stringValue)
-            }
-        }
-
-        public init(from decoder: Decoder) throws {
-            let container = try decoder.singleValueContainer()
-            
-            if let int = try? container.decode(Int.self) {
-                value = .integer(value: int)
-            } else if let string = try? container.decode(String.self) {
-                value = .string(value: string)
-            } else {
-                let prettyKeyPath = container.codingPath.map({ $0.stringValue }).joined(separator: " → ")
-                throw Exception.unimplemented(
-                    "The value on key path: `\(prettyKeyPath)` is not supported by `JSONSchemaDefinition.ConstantValue`."
-                )
-            }
-        }
     }
     
     public init(from decoder: Decoder) throws {
@@ -130,176 +193,6 @@ public struct JSONSchema: Codable, Hashable, Sendable {
         }
     }
     
-    init() {}
-    
-    // MARK: - Schema attributes
-    
-    public enum EnumValue: Codable, Hashable, Sendable {
-        case string(String)
-        case integer(Int)
-        
-        public init(from decoder: Decoder) throws {
-            let singleValueContainer = try decoder.singleValueContainer()
-            if let string = try? singleValueContainer.decode(String.self) {
-                self = .string(string)
-            } else if let integer = try? singleValueContainer.decode(Int.self) {
-                self = .integer(integer)
-            } else {
-                throw Exception.unimplemented("Trying to decode `EnumValue` but its none of supported values.")
-            }
-        }
-        
-        public func encode(to encoder: Encoder) throws {
-            var container = encoder.singleValueContainer()
-            
-            switch self {
-                case .string(let stringValue):
-                    try container.encode(stringValue)
-                case .integer(let intValue):
-                    try container.encode(intValue)
-            }
-        }
-    }
-    
-    public var id: String?
-    public var title: String?
-    public var description: String?
-    public var properties: [String: JSONSchema]?
-    @Indirect
-    public var additionalProperties: JSONSchema?
-    public var required: [String]?
-    public var type: SchemaType?
-    public var `enum`: [EnumValue]?
-    public var const: SchemaConstant?
-    @Indirect
-    public var items: JSONSchema?
-    public var readOnly: Bool?
-    
-    /// Reference to another schema.
-    /// https://json-schema.org/draft/2019-09/json-schema-core.html#ref
-    private var ref: String?
-    
-    /// Subschemas to be resolved.
-    /// https://json-schema.org/draft/2019-09/json-schema-core.html#rfc.section.9.2.1.1
-    var allOf: [JSONSchema]?
-    
-    /// Subschemas to be resolved.
-    /// https://json-schema.org/draft/2019-09/json-schema-core.html#rfc.section.9.2.1.2
-    var anyOf: [JSONSchema]?
-    
-    /// Subschemas to be resolved.
-    /// https://json-schema.org/draft/2019-09/json-schema-core.html#rfc.section.9.2.1.3
-    var oneOf: [JSONSchema]?
-    
-    
-    // MARK: - Schemas Merging
-    
-    /// Merges all attributes of `otherSchema` into this schema.
-    private mutating func merge(with otherSchema: JSONSchema?) {
-        guard let otherSchema = otherSchema else {
-            return
-        }
-        
-        // Title can be overwritten
-        self.title = self.title ?? otherSchema.title
-        
-        // Description can be overwritten
-        self.description = self.description ?? otherSchema.description
-        
-        // Type can be inferred
-        self.type = self.type ?? otherSchema.type
-        
-        // Properties are accumulated and if both schemas have a property with the same name, property
-        // schemas are merged.
-        if let selfProperties = self.properties, let otherProperties = otherSchema.properties {
-            self.properties = selfProperties.merging(otherProperties) { selfProperty, otherProperty in
-                var selfProperty = selfProperty
-                selfProperty.merge(with: otherProperty)
-                return selfProperty
-            }
-        } else {
-            self.properties = self.properties ?? otherSchema.properties
-        }
-        
-        self.additionalProperties = self.additionalProperties ?? otherSchema.additionalProperties
-        
-        // Required properties are accumulated.
-        if let selfRequired = self.required, let otherRequired = otherSchema.required {
-            self.required = selfRequired + otherRequired
-        } else {
-            self.required = self.required ?? otherSchema.required
-        }
-        
-        // Enumeration values are accumulated.
-        if let selfEnum = self.enum, let otherEnum = otherSchema.enum {
-            self.enum = selfEnum + otherEnum
-        } else {
-            self.enum = self.enum ?? otherSchema.enum
-        }
-        
-        // Constant value can be overwritten.
-        self.const = self.const ?? otherSchema.const
-        
-        // If both schemas have Items, their schemas are merged.
-        // Otherwise, any non-nil Items schema is taken.
-        if var selfItems = self.items, let otherItems = otherSchema.items {
-            selfItems.merge(with: otherItems)
-            
-            self.items = selfItems
-        } else {
-            self.items = self.items ?? otherSchema.items
-        }
-        
-        // If both schemas define read-only value, the most strict is taken.
-        if let selfReadOnly = self.readOnly, let otherReadOnly = otherSchema.readOnly {
-            self.readOnly = selfReadOnly || otherReadOnly
-        } else {
-            self.readOnly = self.readOnly ?? otherSchema.readOnly
-        }
-        
-        // Accumulate `oneOf` schemas
-        if let selfOneOf = oneOf, let otherOneOf = otherSchema.oneOf {
-            self.oneOf = selfOneOf + otherOneOf
-        } else if let otherOneOf = otherSchema.oneOf {
-            self.oneOf = otherOneOf
-        }
-        
-        // Accumulate `anyOf` schemas
-        if let selfAnyOf = anyOf, let otherAnyOf = otherSchema.anyOf {
-            self.anyOf = selfAnyOf + otherAnyOf
-        } else if let otherAnyOf = otherSchema.anyOf {
-            self.anyOf = otherAnyOf
-        }
-    }
-}
-
-extension Array where Element == JSONSchema.EnumValue {
-    func inferrSchemaType() -> JSONSchema.SchemaType? {
-        let hasOnlyStrings = allSatisfy { element in
-            if case .string = element {
-                return true
-            }
-            return false
-        }
-        if hasOnlyStrings {
-            return .string
-        }
-        
-        let hasOnlyIntegers = allSatisfy { element in
-            if case .integer = element {
-                return true
-            }
-            return false
-        }
-        if hasOnlyIntegers {
-            return .number
-        }
-        
-        return nil
-    }
-}
-
-extension JSONSchema {
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         
@@ -338,160 +231,108 @@ extension JSONSchema {
     }
 }
 
-extension JSONSchema {
-    /// Initializes a JSONSchema with a Swift type, mapping it to the corresponding JSON schema type.
-    public init(type: Any.Type) {
-        switch type {
-            case is Bool.Type:
-                self.init(type: .boolean)
-            case is String.Type:
-                self.init(type: .string)
-            case is Int8.Type, is Int16.Type, is Int32.Type, is Int64.Type, is Int.Type:
-                self.init(type: .integer)
-            case is UInt8.Type, is UInt16.Type, is UInt32.Type, is UInt64.Type, is UInt.Type:
-                // Assuming that UInt types are also mapped to 'integer' in JSON schema for simplicity.
-                // Adjust based on your requirements.
-                self.init(type: .integer)
-            case is Float.Type, is Double.Type:
-                self.init(type: .number)
-            default:
-                // Fallback for types that don't have a direct mapping or are complex objects/arrays
-                fatalError("Unsupported type for JSONSchema initialization")
-        }
-    }
-    
-    /// Basic initializer for setting a schema type directly.
-    public init(
-        type: SchemaType?,
-        description: String? = nil,
-        properties: [String: JSONSchema]? = nil,
-        required: [String]? = nil,
-        additionalProperties: JSONSchema? = nil,
-        items: JSONSchema? = nil
+extension JSONSchema: MergeOperatable {
+    /// Merges all attributes of `otherSchema` into this schema.
+    public mutating func mergeInPlace(
+        with otherSchema: JSONSchema
     ) {
-        self.id = nil
-        self.title = nil
-        self.description = description
-        self.properties = properties
-        self.additionalProperties = additionalProperties
-        self.required = required
-        self.type = type
-        self.enum = nil
-        self.const = nil
-        self.items = items
-        self.readOnly = nil
-        self.ref = nil
-        self.allOf = nil
-        self.anyOf = nil
-        self.oneOf = nil
-    }
-    
-    /// Basic initializer for setting a schema type directly.
-    public init(
-        type: SchemaType?,
-        description: String? = nil,
-        properties: [String: JSONSchema]? = nil,
-        required: Bool,
-        additionalProperties: JSONSchema? = nil,
-        items: JSONSchema? = nil
-    ) {
-        self.id = nil
-        self.title = nil
-        self.description = description
-        self.properties = properties
-        self.additionalProperties = additionalProperties
-        self.required = required ? (properties?.keys).map({ Array($0) }) : nil
-        self.type = type
-        self.enum = nil
-        self.const = nil
-        self.items = items
-        self.readOnly = nil
-        self.ref = nil
-        self.allOf = nil
-        self.anyOf = nil
-        self.oneOf = nil
-    }
-}
-
-// MARK: - Diagnostics
-
-internal func withErrorContext<T>(context: String, block: () throws -> T) throws -> T {
-    do {
-        return try block()
-    } catch let error {
-        throw JSONSchema.Exception.moreContext(context, for: error)
-    }
-}
-
-// MARK: - `Swift.DecodingError` pretty formatting
-
-/// Returns pretty description of given `DecodingError`.
-func pretty(error: DecodingError) -> String {
-    var description = "✋ description is unavailable"
-    var context: DecodingError.Context?
-    
-    switch error {
-        case .typeMismatch(let type, let moreContext):
-            description = "Type \(type) could not be decoded because it did not match the type of what was found in the encoded payload."
-            context = moreContext
-        case .valueNotFound(let type, let moreContext):
-            description = "Non-optional value of type \(type) was expected, but a null value was found."
-            context = moreContext
-        case .keyNotFound(let key, let moreContext):
-            description = "A keyed decoding container was asked for an entry for key \(key), but did not contain one."
-            context = moreContext
-        case .dataCorrupted(let moreContext):
-            context = moreContext
-        @unknown default:
-            break
-    }
-    
-    return "\n→ \(description)" + (context.flatMap { pretty(context: $0) } ?? "")
-}
-
-/// Returns pretty description of given `DecodingError.Context`.
-private func pretty(context: DecodingError.Context) -> String {
-    let codingPath: [String] = context.codingPath.map { codingKey in
-        if let intValue = codingKey.intValue {
-            return String(intValue)
+        // Title can be overwritten
+        self.title = self.title ?? otherSchema.title
+        
+        // Description can be overwritten
+        self.description = self.description ?? otherSchema.description
+        
+        // Type can be inferred
+        self.type = self.type ?? otherSchema.type
+        
+        // Properties are accumulated and if both schemas have a property with the same name, property
+        // schemas are merged.
+        if let selfProperties = self.properties, let otherProperties = otherSchema.properties {
+            self.properties = selfProperties.merging(otherProperties) { selfProperty, otherProperty in
+                var selfProperty = selfProperty
+                selfProperty.mergeInPlace(with: otherProperty)
+                return selfProperty
+            }
         } else {
-            return codingKey.stringValue
-        }
-    }
-    return """
-    
-    → In Context:
-        → coding path: \(codingPath.joined(separator: " → "))
-        → underlyingError: \(String(describing: context.underlyingError))
-    """
-}
-
-// MARK: - String formatting
-
-public extension String {
-    var camelCased: String {
-        guard !isEmpty else {
-            return ""
+            self.properties = self.properties ?? otherSchema.properties
         }
         
-        let words = components(separatedBy: CharacterSet.alphanumerics.inverted)
-        let first = words.first! // swiftlint:disable:this force_unwrapping
-        let rest = words.dropFirst().map { $0.uppercasingFirst }
-        return ([first] + rest).joined(separator: "")
+        self.additionalProperties = self.additionalProperties ?? otherSchema.additionalProperties
+        
+        // Required properties are accumulated.
+        if let selfRequired = self.required, let otherRequired = otherSchema.required {
+            self.required = selfRequired + otherRequired
+        } else {
+            self.required = self.required ?? otherSchema.required
+        }
+        
+        // Enumeration values are accumulated.
+        if let selfEnum = self.enum, let otherEnum = otherSchema.enum {
+            self.enum = selfEnum + otherEnum
+        } else {
+            self.enum = self.enum ?? otherSchema.enum
+        }
+        
+        // Constant value can be overwritten.
+        self.const = self.const ?? otherSchema.const
+        
+        // If both schemas have Items, their schemas are merged.
+        // Otherwise, any non-nil Items schema is taken.
+        if var selfItems = self.items, let otherItems = otherSchema.items {
+            selfItems.mergeInPlace(with: otherItems)
+            
+            self.items = selfItems
+        } else {
+            self.items = self.items ?? otherSchema.items
+        }
+        
+        // If both schemas define read-only value, the most strict is taken.
+        if let selfReadOnly = self.readOnly, let otherReadOnly = otherSchema.readOnly {
+            self.readOnly = selfReadOnly || otherReadOnly
+        } else {
+            self.readOnly = self.readOnly ?? otherSchema.readOnly
+        }
+        
+        // Accumulate `oneOf` schemas
+        if let selfOneOf = oneOf, let otherOneOf = otherSchema.oneOf {
+            self.oneOf = selfOneOf + otherOneOf
+        } else if let otherOneOf = otherSchema.oneOf {
+            self.oneOf = otherOneOf
+        }
+        
+        // Accumulate `anyOf` schemas
+        if let selfAnyOf = anyOf, let otherAnyOf = otherSchema.anyOf {
+            self.anyOf = selfAnyOf + otherAnyOf
+        } else if let otherAnyOf = otherSchema.anyOf {
+            self.anyOf = otherAnyOf
+        }
     }
-    
-    /// Uppercases the first character.
-    var uppercasingFirst: String {
-        prefix(1).uppercased() + String(self.dropFirst())
-    }
-    /// Lowercases the first character.
-    var lowercasingFirst: String {
-        prefix(1).lowercased() + String(self.dropFirst())
-    }
-    
-    /// "lowerCamelCased" notation.
-    var lowerCamelCased: String { camelCased.lowercasingFirst }
-    /// "UpperCamelCased" notation.
-    var upperCamelCased: String { camelCased.uppercasingFirst }
 }
 
+// MARK: - Internal
+
+extension Array where Element == JSONSchema.EnumValue {
+    func inferrSchemaType() -> JSONSchema.SchemaType? {
+        let hasOnlyStrings = allSatisfy { element in
+            if case .string = element {
+                return true
+            }
+            return false
+        }
+        if hasOnlyStrings {
+            return .string
+        }
+        
+        let hasOnlyIntegers = allSatisfy { element in
+            if case .integer = element {
+                return true
+            }
+            return false
+        }
+        if hasOnlyIntegers {
+            return .number
+        }
+        
+        return nil
+    }
+}

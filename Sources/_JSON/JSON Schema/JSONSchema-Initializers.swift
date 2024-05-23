@@ -17,8 +17,16 @@ extension JSONSchema {
         JSONSchema(type: .string)
     }
         
-    public static func array(_ schema: JSONSchema) -> JSONSchema {
+    public static func array(
+        _ schema: JSONSchema
+    ) -> JSONSchema {
         JSONSchema(type: .array, items: schema)
+    }
+    
+    public static func array(
+        _ schema: () throws -> JSONSchema
+    ) rethrows -> JSONSchema {
+        JSONSchema(type: .array, items: try schema())
     }
     
     public static func object(

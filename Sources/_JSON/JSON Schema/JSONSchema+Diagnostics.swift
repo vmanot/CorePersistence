@@ -39,7 +39,7 @@ extension JSONSchema {
                 ⬇️
                 🛑 \(moreContext)
                 
-                🔎 Pretty error: \(pretty(error: decodingError))
+                🔎 Pretty error: \(Self.pretty(error: decodingError))
                 
                 ⚙️ Original error: \(decodingError)
                 """,
@@ -59,25 +59,48 @@ extension JSONSchema {
                 )
             }
         }
-    }
-}
+        
+        /// Returns pretty description of given `DecodingError.Context`.
+        private static func pretty(context: DecodingError.Context) -> String {
+            let codingPath: [String] = context.codingPath.map { codingKey in
+                if let intValue = codingKey.intValue {
+                    return String(intValue)
+                } else {
+                    return codingKey.stringValue
+                }
+            }
 
-extension Optional {
-    func unwrapOrThrow(_ exception: JSONSchema.Exception) throws -> Wrapped {
-        switch self {
-            case .some(let unwrappedValue):
-                return unwrappedValue
-            case .none:
-                throw exception
+            let result: String =
+            """
+            → In Context:
+                → coding path: \(codingPath.joined(separator: " → "))
+                → underlyingError: \(String(describing: context.underlyingError))
+            """
+            
+            return result
+        }
+        
+        private static func pretty(error: DecodingError) -> String {
+            var description = "✋ description is unavailable"
+            var context: DecodingError.Context?
+            
+            switch error {
+                case .typeMismatch(let type, let moreContext):
+                    description = "Type \(type) could not be decoded because it did not match the type of what was found in the encoded payload."
+                    context = moreContext
+                case .valueNotFound(let type, let moreContext):
+                    description = "Non-optional value of type \(type) was expected, but a null value was found."
+                    context = moreContext
+                case .keyNotFound(let key, let moreContext):
+                    description = "A keyed decoding container was asked for an entry for key \(key), but did not contain one."
+                    context = moreContext
+                case .dataCorrupted(let moreContext):
+                    context = moreContext
+                @unknown default:
+                    break
+            }
+            
+            return "\n→ \(description)" + (context.flatMap { pretty(context: $0) } ?? "")
         }
     }
-    
-    func ifNotNil<T>(_ closure: (Wrapped) throws -> T) rethrows -> T? {
-        if case .some(let unwrappedValue) = self {
-            return try closure(unwrappedValue)
-        } else {
-            return nil
-        }
-    }
 }
-

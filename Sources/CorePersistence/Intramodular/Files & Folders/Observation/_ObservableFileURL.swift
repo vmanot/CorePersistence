@@ -121,7 +121,7 @@ extension _ObservableFileURL: Codable {
         let fileIdentifier: FileSystemIdentifier? = try container.decodeIfPresent(FileSystemIdentifier.self, forKey: .fileIdentifier)
         
         #try(.optimistic) {
-            try? bookmark?.renew()
+            try bookmark?.renew()
         }
         
         let fileURL: URL = try (url ?? (try? bookmark?.toURL())).unwrap()
