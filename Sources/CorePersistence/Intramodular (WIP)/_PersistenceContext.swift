@@ -29,7 +29,9 @@ public final class _PersistenceContext: @unchecked Sendable {
     }
     
     public convenience init<T>(for type: T.Type) {
-        self.init(persistenceRepresentation: PersistenceRepresentationBuilder.Accumulated(components: []))
+        self.init(
+            persistenceRepresentation: PersistenceRepresentationBuilder.Accumulated(components: [])
+        )
     }
 }
 
