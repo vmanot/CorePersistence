@@ -19,6 +19,23 @@ extension JSONSchema {
             self[property: propertyName]?.description = propertyDescription
         }
     }
+    
+    public init(
+        type: Any.Type,
+        description: String? = nil,
+        propertyDescriptions: [String: String]? = nil,
+        required: [String]?
+    ) throws {
+        self = try TypeMetadata(type)._toJSONSchema()
+        
+        self.description = description
+        
+        for (propertyName, propertyDescription) in (propertyDescriptions ?? [:]) {
+            self[property: propertyName]?.description = propertyDescription
+        }
+        
+        self.required = required
+    }
 }
 
 extension TypeMetadata {
