@@ -27,7 +27,6 @@ class XMLEncoderImplementation: Encoder {
         return options.userInfo
     }
 
-    // MARK: - Initialization
 
     /// Initializes `self` with the given top-level encoder options.
     init(

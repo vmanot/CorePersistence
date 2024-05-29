@@ -29,7 +29,6 @@ class XMLReferencingEncoder: XMLEncoderImplementation {
         case choice(SharedBox<ChoiceBox>, String)
     }
 
-    // MARK: - Properties
 
     /// The encoder we're referencing.
     let encoder: XMLEncoderImplementation
@@ -37,7 +36,6 @@ class XMLReferencingEncoder: XMLEncoderImplementation {
     /// The container reference itself.
     private let reference: Reference
 
-    // MARK: - Initialization
 
     /// Initializes `self` by referencing the given array container in the given encoder.
     init(

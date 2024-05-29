@@ -30,7 +30,6 @@ class XMLDecoderImplementation: Decoder {
     // The error context length
     open var errorContextLength: UInt = 0
 
-    // MARK: - Initialization
 
     /// Initializes `self` with the given top-level container and options.
     init(

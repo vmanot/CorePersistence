@@ -16,7 +16,6 @@ struct XMLEncodingStorage {
     /// The container stack.
     private var containers: [Box] = []
 
-    // MARK: - Initialization
 
     /// Initializes `self` with no containers.
     init() {}

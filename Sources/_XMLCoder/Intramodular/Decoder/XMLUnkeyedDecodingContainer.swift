@@ -23,7 +23,6 @@ struct XMLUnkeyedDecodingContainer: UnkeyedDecodingContainer {
     /// The index of the element we're about to decode.
     public private(set) var currentIndex: Int
 
-    // MARK: - Initialization
 
     /// Initializes `self` by referencing the given decoder and container.
     init(referencing decoder: XMLDecoderImplementation, wrapping container: SharedBox<UnkeyedBox>) {

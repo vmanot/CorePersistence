@@ -17,7 +17,6 @@ struct XMLDecodingStorage {
     /// Elements may be any one of the XML types (StringBox, KeyedBox).
     private var containers: [Box] = []
 
-    // MARK: - Initialization
 
     /// Initializes `self` with no containers.
     init() {}

@@ -22,7 +22,6 @@ struct XMLKeyedEncodingContainer<K: CodingKey>: KeyedEncodingContainerProtocol {
     /// The path of coding keys taken to get to this point in encoding.
     public private(set) var codingPath: [CodingKey]
 
-    // MARK: - Initialization
 
     /// Initializes `self` with the given references.
     init(

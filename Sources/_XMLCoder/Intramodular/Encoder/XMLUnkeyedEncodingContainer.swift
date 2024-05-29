@@ -25,7 +25,6 @@ struct XMLUnkeyedEncodingContainer: UnkeyedEncodingContainer {
         return container.withShared { $0.count }
     }
 
-    // MARK: - Initialization
 
     /// Initializes `self` with the given references.
     init(
