@@ -2,7 +2,6 @@
 // Copyright (c) Vatsal Manot
 //
 
-import Merge
 import Swallow
 
 /// A one-to-many identifiers map.

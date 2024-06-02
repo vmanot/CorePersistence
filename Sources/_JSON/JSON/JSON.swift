@@ -262,9 +262,12 @@ extension JSON: DataDecodableWithDefaultStrategy {
         self = try decoder.decode(JSON.self, from: data, allowFragments: true)
     }
     
-    public init(jsonString: String, using strategy: DataDecodingStrategy) throws {
+    public init(
+        jsonString: String,
+        using strategy: DataDecodingStrategy
+    ) throws {
         try self.init(
-            data: jsonString.toJSONData(),
+            data: jsonString.data(using: .utf8).unwrap(),
             using: strategy
         )
     }

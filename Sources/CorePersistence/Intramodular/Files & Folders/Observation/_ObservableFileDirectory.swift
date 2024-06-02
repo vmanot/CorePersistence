@@ -2,8 +2,8 @@
 // Copyright (c) Vatsal Manot
 //
 
+import Combine
 import Dispatch
-import Merge
 import System
 import Swift
 
