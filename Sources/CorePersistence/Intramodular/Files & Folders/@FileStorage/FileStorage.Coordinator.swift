@@ -7,7 +7,7 @@ import Merge
 import Swallow
 
 /// A namespace for @FileStorage coordinator implementations.
-public enum _FileStorageCoordinators: _StaticNamespaceType {
+public enum _FileStorageCoordinators: _StaticSwift.Namespace {
     
 }
 

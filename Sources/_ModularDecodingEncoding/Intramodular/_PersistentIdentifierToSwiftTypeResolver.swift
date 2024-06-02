@@ -12,13 +12,13 @@ import Swallow
 /// This type is a work-in-progress. Do not use this type directly in your code.
 public protocol _PersistentIdentifierToSwiftTypeResolver<Input, Output> {
     associatedtype Input: PersistentIdentifier
-    associatedtype Output: _StaticSwiftType
+    associatedtype Output: _StaticSwift.TypeExpression
     
     func resolve(from _: Input) throws -> Output?
 }
 
 public protocol _StaticSwiftTypeToPersistentIdentifierResolver<Input, Output> {
-    associatedtype Input: _StaticSwiftType
+    associatedtype Input: _StaticSwift.TypeExpression
     associatedtype Output: PersistentIdentifier
     
     func resolve(from input: Input) throws -> Output?

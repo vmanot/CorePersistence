@@ -84,7 +84,7 @@ protocol TestType: Codable, Hashable {
 extension TestTypes {
     struct IdentifierToTypeResolver: _PersistentIdentifierToSwiftTypeResolver {
         typealias Input = TypeIdentifier
-        typealias Output = _ExistentialSwiftType<any TestType, any TestType.Type>
+        typealias Output = _StaticSwift.ExistentialTypeExpression<any TestType, any TestType.Type>
         
         fileprivate init() {
             
@@ -105,7 +105,7 @@ extension TestTypes {
     }
     
     struct TypeToIdentifierResolver: _StaticSwiftTypeToPersistentIdentifierResolver {
-        typealias Input = _ExistentialSwiftType<any TestType, any TestType.Type>
+        typealias Input = _StaticSwift.ExistentialTypeExpression<any TestType, any TestType.Type>
         typealias Output = TypeIdentifier
         
         fileprivate init() {

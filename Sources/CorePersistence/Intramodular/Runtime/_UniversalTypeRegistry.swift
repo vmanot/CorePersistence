@@ -73,7 +73,7 @@ public struct _UniversalTypeRegistry {
             }
         }
         
-        if let namespaceType = type as? (any _TypeIterableStaticNamespaceType.Type) {
+        if let namespaceType = type as? (any _StaticSwift.TypeIterableNamespace.Type) {
             namespaceType._opaque_allNamespaceTypes.forEach(_register)
         }
     }
@@ -84,7 +84,7 @@ public struct _UniversalTypeRegistry {
     ) {
         lock.withCriticalScope {
             assert(!(type is any HadeanIdentifiable.Type))
-            assert(!(type is any _TypeIterableStaticNamespaceType.Type))
+            assert(!(type is any _StaticSwift.TypeIterableNamespace.Type))
             
             typesByIdentifier[identifier] = type
             identifiersByType[Metatype(type)] = identifier
@@ -121,7 +121,7 @@ extension _UniversalTypeRegistry {
         @usableFromInline
         typealias Input = HadeanIdentifier
         @usableFromInline
-        typealias Output = _ExistentialSwiftType<Any, Any.Type>
+        typealias Output = _StaticSwift.ExistentialTypeExpression<Any, Any.Type>
         
         fileprivate init() {
             
@@ -155,7 +155,7 @@ extension _UniversalTypeRegistry {
     @usableFromInline
     struct SwiftTypeToIdentifierResolver: _StaticSwiftTypeToPersistentIdentifierResolver {
         @usableFromInline
-        typealias Input = _ExistentialSwiftType<Any, Any.Type>
+        typealias Input = _StaticSwift.ExistentialTypeExpression<Any, Any.Type>
         @usableFromInline
         typealias Output = HadeanIdentifier
         

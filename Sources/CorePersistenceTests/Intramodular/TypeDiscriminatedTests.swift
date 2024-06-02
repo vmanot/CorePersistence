@@ -31,7 +31,7 @@ final class TypeDiscriminatedCodingTests: XCTestCase {
 }
 
 private enum TestTypeDiscriminator: String, CaseIterable, Codable, Swallow.TypeDiscriminator {
-    public typealias _DiscriminatedSwiftType = _ExistentialSwiftType<any TypeDiscriminatedCodingTestType, any TypeDiscriminatedCodingTestType.Type>
+    public typealias _DiscriminatedSwiftType = _StaticSwift.ExistentialTypeExpression<any TypeDiscriminatedCodingTestType, any TypeDiscriminatedCodingTestType.Type>
     
     case foo
     case bar
