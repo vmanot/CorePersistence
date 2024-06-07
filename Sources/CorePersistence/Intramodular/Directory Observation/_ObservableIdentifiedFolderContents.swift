@@ -30,6 +30,10 @@ public protocol _ObservableIdentifiedFolderContentsType {
 public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable, WrappedValue>: _ObservableIdentifiedFolderContentsType, MutablePropertyWrapper, _ObservableObjectX {
     public typealias Element = _ObservableIdentifiedFolderContentsElement<Item>
     
+    public let _objectWillChange = ObservableObjectPublisher()
+    
+    public lazy var objectWillChange = AnyObjectWillChangePublisher(from: _objectWillChange)
+    
     public let cocoaFileManager = FileManager.default
     public let folder: any _FileOrFolderRepresenting
     public let fileConfiguration: (Element) throws -> _RelativeFileConfiguration<Item>
@@ -60,7 +64,7 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable, Wrapp
             
             return result
         } set {
-            objectWillChange.send()
+            _objectWillChange.send()
 
             assert(_resolvedWrappedValue != nil)
             

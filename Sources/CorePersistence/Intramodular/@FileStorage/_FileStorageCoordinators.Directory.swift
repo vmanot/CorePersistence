@@ -10,8 +10,8 @@ extension _FileStorageCoordinators {
     public final class Directory<Item, ID: Hashable, WrappedValue>: _AnyFileStorageCoordinator<_ObservableIdentifiedFolderContents<Item, ID, WrappedValue>, WrappedValue> {
         public typealias Base = _ObservableIdentifiedFolderContents<Item, ID, WrappedValue>
         
-        override public var objectWillChange: ObjectWillChangePublisher {
-            base.objectWillChange
+        override public var objectWillChange: AnyObjectWillChangePublisher {
+            AnyObjectWillChangePublisher(from: base)
         }
 
         override public var objectDidChange: _ObjectDidChangePublisher {

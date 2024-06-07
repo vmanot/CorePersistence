@@ -47,8 +47,8 @@ public class _AnyFileStorageCoordinator<ValueType, UnwrappedValue>: _ObservableO
         qos: .default
     )
         
-    open var objectWillChange: ObservableObjectPublisher {
-        _defaultObjectWillChangePublisher
+    open var objectWillChange: AnyObjectWillChangePublisher {
+        .init(erasing: _defaultObjectWillChangePublisher)
     }
     
     open var objectDidChange: _ObjectDidChangePublisher {
