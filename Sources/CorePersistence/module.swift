@@ -25,6 +25,6 @@ public enum _module {
             isInitialized = true
         }
         
-        _UniversalTypeRegistry.register(UUID.self)
+        _HadeanSwiftTypeRegistry.register(UUID.self)
     }
 }
