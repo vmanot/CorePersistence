@@ -27,7 +27,7 @@ public protocol _ObservableIdentifiedFolderContentsType {
     var wrappedValue: WrappedValue { get set }
 }
 
-public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable, WrappedValue>: _ObservableIdentifiedFolderContentsType, MutablePropertyWrapper, ObservableObject {
+public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable, WrappedValue>: _ObservableIdentifiedFolderContentsType, MutablePropertyWrapper, _ObservableObjectX {
     public typealias Element = _ObservableIdentifiedFolderContentsElement<Item>
     
     public let cocoaFileManager = FileManager.default
@@ -60,9 +60,13 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable, Wrapp
             
             return result
         } set {
+            objectWillChange.send()
+
             assert(_resolvedWrappedValue != nil)
             
             _resolvedWrappedValue = newValue
+            
+            objectDidChange.send()
         }
     }
     
@@ -78,8 +82,6 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable, Wrapp
         get {
             _wrappedValue
         } set {
-            objectWillChange.send()
-            
             try! cocoaFileManager.withUserGrantedAccess(to: folderURL) { folderURL in
                 try! _ObservableIdentifiedFolderContentsUpdating_WrappedValue._opaque_update(
                     from: _wrappedValue,

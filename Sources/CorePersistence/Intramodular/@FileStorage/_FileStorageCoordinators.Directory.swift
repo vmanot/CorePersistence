@@ -10,8 +10,16 @@ extension _FileStorageCoordinators {
     public final class Directory<Item, ID: Hashable, WrappedValue>: _AnyFileStorageCoordinator<_ObservableIdentifiedFolderContents<Item, ID, WrappedValue>, WrappedValue> {
         public typealias Base = _ObservableIdentifiedFolderContents<Item, ID, WrappedValue>
         
-        @MainActor
-        @PublishedObject var base: Base
+        override public var objectWillChange: ObjectWillChangePublisher {
+            base.objectWillChange
+        }
+
+        override public var objectDidChange: _ObjectDidChangePublisher {
+            base.objectDidChange
+        }
+        
+        @MainActor(unsafe)
+        @PublishedObject private var base: Base
         
         @MainActor
         public var _hasReadWithLogicalParentAtLeastOnce = false
@@ -51,7 +59,9 @@ extension _FileStorageCoordinators {
                     path: nil,
                     serialization: .init(
                         contentType: nil,
-                        coder: _AnyTopLevelFileDecoderEncoder(.topLevelDataCoder(JSONCoder(), forType: Never.self)),
+                        coder: _AnyTopLevelFileDecoderEncoder(
+                            .topLevelDataCoder(JSONCoder(), forType: Never.self)
+                        ),
                         initialValue: nil
                     ),
                     readWriteOptions: .init(

@@ -3,7 +3,7 @@
 //
 
 import FoundationX
-import Merge
+@_spi(Internal) import Merge
 import Swallow
 
 /// A namespace for @FileStorage coordinator implementations.
@@ -30,19 +30,31 @@ public class _AnyFileStorageCoordinator<ValueType, UnwrappedValue>: _ObservableO
         }
     }
     
+    lazy var _defaultObjectWillChangePublisher = ObservableObjectPublisher()
+    lazy var _defaultObjectDidChangePublisher = _ObjectDidChangePublisher()
+        
     let _persistenceContext = _PersistenceContext(for: ValueType.self)
     let cancellables = Cancellables()
     let lock = OSUnfairLock()
     
+    var resolveFileSystemResource: () throws -> any _FileOrFolderRepresenting
+    var configuration: _RelativeFileConfiguration<UnwrappedValue>
+
     public internal(set) var stateFlags: Set<StateFlag> = []
     
     let writeQueue = DispatchQueue(
         label: "com.vmanot.Data.FileStorage.Coordinator.write",
         qos: .default
     )
+        
+    open var objectWillChange: ObservableObjectPublisher {
+        _defaultObjectWillChangePublisher
+    }
     
-    var resolveFileSystemResource: () throws -> any _FileOrFolderRepresenting
-    
+    open var objectDidChange: _ObjectDidChangePublisher {
+        _defaultObjectDidChangePublisher
+    }
+
     var fileSystemResource: any _FileOrFolderRepresenting {
         get {
             try! resolveFileSystemResource()
@@ -50,9 +62,7 @@ public class _AnyFileStorageCoordinator<ValueType, UnwrappedValue>: _ObservableO
             resolveFileSystemResource = { newValue }
         }
     }
-    
-    var configuration: _RelativeFileConfiguration<UnwrappedValue>
-    
+        
     @MainActor(unsafe)
     open var wrappedValue: UnwrappedValue {
         get {
