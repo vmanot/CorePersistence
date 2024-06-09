@@ -99,6 +99,27 @@ Other custom options for initializing @FileStorage:
 )
 ```
 
+## @HadeanIdentifier
+`@HadeanIdentifier` is a general purpose persistent identifier to identify distinct objects. 
+Usage:
+```swift
+@HadeanIdentifier("guvol-haboz-motiz-povag")
+struct MyObject {
+// your object code here
+}
+```
+It is recommended to use a [Proquint](https://github.com/dsw/proquint) - Identifiers that are not real words but are as Readable, Spellable, and Pronounceable as words. 
+
+Python scrip to generate a proquint: 
+```python
+from proquint import uint2quint
+import random
+
+# Generate a unique string of 4 proquint words
+unique_string = '-'.join(uint2quint(random.getrandbits(32)) for _ in range(4))
+print(unique_string)
+```
+
 # License
 
 CorePersistence is licensed under the [MIT License](https://vmanot.mit-license.org).
