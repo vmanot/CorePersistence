@@ -17,6 +17,10 @@ This library has ambitious goals:
 - A high performance `CSV` primitive.
 - A high performance `XML` primitive (backed by the excellent `XMLCoder` library for now).
 
+- [JSONSchema](#jsonschema)
+- [@FileStorage](#filestorage)
+- [@HadeanIdentifier](#hadeanidentifier)
+
 ## JSONSchema
 Broad description of the JSON schema. It is agnostic and independent of any programming language.
 Based on: [https://json-schema.org/draft/2019-09/json-schema-core.html](https://json-schema.org/draft/2019-09/json-schema-core) it implements only concepts used in the `rum-events-format` schemas.
