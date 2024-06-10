@@ -17,6 +17,70 @@ This library has ambitious goals:
 - A high performance `CSV` primitive.
 - A high performance `XML` primitive (backed by the excellent `XMLCoder` library for now).
 
+## JSONSchema
+Broad description of the JSON schema. It is agnostic and independent of any programming language.
+Based on: [https://json-schema.org/draft/2019-09/json-schema-core.html](https://json-schema.org/draft/2019-09/json-schema-core) it implements only concepts used in the `rum-events-format` schemas.
+
+```swift
+let restaurantBookingSchema = JSONSchema(
+    type: .object,
+    description: "Information required to make a restaurant booking",
+    properties: [
+        "name": JSONSchema(
+            type: .string,
+            description: "The name of the restaurant"
+        ),
+        "date" : JSONSchema(
+            type: .string,
+            description: "The date of the restaurant booking in yyyy-MM-dd format. Should be a date with a year, month, day."
+        ),
+        "time" : JSONSchema(
+            type: .string,
+            description: "The time of the reservation in HH:mm format. Should include hours and minutes."
+        ),
+        "number_of_people" : JSONSchema(
+            type: .integer,
+            description: "The total number of people the reservation is for"
+        )
+    ],
+    // the required parameter specifies whether all properties listed are required or not
+    // note that you can also pass in an array of strings specifying the properties that are required as follows:
+    // required: ["name", "date", "time"] - "number_of_people" not required
+    required: false 
+)
+```
+
+You can also create a `JSONSchema` based on your object as follows:
+
+```swift
+struct RestaurantBooking: Codable, Hashable, Sendable {
+    let name: String?
+    let date: String?
+    let time: String?
+    let numberOfPeople: Int?
+}
+
+func createRestaurantBookingSchema() -> JSONSchema? {
+    do {
+        let restaurantBookingSchema: JSONSchema = try JSONSchema(
+            type: RestaurantBooking.self,
+            description: "Information required to make a restaurant booking",
+            propertyDescriptions: [
+                "name": "The name of the restaurant",
+                "date": "The date of the restaurant booking in yyyy-MM-dd format. Should be a date with a year, month, day.",
+                "time": "The time of the reservation in HH:mm format. Should include hours and minutes.",
+                "number_of_people": "The total number of people the reservation is for"
+            ],
+            required: false
+        )
+        return restaurantBookingSchema
+    } catch {
+        print(error)
+        return nil
+    }
+}
+```
+
 ## @FileStorage
 The `@FileStorage` property wrapper is a tool designed to simplify data persistence by automatically handling the reading and writing of data to files. Features include:
 - **Automatic Data Handling**: `@FileStorage` automates the process of storing and retrieving data. Data is automatically written to a file whenever it changes, and read from the file when needed.
