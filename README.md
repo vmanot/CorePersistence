@@ -17,6 +17,7 @@ This library has ambitious goals:
 - A high performance `CSV` primitive.
 - A high performance `XML` primitive (backed by the excellent `XMLCoder` library for now).
 
+Examples:
 - [JSONSchema](#jsonschema)
 - [@FileStorage](#filestorage)
 - [@HadeanIdentifier](#hadeanidentifier)
