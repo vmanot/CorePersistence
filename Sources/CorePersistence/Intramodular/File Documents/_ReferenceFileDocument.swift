@@ -5,6 +5,7 @@
 import Foundation
 import Swift
 import UniformTypeIdentifiers
+import SwiftUI
 
 public struct ReferenceFileDocumentSnapshotConfiguration {
     public let contentType: UTType?
@@ -37,7 +38,6 @@ public protocol _ReferenceFileDocument {
         configuration: WriteConfiguration
     ) throws -> FileWrapper
 }
-
 
 extension _ReferenceFileDocument {
     public func _fileWrapper(
