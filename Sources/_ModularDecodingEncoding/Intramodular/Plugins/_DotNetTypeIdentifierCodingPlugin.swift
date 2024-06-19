@@ -7,6 +7,7 @@ import Foundation
 import Diagnostics
 import Swallow
 
+/// Microsoft .NET style `$type` field.
 public struct _DotNetTypeIdentifierCodingPlugin<ID: Codable & PersistentIdentifier>: _TypeDiscriminatorCodingPlugin, @unchecked Sendable {
     private enum CodingKeys: String, CodingKey {
         case type = "$type"
