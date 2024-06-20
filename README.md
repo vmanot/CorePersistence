@@ -189,6 +189,59 @@ unique_string = '-'.join(uint2quint(random.getrandbits(32)) for _ in range(4))
 print(unique_string)
 ```
 
+## TopLevelDecoder._modular()
+
+Sample JSON Data: 
+
+```swift
+let jsonData = """
+{
+    "id": 1,
+    "name": "John Doe",
+    "email": "john@example.com"
+}
+""".data(using: .utf8)!
+```
+
+Using regular `JSONDecoder()`: 
+```swift
+do {
+    // using regular JSONDecoder()
+    let decoder = JSONDecoder()
+    let user = try decoder.decode(User.self, from: jsonData)
+} catch {
+    print(error)
+}
+```
+
+Printed Error when using `JSONDecoder()`: 
+
+```
+keyNotFound(CodingKeys(stringValue: "wrongKey", intValue: nil),
+Swift.DecodingError.Context(codingPath: [],
+debugDescription: "No value associated with key CodingKeys(stringValue: \"wrongKey\", intValue: nil) (\"wrongKey\").",
+underlyingError: nil))
+```
+
+Using `JSONDecoder()._modular()`:
+```swift
+do {
+    // using regular JSONDecoder()._modular()
+    let decoder = JSONDecoder()._modular()
+    let user = try decoder.decode(User.self, from: jsonData)
+} catch {
+    print(error)
+}
+```
+
+Printed Error when using `JSONDecoder()._modular()` (actual JSON Data printed out):
+
+```
+keyNotFound("wrongKey",
+context for User: (coding path: []),
+Optional(["id": 1.0, "email": "john@example.com", "name": "John Doe"]))
+```
+
 # License
 
 CorePersistence is licensed under the [MIT License](https://vmanot.mit-license.org).
