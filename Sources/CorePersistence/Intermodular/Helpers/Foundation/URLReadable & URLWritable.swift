@@ -77,8 +77,15 @@ extension NSDictionary: URLReadable, URLWritable {
         return try self.init(contentsOf: url).unwrap()
     }
     
-    public func write(to url: URL, atomically: Bool) throws {
-        try write(to: url, atomically: atomically).orThrow(CocoaError.error(.fileWriteUnknown, url: url))
+    @_disfavoredOverload
+    public func write(
+        to url: URL,
+        atomically: Bool
+    ) throws {
+        try write(
+            to: url,
+            atomically: atomically
+        ).orThrow(CocoaError.error(.fileWriteUnknown, url: url))
     }
 }
 
@@ -87,6 +94,7 @@ extension NSString: URLReadable, URLWritable {
         return try self.init(contentsOf: url, encoding: String.Encoding.utf8.rawValue)
     }
     
+    @_disfavoredOverload
     public func write(to url: URL, atomically: Bool) throws {
         try write(to: url, atomically: atomically, encoding: String.Encoding.utf8.rawValue)
     }
@@ -98,10 +106,10 @@ extension String: URLReadable, URLWritable {
     }
     
     public func write(to url: URL, atomically: Bool) throws {
-        #if os(tvOS) || os(visionOS)
+#if os(tvOS) || os(visionOS)
         try write(toFile: url.path, atomically: atomically, encoding: .utf8)
-        #else
+#else
         try (self as NSString).write(to: url, atomically: atomically)
-        #endif
+#endif
     }
 }
