@@ -2,8 +2,8 @@
 // Copyright (c) Vatsal Manot
 //
 
-import FoundationX
-import Swallow
+@_spi(Internal) import FoundationX
+@_spi(Internal) import Swallow
 import UniformTypeIdentifiers
 
 public protocol _TopLevelFileDecoderEncoder {
@@ -128,7 +128,7 @@ extension FileManager {
         }
         
         if !isReadableAndWritable(at: url) {
-            if let securityScopedURL = try? URL._BookmarkCache.cachedURL(for: url) {
+            if let securityScopedURL = try? URL._SavedBookmarks.bookmarkedURL(for: url) {
                 if isReadableAndWritable(at: securityScopedURL) {
                     url = securityScopedURL
                 }
