@@ -67,26 +67,65 @@ extension _ModularDecoder {
                 switch error {
                     case .typeMismatch:
                         throw error
+                    case .keyNotFound:
+                        return try attemptToRecover(
+                            fromKeyNotFoundError: error,
+                            type: type,
+                            key: key
+                        )
                     default:
                         throw error
                 }
             } catch let error as DecodingError {
                 switch error {
-                    case .typeMismatch:                        
+                    case .typeMismatch:
                         fallthrough
                     case .keyNotFound:
-                        if let nilLiteral = try? _initializeNilLiteral(ofType: T.self) {
-                            return nilLiteral
-                        } else if let arrayLiteral = try? _initializeEmptyArrayLiteral(ofType: T.self) {
-                            return arrayLiteral
-                        }
-                        
-                        fallthrough
+                        return try attemptToRecover(
+                            fromKeyNotFoundError: error,
+                            type: type,
+                            key: key
+                        )
                     default:
                         break
                 }
                 
                 throw error
+            }
+        }
+        
+        /// Attempts to recover from a `.keyNotFound` error.
+        ///
+        /// Only proceeds if a recovery plugin is explicitly specified, the default behavior of `Codable` is to throw an error for a missing key.
+        private func attemptToRecover<T>(
+            fromKeyNotFoundError error: Error,
+            type: T.Type,
+            key: Key
+        ) throws -> T {
+            guard let error = _ModularDecodingError(error) else {
+                throw error
+            }
+            
+            let errorCodingPath: [AnyCodingKey] = try error.context?.codingPath.map({ try $0.key.unwrap() }) ?? []
+            
+            guard errorCodingPath == self.codingPath.map({ AnyCodingKey(erasing: $0) }) else {
+                throw error
+            }
+            
+            guard self.parent.configuration.plugins.contains(where: { $0 is _KeyNotFoundRecoveryPlugin }) else {
+                throw error
+            }
+            
+            if let nilLiteral = try? _initializeNilLiteral(ofType: T.self) {
+                return nilLiteral
+            } else if let arrayLiteral = try? _initializeEmptyArrayLiteral(ofType: T.self) {
+                return arrayLiteral
+            } else if let initiable = try? cast(type, to: (any Initiable.Type).self) {
+                return initiable.init() as! T
+            } else {
+                runtimeIssue("Failed to reasonably initialize \(type), trying all possible fallbacks including placeholder values.")
+                
+                return try _generatePlaceholder(ofType: type)
             }
         }
         

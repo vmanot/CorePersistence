@@ -8,7 +8,7 @@ import Runtime
 import Swallow
 
 public struct HadeanTopLevelCoder<EncodedRepresentation> {
-    private let base: _ModularTopLevelCoder<EncodedRepresentation>
+    private var base: _ModularTopLevelCoder<EncodedRepresentation>
     
     private let plugins: [any _ModularCodingPlugin] = [
         _HadeanTypeCodingPlugin(),
@@ -51,13 +51,22 @@ extension HadeanTopLevelCoder {
         decoder: Decoder,
         encoder: Encoder
     ) where Decoder.Input == EncodedRepresentation, Encoder.Output == EncodedRepresentation {
-        self.init(base: .init(decoder: decoder, encoder: encoder))
+        self.init(base: _ModularTopLevelCoder(decoder: decoder, encoder: encoder))
     }
     
     public init<Coder: TopLevelDataCoder>(
         coder: Coder
     ) where EncodedRepresentation == Data {
-        self.init(base: .init(coder: coder))
+        self.init(base: _ModularTopLevelCoder(coder: coder))
+    }
+    
+    public init<Coder: TopLevelDataCoder>(
+        coder: Coder,
+        plugins: [any _ModularCodingPlugin]
+    ) where EncodedRepresentation == Data {
+        self.init(base: _ModularTopLevelCoder(coder: coder))
+        
+        self.base.plugins.append(contentsOf: plugins)
     }
 }
 
