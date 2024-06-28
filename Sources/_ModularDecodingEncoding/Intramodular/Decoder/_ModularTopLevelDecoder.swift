@@ -33,18 +33,40 @@ public struct _ModularTopLevelDecoder<Input>: TopLevelDecoder, @unchecked Sendab
     ) throws -> T {
         try _ModularDecoder.TaskLocalValues.$configuration.withValue(configuration) {
             if let type = type as? _ModularTopLevelProxyDecodableType.Type {
-                return try cast(
-                    base.decode(
-                        type,
-                        from: input
-                    ),
-                    to: T.self
-                )
+                do {
+                    return try cast(
+                        base.decode(
+                            type,
+                            from: input
+                        ),
+                        to: T.self
+                    )
+                } catch let decodingError as Swift.DecodingError {
+                    throw try _ModularDecodingError(
+                        from: decodingError,
+                        type: Input.self,
+                        decoder: base,
+                        input: input
+                    )
+                } catch {
+                    throw error
+                }
             } else {
-                return try base.decode(
-                    _ModularDecoder.TopLevelProxyDecodable<T>.self,
-                    from: input
-                ).value
+                do {
+                    return try base.decode(
+                        _ModularDecoder.TopLevelProxyDecodable<T>.self,
+                        from: input
+                    ).value
+                } catch let decodingError as Swift.DecodingError {
+                    throw try _ModularDecodingError(
+                        from: decodingError,
+                        type: Input.self,
+                        decoder: base,
+                        input: input
+                    )
+                } catch {
+                    throw error
+                }
             }
         }
     }
@@ -67,22 +89,29 @@ extension _ModularDecoder {
 
 extension _ModularDecoder.TopLevelProxyDecodable {
     init(from _decoder: Decoder) throws {
+        let type = T.self
+                    
+        guard !(type is _ModularDecodableProxyType.Type) else {
+            fatalError()
+        }
+        
+        assert(!(_decoder is _ModularDecoder))
+        
+        let decoder = _ModularDecoder(
+            base: _decoder,
+            configuration: _ModularDecoder.TaskLocalValues.configuration,
+            context: .init(type: T.self)
+        )
+
         do {
-            let type = T.self
-            
-            guard !(type is _ModularDecodableProxyType.Type) else {
-                fatalError()
-            }
-            
-            assert(!(_decoder is _ModularDecoder))
-            
-            let decoder = _ModularDecoder(
-                base: _decoder,
-                configuration: _ModularDecoder.TaskLocalValues.configuration,
-                context: .init(type: T.self)
-            )
-            
             try self.init(from: decoder)
+        } catch let decodingError as Swift.DecodingError {
+            throw try _ModularDecodingError(
+                from: decodingError,
+                type: T.self,
+                value: try? AnyCodable(from: decoder.base),
+                path: CodingPath(_decoder.codingPath)
+            )
         } catch {
             throw error
         }

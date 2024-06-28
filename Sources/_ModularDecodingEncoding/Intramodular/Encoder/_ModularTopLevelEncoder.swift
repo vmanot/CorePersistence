@@ -129,7 +129,7 @@ extension _ModularEncoder {
                         
                         let baseUnwrappedProxy: any Encodable = _openExistential(unwrappedBase, do: _reifiedProxy)
                         
-                        try baseUnwrappedProxy.encode(to: encoder)
+                        try baseUnwrappedProxy.encode(to: encoder.base)
                         
                         encoded = true
                     } else {
