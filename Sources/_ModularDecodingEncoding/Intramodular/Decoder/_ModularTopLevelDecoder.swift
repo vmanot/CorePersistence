@@ -90,7 +90,7 @@ extension _ModularDecoder {
 extension _ModularDecoder.TopLevelProxyDecodable {
     init(from _decoder: Decoder) throws {
         let type = T.self
-                    
+        
         guard !(type is _ModularDecodableProxyType.Type) else {
             fatalError()
         }
@@ -102,7 +102,7 @@ extension _ModularDecoder.TopLevelProxyDecodable {
             configuration: _ModularDecoder.TaskLocalValues.configuration,
             context: .init(type: T.self)
         )
-
+        
         do {
             try self.init(from: decoder)
         } catch let decodingError as Swift.DecodingError {
@@ -283,7 +283,7 @@ extension _ModularDecoder.TopLevelProxyDecodable {
         } else {
             if let value = try? decoder.base.singleValueContainer()._decodeUnsafelySerializedNil(T.self) {
                 return try cast(value, to: T.self)
-            } else if let value = try? type.init(from: decoder) {                
+            } else if let value = try? type.init(from: decoder) {
                 if let result = value as? T {
                     return result
                 } else if let result = value.wrappedValue as? T {

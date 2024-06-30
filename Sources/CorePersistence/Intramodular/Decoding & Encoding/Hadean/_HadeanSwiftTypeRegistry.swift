@@ -72,7 +72,7 @@ public struct _HadeanSwiftTypeRegistry {
             let identifier = type.hadeanIdentifier
             
             if let existing = typesByIdentifier[identifier] {
-                assert(existing == type)
+                assert(existing == type, "Duplicate identifier: \(identifier)")
             } else {
                 typesByIdentifier[type.hadeanIdentifier] = type
                 identifiersByType[Metatype(type)] = identifier
@@ -120,6 +120,7 @@ extension _HadeanSwiftTypeRegistry {
     public enum _Error: Error {
         case failedToResolveType(for: HadeanIdentifier)
         case failedToResolveIdentifier(for: Any.Type)
+        case duplicateIdentifier
     }
     
     @usableFromInline
