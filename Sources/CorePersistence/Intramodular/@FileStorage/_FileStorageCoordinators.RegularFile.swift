@@ -105,7 +105,7 @@ extension _FileStorageCoordinators {
                 var result: UnwrappedValue? = try _withLogicalParent(self._enclosingInstance) { () -> UnwrappedValue? in
                     let resource: any _FileOrFolderRepresenting = self.fileSystemResource
                     
-                    if let serialization = self.configuration.serialization {
+                    if let serialization: _FileOrFolderSerializationConfiguration<UnwrappedValue> = self.configuration.serialization {
                         guard let decoded: Any = try resource.decode(using: serialization.coder) else {
                             return nil
                         }
