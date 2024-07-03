@@ -89,10 +89,7 @@ extension JSONL {
         for json in self.storage {
             let lineData = try json.data()
             
-            if var lineString = String(data: lineData, encoding: .utf8) {
-                lineString = lineString
-                    .replacingOccurrences(of: "\\", with: "\\\\") // Double escape backslashes first
-                    .replacingOccurrences(of: "\"", with: "\\\"") // Then escape quotes
+            if let lineString = String(data: lineData, encoding: .utf8) {
                 jsonlString += lineString + "\n"
             }
         }
