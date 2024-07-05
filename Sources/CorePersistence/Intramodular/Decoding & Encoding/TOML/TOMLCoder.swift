@@ -107,6 +107,10 @@ extension _RawTOMLDecoderEncoder {
         } else if let arrayValue = parseArray(valueString) {
             return .array(arrayValue)
         } else {
+            if valueString.hasPrefix(.quotationMark) && valueString.hasSuffix(.quotationMark) {
+                return .string(String(valueString.dropFirst().dropLast()))
+            }
+            
             return .string(valueString)
         }
     }
