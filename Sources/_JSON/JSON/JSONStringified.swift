@@ -5,7 +5,9 @@
 import Foundation
 import Swift
 
-/// A property wrapper that encodes its value as stringified JSON.
+/// A property wrapper that encodes and decodes its value as stringified JSON.
+///
+/// In decoding, it decodes a `String`, then it initializes a `JSON` from that string, and then finally decodes `Value`.
 @propertyWrapper
 public struct JSONStringified<Value: Decodable> {
     private static var decoder: JSONDecoder {
