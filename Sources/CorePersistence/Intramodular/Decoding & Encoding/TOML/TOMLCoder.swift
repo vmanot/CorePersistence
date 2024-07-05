@@ -3,6 +3,7 @@
 //
 
 import Combine
+import Diagnostics
 import FoundationX
 import Swallow
 
@@ -92,6 +93,10 @@ extension _RawTOMLDecoderEncoder {
         // Handle the last section or top-level dictionary if not already added
         if !currentDictionary.isEmpty {
             result[currentDictionary.keys.first!] = .dictionary(try currentDictionary.values.first.unwrap()._dictionaryValue.unwrap())
+        }
+        
+        if result.isEmpty {
+            try _tryAssert(tomlString.trimmingWhitespaceAndNewlines().isEmpty)
         }
         
         return result
