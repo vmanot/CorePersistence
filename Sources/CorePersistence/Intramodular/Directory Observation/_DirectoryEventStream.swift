@@ -3,8 +3,8 @@
 //
 
 #if os(macOS)
-
 import CoreServices
+#endif
 import FoundationX
 @_spi(Internal) import Swallow
 
@@ -13,7 +13,9 @@ public typealias DirectoryEventStream = _DirectoryEventStream
 public class _DirectoryEventStream {
     public typealias EventCallback = ([Event]) -> Void
     
+    #if os(macOS)
     private var streamRef: FSEventStreamRef?
+    #endif
     private let callback: EventCallback
     private let debounceDuration: TimeInterval
     
@@ -33,6 +35,7 @@ public class _DirectoryEventStream {
     ) {
         self.debounceDuration = debounceDuration
         self.callback = callback
+        
         startEventStream(directory: directory)
     }
     
@@ -43,7 +46,24 @@ public class _DirectoryEventStream {
     public func cancel() {
         stopEventStream()
     }
-    
+}
+
+#if os(macOS)
+extension _DirectoryEventStream {
+    private static let eventStreamCallback: FSEventStreamCallback = { streamRef, clientCallBackInfo, numEvents, eventPaths, eventFlags, eventIds in
+        guard let clientCallBackInfo else {
+            return
+        }
+        
+        let eventStream = Unmanaged<DirectoryEventStream>.fromOpaque(clientCallBackInfo).takeUnretainedValue()
+        
+        eventStream.handleEvents(
+            numEvents: numEvents,
+            eventPaths: eventPaths,
+            eventFlags: eventFlags
+        )
+    }
+
     private func startEventStream(directory: String) {
         let selfPtr = UnsafeMutableRawPointer(Unmanaged.passUnretained(self).toOpaque())
         var context = FSEventStreamContext(version: 0, info: selfPtr, retain: nil, release: nil, copyDescription: nil)
@@ -62,7 +82,7 @@ public class _DirectoryEventStream {
         
         if let ref = FSEventStreamCreate(
             kCFAllocatorDefault,
-            eventStreamCallback,
+            _DirectoryEventStream.eventStreamCallback,
             contextPtr,
             pathsToWatch,
             UInt64(kFSEventStreamEventIdSinceNow),
@@ -74,8 +94,8 @@ public class _DirectoryEventStream {
             FSEventStreamStart(ref)
         }
     }
-    
-    private func stopEventStream() {
+
+    fileprivate func stopEventStream() {
         if let streamRef {
             FSEventStreamStop(streamRef)
             FSEventStreamInvalidate(streamRef)
@@ -84,21 +104,7 @@ public class _DirectoryEventStream {
         streamRef = nil
     }
     
-    private let eventStreamCallback: FSEventStreamCallback = { streamRef, clientCallBackInfo, numEvents, eventPaths, eventFlags, eventIds in
-        guard let clientCallBackInfo else {
-            return
-        }
-        
-        let eventStream = Unmanaged<DirectoryEventStream>.fromOpaque(clientCallBackInfo).takeUnretainedValue()
-       
-        eventStream.handleEvents(
-            numEvents: numEvents,
-            eventPaths: eventPaths,
-            eventFlags: eventFlags
-        )
-    }
-    
-    private func handleEvents(
+    fileprivate func handleEvents(
         numEvents: Int,
         eventPaths: UnsafeMutableRawPointer,
         eventFlags: UnsafePointer<FSEventStreamEventFlags>
@@ -122,6 +128,17 @@ public class _DirectoryEventStream {
         callback(events)
     }
 }
+#else
+extension _DirectoryEventStream {
+    fileprivate func startEventStream(directory: String) {
+        
+    }
+    
+    fileprivate func stopEventStream() {
+        
+    }
+}
+#endif
 
 extension _DirectoryEventStream {
     public enum FSEvent {
@@ -142,29 +159,31 @@ extension _DirectoryEventStream {
                     return false
             }
         }
-        
-        init?(rawValue: FSEventStreamEventFlags) {
-            if rawValue == 0 {
-                self = .changeInDirectory
-            } else if rawValue & UInt32(kFSEventStreamEventFlagRootChanged) > 0 {
-                self = .rootChanged
-            } else if rawValue & UInt32(kFSEventStreamEventFlagItemChangeOwner) > 0 {
-                self = .itemChangedOwner
-            } else if rawValue & UInt32(kFSEventStreamEventFlagItemCreated) > 0 {
-                self = .itemCreated
-            } else if rawValue & UInt32(kFSEventStreamEventFlagItemCloned) > 0 {
-                self = .itemCloned
-            } else if rawValue & UInt32(kFSEventStreamEventFlagItemModified) > 0 {
-                self = .itemModified
-            } else if rawValue & UInt32(kFSEventStreamEventFlagItemRemoved) > 0 {
-                self = .itemRemoved
-            } else if rawValue & UInt32(kFSEventStreamEventFlagItemRenamed) > 0 {
-                self = .itemRenamed
-            } else {
-                return nil
-            }
-        }
     }
 }
 
+#if os(macOS)
+extension _DirectoryEventStream.FSEvent {
+    init?(rawValue: FSEventStreamEventFlags) {
+        if rawValue == 0 {
+            self = .changeInDirectory
+        } else if rawValue & UInt32(kFSEventStreamEventFlagRootChanged) > 0 {
+            self = .rootChanged
+        } else if rawValue & UInt32(kFSEventStreamEventFlagItemChangeOwner) > 0 {
+            self = .itemChangedOwner
+        } else if rawValue & UInt32(kFSEventStreamEventFlagItemCreated) > 0 {
+            self = .itemCreated
+        } else if rawValue & UInt32(kFSEventStreamEventFlagItemCloned) > 0 {
+            self = .itemCloned
+        } else if rawValue & UInt32(kFSEventStreamEventFlagItemModified) > 0 {
+            self = .itemModified
+        } else if rawValue & UInt32(kFSEventStreamEventFlagItemRemoved) > 0 {
+            self = .itemRemoved
+        } else if rawValue & UInt32(kFSEventStreamEventFlagItemRenamed) > 0 {
+            self = .itemRenamed
+        } else {
+            return nil
+        }
+    }
+}
 #endif

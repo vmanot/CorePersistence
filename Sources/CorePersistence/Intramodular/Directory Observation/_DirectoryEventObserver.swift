@@ -2,8 +2,6 @@
 // Copyright (c) Vatsal Manot
 //
 
-#if os(macOS)
-
 import Foundation
 @_spi(Internal) import Swallow
 
@@ -198,5 +196,3 @@ public final class _DirectoryEventObservation {
         }
     }
 }
-
-#endif
