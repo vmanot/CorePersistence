@@ -97,6 +97,12 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable, Wrapp
             
             return result
         } set {
+            if let _resolvedWrappedValue {
+                if AnyEquatable.equate(newValue, _resolvedWrappedValue) == true {
+                    return
+                }
+            }
+            
             _objectWillChange.send()
             
             assert(_resolvedWrappedValue != nil)
@@ -123,7 +129,7 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable, Wrapp
                 try observation.disableAndPerform {
                     try _writeToDisk(newValue: newValue)
                 }
-
+                
                 self._resolvedWrappedValue = newValue
             } catch {
                 runtimeIssue(error)
@@ -163,9 +169,7 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable, Wrapp
     @MainActor
     private func _revertFromDisk() {
         #try(.optimistic) {
-            let value: WrappedValue = try _withLogicalParent(self) {
-                try _readFromDisk()
-            }
+            let value: WrappedValue = try _readFromDisk()
             
             self._resolvedWrappedValue = value
         }
@@ -181,18 +185,18 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable, Wrapp
             _ = self
             
             /*Task.detached { @MainActor in
-                if events.contains(where: \.eventType.isModificationOrDeletion) {
-                    guard self._resolvedWrappedValue != nil else {
-                        return
-                    }
-                    
-                    try await self.observation.disableAndPerform {
-                        self.objectWillChange?.send()
-                        self._resetImmediately()
-                        self._revertFromDisk()
-                    }
-                }
-            }*/
+             if events.contains(where: \.eventType.isModificationOrDeletion) {
+             guard self._resolvedWrappedValue != nil else {
+             return
+             }
+             
+             try await self.observation.disableAndPerform {
+             self.objectWillChange?.send()
+             self._resetImmediately()
+             self._revertFromDisk()
+             }
+             }
+             }*/
         }
     }
     

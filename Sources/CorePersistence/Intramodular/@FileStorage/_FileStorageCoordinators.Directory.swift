@@ -32,7 +32,7 @@ extension _FileStorageCoordinators {
                         return base.wrappedValue
                     }
                     
-                    return try! _withLogicalParent(_enclosingInstance) {
+                    return _withLogicalParent(_enclosingInstance) {
                         base.wrappedValue
                     }
                 }
