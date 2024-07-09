@@ -89,8 +89,8 @@ extension _RelativeFileConfiguration {
     
     public init(
         fileURL: some _FileOrFolderRepresenting,
-        contentType: UTType? = nil,
-        coder: (any _TopLevelFileDecoderEncoder)? = nil,
+        contentType: UTType?,
+        coder: (any _TopLevelFileDecoderEncoder)?,
         readWriteOptions: FileStorageOptions,
         initialValue: Value?
     ) throws {
@@ -98,6 +98,22 @@ extension _RelativeFileConfiguration {
             path: try fileURL._toURL().lastPathComponent,
             contentType: contentType,
             coder: coder,
+            readWriteOptions: readWriteOptions,
+            initialValue: initialValue
+        )
+    }
+    
+    public init(
+        fileURL: some _FileOrFolderRepresenting,
+        contentType: UTType?,
+        coder: some TopLevelDataCoder,
+        readWriteOptions: FileStorageOptions,
+        initialValue: Value?
+    ) throws where Value: Codable {
+        try self.init(
+            path: try fileURL._toURL().lastPathComponent,
+            contentType: contentType,
+            coder: _AnyTopLevelFileDecoderEncoder(coder, for: Value.self),
             readWriteOptions: readWriteOptions,
             initialValue: initialValue
         )

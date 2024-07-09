@@ -47,7 +47,9 @@ public class _DirectoryEventStream {
     private func startEventStream(directory: String) {
         let selfPtr = UnsafeMutableRawPointer(Unmanaged.passUnretained(self).toOpaque())
         var context = FSEventStreamContext(version: 0, info: selfPtr, retain: nil, release: nil, copyDescription: nil)
-        let contextPtr = withUnsafeMutablePointer(to: &context) { UnsafeMutablePointer($0) }
+        let contextPtr = withUnsafeMutablePointer(to: &context) {
+            UnsafeMutablePointer($0)
+        }
         
         let cfDirectory = directory as CFString
         let pathsToWatch = [cfDirectory] as CFArray
@@ -96,7 +98,11 @@ public class _DirectoryEventStream {
         )
     }
     
-    private func handleEvents(numEvents: Int, eventPaths: UnsafeMutableRawPointer, eventFlags: UnsafePointer<FSEventStreamEventFlags>) {
+    private func handleEvents(
+        numEvents: Int,
+        eventPaths: UnsafeMutableRawPointer,
+        eventFlags: UnsafePointer<FSEventStreamEventFlags>
+    ) {
         guard let eventDictionaries = unsafeBitCast(eventPaths, to: NSArray.self) as? [NSDictionary] else {
             return
         }
@@ -127,6 +133,15 @@ extension _DirectoryEventStream {
         case itemModified
         case itemRemoved
         case itemRenamed
+        
+        var isModificationOrDeletion: Bool {
+            switch self {
+                case .itemRenamed, .itemModified, .itemRemoved:
+                    return true
+                default:
+                    return false
+            }
+        }
         
         init?(rawValue: FSEventStreamEventFlags) {
             if rawValue == 0 {

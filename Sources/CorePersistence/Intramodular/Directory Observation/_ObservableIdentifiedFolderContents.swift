@@ -6,9 +6,33 @@ import FoundationX
 import Merge
 import Swallow
 
-public enum _ObservableIdentifiedFolderContentsElement<Item> {
-    case url(any _FileOrFolderRepresenting)
-    case inMemory(Item)
+public struct _ObservableIdentifiedFolderContentsElement<Item, ID: Hashable> {
+    public enum Value {
+        case url(any _FileOrFolderRepresenting)
+        case inMemory(Item)
+    }
+    
+    public var value: Value
+    public var id: ID?
+    
+    public init(value: Value, id: ID?) {
+        self.value = value
+        self.id = id
+        
+        #try(.optimistic) {
+            if id == nil, case .url(let url) = value, ID.self == URL.self {
+                self.id = try cast(url._toURL())
+            }
+        }
+    }
+    
+    public init(value: Item, id: ID?) {
+        self.init(value: .inMemory(value), id: id)
+    }
+    
+    public init(url: any _FileOrFolderRepresenting, id: ID?) {
+        self.init(value: .url(url), id: id)
+    }
 }
 
 public protocol _ObservableIdentifiedFolderContentsType {
@@ -16,19 +40,19 @@ public protocol _ObservableIdentifiedFolderContentsType {
     associatedtype ID: Hashable
     associatedtype WrappedValue
     
-    typealias Element = _ObservableIdentifiedFolderContentsElement<Item>
+    typealias Element = _ObservableIdentifiedFolderContentsElement<Item, ID>
     
     var cocoaFileManager: FileManager { get }
     var folder: any _FileOrFolderRepresenting { get }
     var fileConfiguration: (Element) throws -> _RelativeFileConfiguration<Item> { get }
-    var id: (Item) -> ID { get }
+    var id: ((Item) -> ID)? { get }
     
     var _wrappedValue: WrappedValue { get set }
     var wrappedValue: WrappedValue { get set }
 }
 
 public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable, WrappedValue>: _ObservableIdentifiedFolderContentsType, MutablePropertyWrapper, _ObservableObjectX {
-    public typealias Element = _ObservableIdentifiedFolderContentsElement<Item>
+    public typealias Element = _ObservableIdentifiedFolderContentsElement<Item, ID>
     
     public let _objectWillChange = ObservableObjectPublisher()
     
@@ -37,7 +61,7 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable, Wrapp
     public let cocoaFileManager = FileManager.default
     public let folder: any _FileOrFolderRepresenting
     public let fileConfiguration: (Element) throws -> _RelativeFileConfiguration<Item>
-    public let id: (Item) -> ID
+    public let id: ((Item) -> ID)?
     
     var storage: [ID: _FileStorageCoordinators.RegularFile<MutableValueBox<Item>, Item>] = [:]
     
@@ -45,6 +69,8 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable, Wrapp
     
     public var _ObservableIdentifiedFolderContentsUpdating_WrappedValue: any _ObservableIdentifiedFolderContentsUpdating.Type {
         if let wrappedValueType = WrappedValue.self as? any _IdentifierIndexingArrayOf_Protocol.Type {
+            return try! wrappedValueType.folderContentsUpdating(forType: WrappedValue.self)
+        } else if let wrappedValueType = WrappedValue.self as? any DictionaryProtocol.Type {
             return try! wrappedValueType.folderContentsUpdating(forType: WrappedValue.self)
         } else {
             fatalError()
@@ -55,17 +81,24 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable, Wrapp
     public var _wrappedValue: WrappedValue {
         get {
             guard let result = _resolvedWrappedValue else {
-                self._resolvedWrappedValue = try! _ObservableIdentifiedFolderContentsUpdating_WrappedValue._opaque_initializePlaceholder(for: self, as: WrappedValue.self)
+                _revertFromDisk()
                 
-                _initializeResolvedWrappedValue()
+                guard let _resolvedWrappedValue else {
+                    let placeholder: WrappedValue = try! _ObservableIdentifiedFolderContentsUpdating_WrappedValue._opaque_initializePlaceholder(
+                        for: self,
+                        as: WrappedValue.self
+                    )
+                    
+                    return placeholder
+                }
                 
-                return _resolvedWrappedValue!
+                return _resolvedWrappedValue
             }
             
             return result
         } set {
             _objectWillChange.send()
-
+            
             assert(_resolvedWrappedValue != nil)
             
             _resolvedWrappedValue = newValue
@@ -75,7 +108,7 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable, Wrapp
     }
     
     @MainActor
-    public var folderURL: URL {
+    public var directoryURL: URL {
         get throws {
             try self.folder._toURL()
         }
@@ -86,43 +119,105 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable, Wrapp
         get {
             _wrappedValue
         } set {
-            try! cocoaFileManager.withUserGrantedAccess(to: folderURL) { folderURL in
-                try! _ObservableIdentifiedFolderContentsUpdating_WrappedValue._opaque_update(
-                    from: _wrappedValue,
-                    to: newValue,
-                    directory: folderURL,
-                    for: self
-                )
+            do {
+                try observation.disableAndPerform {
+                    try _writeToDisk(newValue: newValue)
+                }
+
+                self._resolvedWrappedValue = newValue
+            } catch {
+                runtimeIssue(error)
             }
         }
     }
     
+    private var observation: _DirectoryEventObservation!
+    
+    @MainActor(unsafe)
     package init(
         folder: any _FileOrFolderRepresenting,
         fileConfiguration: @escaping (Element) throws -> _RelativeFileConfiguration<Item>,
-        id: @escaping (Item) -> ID
+        id: ((Item) -> ID)?
     ) {
         self.folder = folder
         self.fileConfiguration = fileConfiguration
         self.id = id
+        
+        #try(.optimistic) {
+            try _setUpDiskObserver()
+        }
     }
     
     @MainActor
-    private func _initializeResolvedWrappedValue() {
+    private func _writeToDisk(newValue: WrappedValue) throws {
+        try cocoaFileManager.withUserGrantedAccess(to: directoryURL) { directoryURL in
+            try _ObservableIdentifiedFolderContentsUpdating_WrappedValue._opaque_update(
+                from: _wrappedValue,
+                to: newValue,
+                directory: directoryURL,
+                for: self
+            )
+        }
+    }
+    
+    @MainActor
+    private func _revertFromDisk() {
         #try(.optimistic) {
-            let folderURL = try self.folderURL
+            let value: WrappedValue = try _withLogicalParent(self) {
+                try _readFromDisk()
+            }
             
-            do {
-                if !cocoaFileManager.fileExists(at: folderURL) {
-                    try cocoaFileManager.createDirectory(at: folderURL, withIntermediateDirectories: true)
+            self._resolvedWrappedValue = value
+        }
+    }
+    
+    @MainActor
+    private func _setUpDiskObserver() throws {
+        observation = _DirectoryEventObserver.shared.observe(directory: try directoryURL) { [weak self] events in
+            guard let `self` = self else {
+                return
+            }
+            
+            _ = self
+            
+            /*Task.detached { @MainActor in
+                if events.contains(where: \.eventType.isModificationOrDeletion) {
+                    guard self._resolvedWrappedValue != nil else {
+                        return
+                    }
+                    
+                    try await self.observation.disableAndPerform {
+                        self.objectWillChange?.send()
+                        self._resetImmediately()
+                        self._revertFromDisk()
+                    }
                 }
-            } catch {
-                runtimeIssue(error)
+            }*/
+        }
+    }
+    
+    private func _resetImmediately() {
+        self.objectWillChange.send()
+        self.storage = [:]
+        self._resolvedWrappedValue = nil
+    }
+    
+    @MainActor
+    private func _readFromDisk() throws -> WrappedValue {
+        let directoryURL: URL = try self.directoryURL
+        
+        do {
+            if !cocoaFileManager.fileExists(at: directoryURL) {
+                try cocoaFileManager.createDirectory(at: directoryURL, withIntermediateDirectories: true)
             }
+        } catch {
+            runtimeIssue(error)
+        }
+        
+        return try cocoaFileManager.withUserGrantedAccess(to: directoryURL) { (url: URL) -> WrappedValue in
+            let wrappedValue: WrappedValue = try _ObservableIdentifiedFolderContentsUpdating_WrappedValue._opaque_initialize(from: url, for: self)
             
-            try cocoaFileManager.withUserGrantedAccess(to: folderURL) { url in
-                self._resolvedWrappedValue = .init(try _ObservableIdentifiedFolderContentsUpdating_WrappedValue._opaque_initialize(from: url, for: self))
-            }
+            return wrappedValue
         }
     }
 }
@@ -167,5 +262,13 @@ extension _IdentifierIndexingArrayOf_Protocol {
         forType type: T.Type
     ) throws -> any _ObservableIdentifiedFolderContentsUpdating.Type {
         try cast(_ObservableIdentifiedFolderContentsUpdatingTypes._IdentifierIndexingArray<Element, ID>.self)
+    }
+}
+
+extension DictionaryProtocol {
+    fileprivate static func folderContentsUpdating<T>(
+        forType type: T.Type
+    ) throws -> any _ObservableIdentifiedFolderContentsUpdating.Type {
+        try cast(_ObservableIdentifiedFolderContentsUpdatingTypes._Dictionary<URL, DictionaryValue>.self)
     }
 }

@@ -49,11 +49,21 @@ extension _FileStorageCoordinators {
                     return try! readInitialValue()
                 }
             } set {
+                defer {
+                    stateFlags.insert(.didWriteOnce)
+                }
+                
                 setValue(newValue)
             }
         }
         
-        func setValue(_ newValue: UnwrappedValue) {
+        func setValue(
+            _ newValue: UnwrappedValue
+        ) {
+            if AnyEquatable.equate(newValue, _cachedValue) == true {
+                return
+            }
+            
             objectWillChange.send()
             
             lock.withCriticalScope {
@@ -238,7 +248,7 @@ extension _FileStorageCoordinators {
         }
         
         override public func commit() {
-            guard !stateFlags.contains(.discarded) else {
+            guard !stateFlags.contains(.discarded), stateFlags.contains(.didWriteOnce) else {
                 return
             }
             

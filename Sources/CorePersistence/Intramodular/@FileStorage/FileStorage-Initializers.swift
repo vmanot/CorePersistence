@@ -370,10 +370,12 @@ extension FileStorage {
 
 // MARK: - Directories
 
-extension FileStorage {
+extension FileStorage where ValueType: _ObservableIdentifiedFolderContentsType {
+    public typealias DirectoryElement = _ObservableIdentifiedFolderContents<ValueType.Item, ValueType.ID, UnwrappedType>.Element
+    
     public convenience init<Item, ID>(
         directory: @escaping () throws -> URL,
-        file: @escaping (_ObservableIdentifiedFolderContents<Item, ID, UnwrappedType>.Element) -> _RelativeFileConfiguration<Item>,
+        file: @escaping (DirectoryElement) throws -> _RelativeFileConfiguration<Item>,
         id: KeyPath<Item, ID>,
         options: FileStorageOptions = nil
     ) where ValueType == _ObservableIdentifiedFolderContents<Item, ID, UnwrappedType>, UnwrappedType == IdentifierIndexingArray<Item, ID> {
@@ -388,6 +390,60 @@ extension FileStorage {
         )
     }
     
+    public convenience init<Item>(
+        wrappedValue: UnwrappedType = .init(),
+        directory: @escaping () throws -> URL,
+        file: @escaping (DirectoryElement) throws -> _RelativeFileConfiguration<Item>,
+        options: FileStorageOptions = nil
+    ) where ValueType == _ObservableIdentifiedFolderContents<Item, URL, Dictionary<URL, Item>>, UnwrappedType == Dictionary<URL, Item> {
+        self.init(
+            coordinator: try _FileStorageCoordinators.Directory(
+                base: _ObservableIdentifiedFolderContents(
+                    folder: FileURL(try directory()),
+                    fileConfiguration: file,
+                    id: nil
+                )
+            )
+        )
+    }
+    
+    public convenience init<Item, Coder: TopLevelDataCoder>(
+        wrappedValue: UnwrappedType = .init(),
+        directory: @escaping () throws -> URL,
+        coder: Coder,
+        options: FileStorageOptions = nil
+    ) where Item: Codable, ValueType == _ObservableIdentifiedFolderContents<Item, URL, Dictionary<URL, Item>>, UnwrappedType == Dictionary<URL, Item> {
+        self.init(
+            wrappedValue: wrappedValue,
+            directory: directory,
+            file: { (element: DirectoryElement) -> _RelativeFileConfiguration<Item> in
+                try _RelativeFileConfiguration(
+                    fileURL: FileURL(try element.id.unwrap()),
+                    contentType: nil,
+                    coder: coder,
+                    readWriteOptions: options,
+                    initialValue: nil
+                )
+            },
+            options: options
+        )
+    }
+    
+    public convenience init<Item, Coder: TopLevelDataCoder>(
+        wrappedValue: UnwrappedType = .init(),
+        directory: CanonicalFileDirectory,
+        path: String,
+        coder: Coder,
+        options: FileStorageOptions = nil
+    ) where Item: Codable, ValueType == _ObservableIdentifiedFolderContents<Item, URL, Dictionary<URL, Item>>, UnwrappedType == Dictionary<URL, Item> {
+        self.init(
+            wrappedValue: wrappedValue,
+            directory: { try directory.toURL().appending(.directory(path)) },
+            coder: coder,
+            options: options
+        )
+    }
+    
     public convenience init<Item, ID, Coder: TopLevelDataCoder>(
         directory: @escaping () throws -> URL,
         filename: @escaping (Item) -> URL.Filename,
@@ -399,11 +455,12 @@ extension FileStorage {
             coordinator: try _FileStorageCoordinators.Directory(
                 base: _ObservableIdentifiedFolderContents(
                     folder: FileURL(try directory()),
-                    fileConfiguration: { element in
-                        switch element {
+                    fileConfiguration: { (element: _ObservableIdentifiedFolderContentsElement) in
+                        switch element.value {
                             case .url(let fileURL):
                                 try _RelativeFileConfiguration(
                                     fileURL: fileURL,
+                                    contentType: nil,
                                     coder: _AnyTopLevelFileDecoderEncoder(coder, for: Item.self),
                                     readWriteOptions: options,
                                     initialValue: nil
@@ -617,7 +674,7 @@ extension FileStorage {
     public convenience init<Item, ID>(
         _ location: CanonicalFileDirectory,
         directory: String,
-        file: @escaping (_ObservableIdentifiedFolderContents<Item, ID, UnwrappedType>.Element) -> _RelativeFileConfiguration<Item>,
+        file: @escaping (DirectoryElement) -> _RelativeFileConfiguration<Item>,
         id: KeyPath<Item, ID>
     ) where ValueType == _ObservableIdentifiedFolderContents<Item, ID, UnwrappedType>, UnwrappedType == IdentifierIndexingArray<Item, ID> {
         self.init(
@@ -633,7 +690,7 @@ extension FileStorage {
         wrappedValue: UnwrappedType,
         _ location: CanonicalFileDirectory,
         directory: String,
-        file: @escaping (_ObservableIdentifiedFolderContents<Item, ID, UnwrappedType>.Element) -> _RelativeFileConfiguration<Item>,
+        file: @escaping (DirectoryElement) -> _RelativeFileConfiguration<Item>,
         id: KeyPath<Item, ID>
     ) where ValueType == _ObservableIdentifiedFolderContents<Item, ID, UnwrappedType>, UnwrappedType == IdentifierIndexingArray<Item, ID> {
         assert(wrappedValue.isEmpty)

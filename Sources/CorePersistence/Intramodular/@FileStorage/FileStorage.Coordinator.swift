@@ -14,6 +14,7 @@ public enum _FileStorageCoordinators: _StaticSwift.Namespace {
 public class _AnyFileStorageCoordinator<ValueType, UnwrappedValue>: _ObservableObjectX, @unchecked Sendable {
     public enum StateFlag {
         case initialReadComplete
+        case didWriteOnce
         case latestWritten
         case discarded
     }

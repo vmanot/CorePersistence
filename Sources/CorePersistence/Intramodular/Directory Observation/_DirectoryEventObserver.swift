@@ -8,22 +8,29 @@ import Foundation
 @_spi(Internal) import Swallow
 
 public final class _DirectoryEventObserver {
+    public typealias Observation = _DirectoryEventObservation
+    
     public static let shared = _DirectoryEventObserver()
     
     private let lock = OSUnfairLock()
     private var eventStreams: [URL: DirectoryEventStream] = [:]
     private var observations: [Weak<_DirectoryEventObservation>] = []
     
-    private init() {}
+    private init() {
+        
+    }
     
     public func observe(
         directories: some Sequence<URL>,
-        eventHandler: @escaping ([DirectoryEventStream.Event]) -> Void
+        eventHandler: @escaping ([DirectoryEventStream.Event]) async throws -> Void
     ) -> _DirectoryEventObservation {
-        let directories = Set(directories)
+        let directories: Set<URL> = Set(directories)
         
         lock.acquireOrBlock()
-        defer { lock.relinquish() }
+        
+        defer {
+            lock.relinquish()
+        }
         
         let observation = _DirectoryEventObservation(
             owner: self,
@@ -32,14 +39,22 @@ public final class _DirectoryEventObserver {
         )
         
         for directory in directories {
-            if eventStreams[directory] == nil {
-                eventStreams[directory] = DirectoryEventStream(
-                    directory: directory.path,
-                    callback: { [weak self] events in
-                        self?.handleEvents(events)
-                    }
-                )
+            guard eventStreams[directory] == nil else {
+                continue
             }
+
+            eventStreams[directory] = DirectoryEventStream(
+                directory: directory.path,
+                callback: { [weak self] events in
+                    guard let `self` = self else {
+                        return
+                    }
+                    
+                    Task {
+                        try await self.handleEvents(events)
+                    }
+                }
+            )
         }
         
         observations.append(Weak(observation))
@@ -49,37 +64,21 @@ public final class _DirectoryEventObserver {
     
     public func observe(
         directory: URL,
-        eventHandler: @escaping ([DirectoryEventStream.Event]) -> Void
+        eventHandler: @escaping ([DirectoryEventStream.Event]) async throws -> Void
     ) -> _DirectoryEventObservation {
         observe(directories: [directory], eventHandler: eventHandler)
     }
     
     private func handleEvents(
         _ events: [DirectoryEventStream.Event]
-    ) {
+    ) async throws {
         lock.acquireOrBlock()
         let observations = self.observations.filter({ $0.wrappedValue != nil })
         self.observations = observations
         lock.relinquish()
         
         for observation in observations.compactMap({ $0.wrappedValue }) {
-            let filteredEvents: [DirectoryEventStream.Event] = events.filter { (event: DirectoryEventStream.Event) in
-                if observation.options.contains(.ignoreHiddenFiles) {
-                    if event.url._isCanonicallyHiddenFile {
-                        return false
-                    }
-                }
-                
-                return observation.directories.contains(where: { (directory: URL) in
-                    directory.isAncestor(of: event.url)
-                })
-            }
-            
-            guard !filteredEvents.isEmpty else {
-                continue
-            }
-            
-            observation.eventHandler(filteredEvents)
+            try await observation.handleEvents(events)
         }
     }
     
@@ -100,26 +99,59 @@ public final class _DirectoryEventObserver {
 }
 
 public final class _DirectoryEventObservation {
+    private enum StateFlag {
+        case ignoreEvents
+    }
+    
     public enum Option {
         case ignoreHiddenFiles
     }
     
     private weak var owner: _DirectoryEventObserver?
     
-    fileprivate let eventHandler: ([DirectoryEventStream.Event]) -> Void
-    fileprivate let directories: Set<URL>
-    fileprivate let options: Set<Option>
+    public let directories: Set<URL>
+    
+    private let eventHandler: ([DirectoryEventStream.Event]) async throws -> Void
+    private let options: Set<Option>
+    
+    private var stateFlags: Set<StateFlag> = []
     
     fileprivate init(
         owner: _DirectoryEventObserver,
         directories: Set<URL>,
         options: Set<Option> = [.ignoreHiddenFiles],
-        eventHandler: @escaping ([DirectoryEventStream.Event]) -> Void
+        eventHandler: @escaping ([DirectoryEventStream.Event]) async throws -> Void
     ) {
         self.owner = owner
         self.directories = directories
         self.options = options
         self.eventHandler = eventHandler
+    }
+    
+    public func handleEvents(
+        _ events: [DirectoryEventStream.Event]
+    ) async throws {
+        guard !stateFlags.contains(.ignoreEvents) else {
+            return
+        }
+        
+        let filteredEvents: [DirectoryEventStream.Event] = events.filter { (event: DirectoryEventStream.Event) in
+            if options.contains(.ignoreHiddenFiles) {
+                if event.url._isCanonicallyHiddenFile {
+                    return false
+                }
+            }
+            
+            return directories.contains(where: { (directory: URL) in
+                directory.isAncestor(of: event.url)
+            })
+        }
+        
+        guard !filteredEvents.isEmpty else {
+            return
+        }
+        
+        try await eventHandler(filteredEvents)
     }
     
     public func cancel() {
@@ -128,6 +160,42 @@ public final class _DirectoryEventObservation {
     
     deinit {
         owner?.removeObservation(self)
+    }
+    
+    public func disableAndPerform<T>(
+        _ block: () throws -> T
+    ) rethrows -> T {
+        do {
+            stateFlags.insert(.ignoreEvents)
+            
+            let result = try block()
+            
+            stateFlags.remove(.ignoreEvents)
+            
+            return result
+        } catch {
+            stateFlags.remove(.ignoreEvents)
+            
+            throw error
+        }
+    }
+    
+    public func disableAndPerform<T>(
+        _ block: () async throws -> T
+    ) async rethrows -> T {
+        do {
+            stateFlags.insert(.ignoreEvents)
+            
+            let result = try await block()
+            
+            stateFlags.remove(.ignoreEvents)
+            
+            return result
+        } catch {
+            stateFlags.remove(.ignoreEvents)
+            
+            throw error
+        }
     }
 }
 

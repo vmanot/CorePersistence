@@ -13,16 +13,26 @@ public struct AnyPersistentIdentifier: Hashable, Sendable {
     
     public init(rawValue: RawValue) {
         self.rawValue = rawValue
+        
+        assert(!_isValueNil(_unwrapPossiblyTypeErasedValue(rawValue)))
     }
     
     public init<T: Codable & Hashable & Sendable>(erasing value: T) {
-        self.init(rawValue: value)
+        if let value = value as? AnyPersistentIdentifier {
+            self = value
+        } else {
+            self.init(rawValue: value)
+        }
     }
 }
 
 extension AnyPersistentIdentifier {
     public func `as`<T>(_ type: T.Type) throws -> T {
-        try cast(rawValue, to: type)
+        if type == AnyPersistentIdentifier.self || type == Optional<AnyPersistentIdentifier>.self {
+            return self as! T
+        } else {
+            return try cast(rawValue, to: type)
+        }
     }
 }
 
@@ -42,7 +52,7 @@ extension AnyPersistentIdentifier: Codable {
             self._rawValue = try _UnsafelySerialized<any Codable & Hashable & Sendable>(from: decoder)
         }
     }
-
+    
     public func encode(to encoder: Encoder) throws {
         try _rawValue.encode(to: encoder)
     }

@@ -54,7 +54,7 @@ extension _FileStorageCoordinators {
             self.base = base
             
             try super.init(
-                fileSystemResource: FileURL(try base.folderURL),
+                fileSystemResource: FileURL(try base.directoryURL),
                 configuration: .init(
                     path: nil,
                     serialization: .init(
