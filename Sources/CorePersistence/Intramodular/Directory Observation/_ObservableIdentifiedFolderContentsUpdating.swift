@@ -305,10 +305,15 @@ extension _ObservableIdentifiedFolderContentsUpdatingTypes {
                 
                 let fileURL = try parent.storage[key].unwrap().fileSystemResource._toURL()
                 
-                assert(parent.cocoaFileManager.regularFileExists(at: fileURL))
-                
-                parent.storage[key]?.discard()
-                parent.storage[key] = nil
+                if let coordinator = parent.storage[key] {
+                    if coordinator.stateFlags.contains(.didWriteOnce) {
+                        assert(parent.cocoaFileManager.regularFileExists(at: fileURL))
+                    }
+                    
+                    coordinator.discard()
+                    
+                    parent.storage[key] = nil
+                }
                 
                 updatedNewValue[id: key] = nil
                 

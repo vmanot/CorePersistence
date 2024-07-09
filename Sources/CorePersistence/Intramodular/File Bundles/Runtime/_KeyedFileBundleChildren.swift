@@ -267,7 +267,7 @@ final class _KeyedFileBundleChildren<Key: StringRepresentable, Value, WrappedVal
             )
             
             if var value = value as? (any FileBundle), value._fileBundleObject == nil {
-                value = try _withLogicalParent(enclosingInstance) {
+                value = _withLogicalParent(enclosingInstance) {
                     value
                 }
                 

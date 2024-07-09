@@ -99,7 +99,7 @@ class _KeyedFileBundleChildBundle<Bundle: FileBundle>: _KeyedFileBundleChildGene
             )
         )
         
-        bundle = try _withLogicalParent(enclosingInstance) {
+        bundle = _withLogicalParent(enclosingInstance) {
             bundle
         }
         
