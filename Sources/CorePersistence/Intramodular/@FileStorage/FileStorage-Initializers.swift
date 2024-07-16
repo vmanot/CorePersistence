@@ -70,7 +70,7 @@ extension FileStorage {
             coordinator: try _FileStorageCoordinators.RegularFile(
                 initialValue: wrappedValue,
                 file: url,
-                coder: _AnyTopLevelFileDecoderEncoder(.topLevelDataCoder(coder, forType: UnwrappedType.self)),
+                coder: _AnyTopLevelFileDecoderEncoder(coder, for: UnwrappedType.self),
                 options: options
             )
         )

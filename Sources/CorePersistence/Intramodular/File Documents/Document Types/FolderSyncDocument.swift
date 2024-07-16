@@ -2,8 +2,10 @@
 // Copyright (c) Vatsal Manot
 //
 
-import SwiftUI
+#if !os(tvOS)
+
 import Runtime
+import SwiftUI
 import UniformTypeIdentifiers
 
 public struct FolderSyncDocument: Codable, Hashable, Identifiable, FileDocument {
@@ -63,3 +65,5 @@ extension FileWrapper {
         self[instanceVariableNamed: "_contentsURL"] as? URL
     }
 }
+
+#endif

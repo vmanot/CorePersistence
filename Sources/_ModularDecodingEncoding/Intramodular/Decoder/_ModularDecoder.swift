@@ -6,52 +6,6 @@ import Foundation
 import Swallow
 
 public struct _ModularDecoder: Decoder {
-    public struct Configuration: ExpressibleByNilLiteral {
-        var codingPath: [AnyCodingKey] = []
-        var hiddenCodingPaths: Set<[AnyCodingKey]> = []
-        var plugins: [any _ModularCodingPlugin] = []
-        
-        var allowsUnsafeSerialization: Bool {
-            plugins.contains(where: { $0 is _UnsafeSerializationPlugin })
-        }
-        
-        public init(nilLiteral: ()) {
-            
-        }
-        
-        func hides(
-            _ key: some CodingKey,
-            at codingPath: [CodingKey]
-        ) -> Bool {
-            guard !hiddenCodingPaths.isEmpty else {
-                return false
-            }
-            
-            let codingPathForKey = codingPath.map({ AnyCodingKey(erasing: $0) }).appending(AnyCodingKey(erasing: key))
-            
-            if hiddenCodingPaths.contains(codingPathForKey) {
-                return true
-            } else {
-                return false
-            }
-        }
-        
-        func nested(forKey key: some CodingKey) -> Self {
-            var result = self
-            
-            result.codingPath.append(AnyCodingKey(erasing: key))
-            result.hiddenCodingPaths._forEach(mutating: {
-                $0.removeFirst()
-            })
-            
-            return result
-        }
-    }
-    
-    public struct Context {
-        let type: Any.Type?
-    }
-    
     let base: Decoder
     var configuration: Configuration
     let context: Context
@@ -91,7 +45,7 @@ public struct _ModularDecoder: Decoder {
     public func container<Key: CodingKey>(
         keyedBy type: Key.Type
     ) throws -> KeyedDecodingContainer<Key> {
-        .init(
+        KeyedDecodingContainer(
             KeyedContainer(
                 base: try base.container(keyedBy: type),
                 parent: self
@@ -115,6 +69,54 @@ public struct _ModularDecoder: Decoder {
 }
 
 // MARK: - Auxiliary
+
+extension _ModularDecoder {
+    public struct Configuration: ExpressibleByNilLiteral {
+        public var codingPath: [AnyCodingKey] = []
+        public var hiddenCodingPaths: Set<[AnyCodingKey]> = []
+        public var plugins: [any _ModularCodingPlugin] = []
+        
+        public var allowsUnsafeSerialization: Bool {
+            plugins.contains(where: { $0 is _UnsafeSerializationPlugin })
+        }
+        
+        public init(nilLiteral: ()) {
+            
+        }
+        
+        func hides(
+            _ key: some CodingKey,
+            at codingPath: [CodingKey]
+        ) -> Bool {
+            guard !hiddenCodingPaths.isEmpty else {
+                return false
+            }
+            
+            let codingPathForKey = codingPath.map({ AnyCodingKey(erasing: $0) }).appending(AnyCodingKey(erasing: key))
+            
+            if hiddenCodingPaths.contains(codingPathForKey) {
+                return true
+            } else {
+                return false
+            }
+        }
+        
+        func nested(forKey key: some CodingKey) -> Self {
+            var result = self
+            
+            result.codingPath.append(AnyCodingKey(erasing: key))
+            result.hiddenCodingPaths._forEach(mutating: {
+                $0.removeFirst()
+            })
+            
+            return result
+        }
+    }
+    
+    public struct Context {
+        let type: Any.Type?
+    }
+}
 
 extension Decoder {
     public func _determineContainerKind(

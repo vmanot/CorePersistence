@@ -5,7 +5,7 @@
 import Foundation
 import Swallow
 
-struct _ModularEncoder: Encoder {
+final class _ModularEncoder {
     struct Configuration {
         var plugins: [any _ModularCodingPlugin] = []
     }
@@ -23,19 +23,21 @@ struct _ModularEncoder: Encoder {
         self.configuration = configuration
         self.context = context
     }
-    
+}
+
+extension _ModularEncoder: Encoder {
     var codingPath: [CodingKey] {
-        return base.codingPath
+        base.codingPath
     }
     
     var userInfo: [CodingUserInfoKey: Any] {
-        return base.userInfo
+        base.userInfo
     }
     
     func container<Key: CodingKey>(
         keyedBy type: Key.Type
     ) -> KeyedEncodingContainer<Key> {
-        .init(
+        KeyedEncodingContainer(
             KeyedContainer(
                 base: base.container(keyedBy: type),
                 parent: self

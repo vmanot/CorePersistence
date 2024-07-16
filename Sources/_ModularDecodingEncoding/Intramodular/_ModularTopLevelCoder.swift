@@ -69,6 +69,27 @@ extension TopLevelEncoder {
 
 extension TopLevelDataCoder {
     public func _modular() -> _ModularTopLevelCoder<Data> {
-        _ModularTopLevelCoder(coder: self)
+        if let result = self as? _ModularTopLevelCoder<Data> {
+            return result
+        } else {
+            return _ModularTopLevelCoder(coder: self)
+        }
+    }
+    
+    public func __opaque_modular() -> any TopLevelDataCoder {
+        self._modular()
+    }
+}
+
+extension _AnyTopLevelDataCoder {
+    public func _modular() -> Self {
+        switch self {
+            case .dataCodableType:
+                return self
+            case .topLevelDataCoder(let topLevelDataCoder, let type):
+                return .topLevelDataCoder(topLevelDataCoder._modular(), forType: type)
+            case .custom:
+                return self
+        }
     }
 }

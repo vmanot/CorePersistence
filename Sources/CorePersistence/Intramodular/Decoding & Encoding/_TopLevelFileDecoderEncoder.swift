@@ -21,9 +21,18 @@ public enum __AnyTopLevelFileDecoderEncoder_RawValue {
 public struct _AnyTopLevelFileDecoderEncoder<DataType>: _TopLevelFileDecoderEncoder {
     public typealias RawValue = __AnyTopLevelFileDecoderEncoder_RawValue
     
-    public let rawValue: RawValue
+    package let rawValue: RawValue
     
-    public init(rawValue: RawValue) {
+    fileprivate init(rawValue: RawValue) {
+        var rawValue: RawValue = rawValue
+        
+        switch rawValue {
+            case .document:
+                break
+            case .topLevelData(let coder):
+                rawValue = .topLevelData(coder._modular())
+        }
+        
         self.rawValue = rawValue
     }
     
@@ -61,7 +70,7 @@ extension _AnyTopLevelFileDecoderEncoder where DataType == Any {
     ) {
         self.init(rawValue: .topLevelData(coder))
     }
-
+    
     public init<Coder: TopLevelDataCoder, T>(
         _ coder: Coder,
         forUnsafelySerialized type: T.Type
@@ -90,7 +99,7 @@ extension FileManager {
         coder: some _TopLevelFileDecoderEncoder
     ) throws -> Any? {
         let coder: _AnyTopLevelFileDecoderEncoder<Any> = try coder.__conversion()
-
+        
         switch coder.rawValue {
             case .document(let document):
                 do {
