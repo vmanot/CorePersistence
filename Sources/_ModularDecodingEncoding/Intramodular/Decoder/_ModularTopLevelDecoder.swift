@@ -183,9 +183,17 @@ extension _ModularDecoder.TopLevelProxyDecodable {
         from decoder: _ModularDecoder
     ) throws -> T {
         do {
-            let value = try type.init(from: decoder)
-            
-            return try cast(value, to: T.self)
+            do {
+                let value: T = try cast(type.init(from: decoder), to: T.self)
+                
+                return try cast(value, to: T.self)
+            } catch {
+                if let value: T = try cast(decoder.singleValueContainer().decode(type)) {
+                    return value
+                }
+                
+                throw error
+            }
         } catch let decodingError as Swift.DecodingError {
             throw _ModularDecodingError(
                 from: decodingError,
