@@ -186,7 +186,6 @@ extension _UnsafelySerialized: Initiable where Value: Initiable {
 // MARK: - Auxiliary
 
 extension _UnsafelySerialized {
-    @frozen
     private enum _IntermediateRepresentation: Codable, Hashable {
         case metatype(_SerializedTypeIdentity?)
         case representable(any Hashable & Codable)

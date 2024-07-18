@@ -73,7 +73,7 @@ extension FileManager.SearchPathDirectory: CustomStringConvertible {
     }
 }
 
-extension FileManager.SearchPathDomainMask: CustomStringConvertible {
+extension FileManager.SearchPathDomainMask: Swift.CustomStringConvertible {
     public var description: String {
         switch self {
             case .userDomainMask:

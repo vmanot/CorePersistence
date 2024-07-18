@@ -118,7 +118,7 @@ class _KeyedFileBundleChildFile<Contents>: _KeyedFileBundleChildGenericBase<Cont
         }
         
         coordinator = try _FileStorageCoordinators.RegularFile(
-            fileSystemResource: self,
+            fileSystemResource: { self },
             configuration: latestConfiguration,
             cache: InMemorySingleValueCache()
         )

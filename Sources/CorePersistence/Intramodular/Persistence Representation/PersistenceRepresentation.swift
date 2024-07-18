@@ -33,7 +33,10 @@ public protocol _PersistenceRepresentationBuiltin {
 // MARK: - Implemented Conformances
 
 extension Never: PersistenceRepresentation {
-    
+    @_implements(PersistenceRepresentation, body)
+    public var _PersistenceRepresentation_body: Never {
+        fatalError()
+    }
 }
 
 extension _PersistenceRepresentationBuiltin {

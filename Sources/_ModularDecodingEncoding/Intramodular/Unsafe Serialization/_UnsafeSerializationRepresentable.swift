@@ -144,14 +144,52 @@ extension _BagOfExistentials: _UnsafeSerializationRepresentable {
     }
 }
 
+public struct _DictionaryUnsafeSerializationRepresentation: Codable, Hashable {
+    var storage: [_TypeSerializingAnyCodable: _TypeSerializingAnyCodable]
+    
+    init(storage: [_TypeSerializingAnyCodable: _TypeSerializingAnyCodable]) {
+        self.storage = storage
+    }
+    
+    public init(from decoder: any Decoder) throws {
+        do {
+            let storage: [_TypeSerializingAnyCodable: _TypeSerializingAnyCodable]
+            
+            do {
+                storage = try [_TypeSerializingAnyCodable: _TypeSerializingAnyCodable](from: decoder)
+            } catch {
+                do {
+                    storage = try [AnyCodingKey: _TypeSerializingAnyCodable](from: decoder).mapKeys { key in
+                        return _TypeSerializingAnyCodable(_data: key.stringValue)
+                    }
+                } catch {
+                    storage = try [AnyCodingKey: _TypeSerializingAnyCodable](from: AnyCodable(from: decoder)).mapKeys { key in
+                        return _TypeSerializingAnyCodable(_data: key.stringValue)
+                    }
+                }
+            }
+            
+            self.storage = storage
+        } catch {
+            throw error
+        }
+    }
+    
+    public func encode(to encoder: any Encoder) throws {
+        try storage.encode(to: encoder)
+    }
+}
+
 extension Dictionary: _UnsafeSerializationRepresentable {
-    typealias _UnsafeSerializationRepresentation = [_TypeSerializingAnyCodable: _TypeSerializingAnyCodable]
+    public typealias _UnsafeSerializationRepresentation = _DictionaryUnsafeSerializationRepresentation
     
     var _unsafeSerializationRepresentation: _UnsafeSerializationRepresentation {
         get throws {
-            try mapKeysAndValues(
-                { try _TypeSerializingAnyCodable($0) },
-                { try _TypeSerializingAnyCodable($0) }
+            _UnsafeSerializationRepresentation(
+                storage: try mapKeysAndValues(
+                    { try _TypeSerializingAnyCodable($0) },
+                    { try _TypeSerializingAnyCodable($0) }
+                )
             )
         }
     }
@@ -159,9 +197,13 @@ extension Dictionary: _UnsafeSerializationRepresentable {
     init(
         _unsafeSerializationRepresentation representation: _UnsafeSerializationRepresentation
     ) throws {
-        self = try representation.mapKeysAndValues(
-            { try $0.decode(Key.self) },
-            { try $0.decode(Value.self) }
+        self = try representation.storage.mapDictionary(
+            key: { key -> Key in
+                return try key.decode(Key.self)
+            },
+            value: { value -> Value in
+                return try value.decode(Value.self)
+            }
         )
     }
 }

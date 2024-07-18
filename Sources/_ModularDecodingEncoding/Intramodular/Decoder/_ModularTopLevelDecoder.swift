@@ -128,7 +128,7 @@ extension _ModularDecoder.TopLevelProxyDecodable {
         
         try sanityCheckFunction()
         
-        if let type = (decoder.context.type as? any _UnsafelySerializedType.Type), TypeMetadata(type._opaque_WrappedValue).kind == .existentialMetatype {
+        if let type: any _UnsafelySerializedType.Type = (decoder.context.type as? any _UnsafelySerializedType.Type), TypeMetadata(type._opaque_WrappedValue).kind == .existentialMetatype {
             let plugin = try decoder.configuration.plugins
                 .first(byUnwrapping: { $0 as? (any _MetatypeCodingPlugin) })
                 .unwrap()
@@ -136,22 +136,22 @@ extension _ModularDecoder.TopLevelProxyDecodable {
             let wrappedValue = try plugin._decode(Any.Type.self, from: decoder, context: .init())
             
             value = try cast(type.init(_opaque_wrappedValue: wrappedValue))
-        } else if let type = decoder.context.type as? any _UnsafeSerializationRepresentable.Type, !(type is Decodable.Type) {
+        } else if let type: any _UnsafeSerializationRepresentable.Type = decoder.context.type as? any _UnsafeSerializationRepresentable.Type, !(type is Decodable.Type) {
             value = try Self._decodeNonDecodableUnsafeSerializationRepresentable(
                 type,
                 from: decoder
             )
-        } else if let type = decoder.context.type as? any (_UnsafelySerializedType & _UnsafeSerializationRepresentable).Type {
+        } else if let type: any (_UnsafeSerializationRepresentable & _UnsafelySerializedType).Type = decoder.context.type as? any (_UnsafelySerializedType & _UnsafeSerializationRepresentable).Type {
             value = try Self._decodeUnsafelySerializationPropertyWrappedUnsafeSerializationRepresentable(
                 type,
                 from: decoder
             )
-        } else if let type = decoder.context.type as? (any Decodable.Type) {
+        } else if let type: any Decodable.Type = decoder.context.type as? (any Decodable.Type) {
             let discriminatedType: (any Decodable.Type)? = try Self.decodeDiscriminatedDecodableTypeIfAny(from: decoder)
             
             try Self._validatePluginSupportForConcreteType(type, decoder: decoder)
             
-            if let discriminatedType {
+            if let discriminatedType: (any Decodable.Type) {
                 if let concreteType = type as? (any _UnsafelySerializedType.Type) {
                     value = try Self.decodeDiscriminatedType(
                         discriminatedType,

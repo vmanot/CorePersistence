@@ -19,10 +19,6 @@ extension XMLDecoderImplementation: SingleValueDecodingContainer {
         return try unbox(try topContainer())
     }
 
-    public func decode(_: Decimal.Type) throws -> Decimal {
-        return try unbox(try topContainer())
-    }
-
     public func decode<T: BinaryInteger & SignedInteger & Decodable>(_: T.Type) throws -> T {
         return try unbox(try topContainer())
     }
@@ -43,15 +39,21 @@ extension XMLDecoderImplementation: SingleValueDecodingContainer {
         return try unbox(try topContainer())
     }
 
-    public func decode(_: String.Type) throws -> Date {
-        return try unbox(try topContainer())
-    }
-
-    public func decode(_: String.Type) throws -> Data {
-        return try unbox(try topContainer())
-    }
-
     public func decode<T: Decodable>(_: T.Type) throws -> T {
+        return try unbox(try topContainer())
+    }
+}
+
+extension XMLDecoderImplementation {
+    public func decode(_: Data.Type) throws -> Data {
+        return try unbox(try topContainer())
+    }
+    
+    public func decode(_: Date.Type) throws -> Date {
+        return try unbox(try topContainer())
+    }
+
+    public func decode(_: Decimal.Type) throws -> Decimal {
         return try unbox(try topContainer())
     }
 }

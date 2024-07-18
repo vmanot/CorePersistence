@@ -52,9 +52,9 @@ public struct _TypeSerializingAnyCodable: CustomDebugStringConvertible {
         }
         
         declaredTypeRepresentation = declaredType.map({ _SerializedTypeIdentity(from: $0 )}) ?? _SerializedTypeIdentity(from: T.self)
-        typeRepresentation = .init(of: data)
+        typeRepresentation = _SerializedTypeIdentity(of: data)
         
-        let type = try typeRepresentation.resolveType()
+        let type: Any.Type = try typeRepresentation.resolveType()
         
         if let data = data {
             if type is Codable.Type {
@@ -128,7 +128,23 @@ extension _TypeSerializingAnyCodable {
             return data
         } else if !(type is any _UnsafeSerializationRepresentable.Type) {
             do {
-                return try cast(data, to: type)
+                do {
+                    return try cast(data, to: type)
+                } catch {
+                    do {
+                        if let data: any Codable {
+                            if let string: String = data as? String, type == Int.self {
+                                return try Int(string).map({ $0 as! T }).unwrap()
+                            } else if let type = type as? any _UnsafelySerializedType.Type {
+                                return try type.init(_opaque_wrappedValue: data) as! T
+                            }
+                        }
+                    } catch(_) {
+                        throw error
+                    }
+                    
+                    throw error
+                }
             } catch {
                 let resolvedType = try typeRepresentation.resolveType()
                 
@@ -180,59 +196,75 @@ extension _TypeSerializingAnyCodable: Codable {
     }
     
     public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        
-        self.declaredTypeRepresentation = #try(.optimistic) {
-            try container.decodeIfPresent(
+        do {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            
+            let declaredTypeRepresentation: _SerializedTypeIdentity? = #try(.optimistic) {
+                try container.decodeIfPresent(
+                    _SerializedTypeIdentity.self,
+                    forKey: .declaredTypeRepresentation
+                )
+            }
+            let typeRepresentation: _SerializedTypeIdentity = try container.decode(
                 _SerializedTypeIdentity.self,
-                forKey: .declaredTypeRepresentation
+                forKey: .typeRepresentation
             )
-        }
-        self.typeRepresentation = try container.decode(
-            _SerializedTypeIdentity.self,
-            forKey: .typeRepresentation
-        )
-        
-        let resolvedDeclaredType: Any.Type? = try? self.declaredTypeRepresentation?.resolveType()
-        let resolvedType: Any.Type = try self.typeRepresentation.resolveType()
-        
-        func decodeData(from type: Any.Type) throws -> (any Codable)? {
-            if let dataType = type as? Codable.Type {
-                if type == resolvedDeclaredType {
-                    let _container = try decoder
-                        ._hidingCodingKey(CodingKeys.declaredTypeRepresentation)
-                        .container(keyedBy: CodingKeys.self)
-                    
-                    do {
-                        return try _container.decode(dataType, forKey: .data)
-                    } catch {
+            
+            let resolvedDeclaredType: Any.Type? = try? declaredTypeRepresentation?.resolveType()
+            let resolvedType: Any.Type = try typeRepresentation.resolveType()
+            
+            func decodeData(from type: Any.Type) throws -> (any Codable)? {
+                if let dataType = type as? Codable.Type {
+                    if type == resolvedDeclaredType {
+                        let _container = try decoder
+                            ._hidingCodingKey(CodingKeys.declaredTypeRepresentation)
+                            .container(keyedBy: CodingKeys.self)
+                        
+                        do {
+                            return try _container.decode(dataType, forKey: .data)
+                        } catch {
+                            return try container.decode(dataType, forKey: .data)
+                        }
+                    } else {
                         return try container.decode(dataType, forKey: .data)
                     }
-                } else {
-                    return try container.decode(dataType, forKey: .data)
-                }
-            } else if let type = type as? any _UnsafeSerializationRepresentable.Type {
-                return try type._opaque_decodeUnsafeSerializationRepresentation(from: decoder)
-            } else if type == Any.self, !container.allKeys.contains(.data) {
-                return nil
-            } else {
-                if try container.decodeNil(forKey: .data) {
+                } else if let type = type as? any _UnsafeSerializationRepresentable.Type {
+                    return try type._opaque_decodeUnsafeSerializationRepresentation(from: decoder)
+                } else if type == Any.self, !container.allKeys.contains(.data) {
                     return nil
                 } else {
-                    throw _Error.attemptedToDecodeFromNonCodableType(resolvedType)
+                    if try container.decodeNil(forKey: .data) {
+                        return nil
+                    } else {
+                        throw _Error.attemptedToDecodeFromNonCodableType(resolvedType)
+                    }
                 }
             }
-        }
-         
-        var data: (any Codable)? = try decodeData(from: resolvedType)
-        
-        if let resolvedDeclaredType {
-            if let _data = data, let declaredType = resolvedDeclaredType as? (any _UnwrappableTypeEraser.Type), let erasedData = try? declaredType.init(_opaque_erasing: _data) as? (any Codable) {
-                data = erasedData
+            
+            var data: (any Codable)? = try decodeData(from: resolvedType)
+            
+            if let resolvedDeclaredType {
+                if let _data = data, let declaredType = resolvedDeclaredType as? (any _UnwrappableTypeEraser.Type), let erasedData = try? declaredType.init(_opaque_erasing: _data) as? (any Codable) {
+                    data = erasedData
+                }
             }
+            
+            self.declaredTypeRepresentation = declaredTypeRepresentation
+            self.typeRepresentation = typeRepresentation
+            self.data = data
+        } catch {
+            let container = try decoder.singleValueContainer()
+            
+            if let value: any Codable = try? container.decode(AnyCodable.self).value {
+                self.declaredTypeRepresentation = nil
+                self.typeRepresentation = _SerializedTypeIdentity(_fromUnwrappedType: type(of: value))
+                self.data = value
+                
+                return
+            }
+            
+            throw error 
         }
-        
-        self.data = data
     }
     
     public func encode(to encoder: Encoder) throws {

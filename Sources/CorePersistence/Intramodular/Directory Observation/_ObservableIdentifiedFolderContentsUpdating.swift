@@ -74,10 +74,16 @@ extension _ObservableIdentifiedFolderContentsUpdatingTypes {
                     
                     var fileConfiguration: _RelativeFileConfiguration<Value> = try parent.fileConfiguration(element)
                     let relativeFilePath: String = try fileConfiguration.consumePath()
-                    let fileURL: FileURL = try FileURL(parent.folder._toURL().appendingPathComponent(relativeFilePath))
+                    var fileURL: FileURL {
+                        get throws {
+                            try FileURL(parent.folder._toURL().appendingPathComponent(relativeFilePath))
+                        }
+                    }
                     
                     let fileCoordinator = try _FileStorageCoordinators.RegularFile<MutableValueBox<Value>, Value>(
-                        fileSystemResource: fileURL,
+                        fileSystemResource: {
+                            try fileURL
+                        },
                         configuration: fileConfiguration
                     )
                     
@@ -158,7 +164,7 @@ extension _ObservableIdentifiedFolderContentsUpdatingTypes {
                 fileConfiguration.serialization?.initialValue = .available(item)
                                 
                 let fileCoordinator = try! _FileStorageCoordinators.RegularFile<MutableValueBox<Value>, Value>(
-                    fileSystemResource: FileURL(fileURL),
+                    fileSystemResource: { FileURL(fileURL) },
                     configuration: fileConfiguration
                 )
                 
@@ -227,10 +233,11 @@ extension _ObservableIdentifiedFolderContentsUpdatingTypes {
 
                 var fileConfiguration = try parent.fileConfiguration(element)
                 let relativeFilePath = try fileConfiguration.consumePath()
-                let fileURL = try FileURL(parent.folder._toURL().appendingPathComponent(relativeFilePath))
                 
                 let fileCoordinator = try _FileStorageCoordinators.RegularFile<MutableValueBox<Item>, Item>(
-                    fileSystemResource: fileURL,
+                    fileSystemResource: {
+                        try FileURL(parent.folder._toURL().appendingPathComponent(relativeFilePath))
+                    },
                     configuration: fileConfiguration
                 )
                 
@@ -340,7 +347,7 @@ extension _ObservableIdentifiedFolderContentsUpdatingTypes {
                 try parent.cocoaFileManager.createDirectory(at: directory, withIntermediateDirectories: true)
                 
                 let fileCoordinator = try! _FileStorageCoordinators.RegularFile<MutableValueBox<Item>, Item>(
-                    fileSystemResource: FileURL(fileURL),
+                    fileSystemResource: { FileURL(fileURL) },
                     configuration: fileConfiguration
                 )
                 

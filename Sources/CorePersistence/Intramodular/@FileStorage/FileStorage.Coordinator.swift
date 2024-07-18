@@ -36,7 +36,7 @@ public class _AnyFileStorageCoordinator<ValueType, UnwrappedValue>: _ObservableO
         
     let _persistenceContext = _PersistenceContext(for: ValueType.self)
     let cancellables = Cancellables()
-    let lock = OSUnfairLock()
+    let lock = Merge.OSUnfairLock()
     
     var resolveFileSystemResource: () throws -> any _FileOrFolderRepresenting
     var configuration: _RelativeFileConfiguration<UnwrappedValue>
@@ -117,12 +117,12 @@ public class _AnyFileStorageCoordinator<ValueType, UnwrappedValue>: _ObservableO
 extension _FileStorageCoordinators.RegularFile {
     convenience init(
         initialValue: UnwrappedValue?,
-        file: @autoclosure @escaping () throws -> any _FileOrFolderRepresenting,
+        file: @MainActor @escaping () throws -> any _FileOrFolderRepresenting,
         coder: (any _TopLevelFileDecoderEncoder),
         options: FileStorageOptions
     ) throws {
         try self.init(
-            fileSystemResource: file(),
+            fileSystemResource: file,
             configuration: try! _RelativeFileConfiguration(
                 path: nil,
                 coder: coder,

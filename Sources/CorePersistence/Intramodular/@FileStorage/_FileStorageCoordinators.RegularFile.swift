@@ -79,7 +79,7 @@ extension _FileStorageCoordinators {
         
         @MainActor(unsafe)
         init(
-            fileSystemResource: @autoclosure @escaping () throws -> any _FileOrFolderRepresenting,
+            fileSystemResource: @MainActor @escaping () throws -> any _FileOrFolderRepresenting,
             configuration: _RelativeFileConfiguration<UnwrappedValue>,
             cache: any SingleValueCache<UnwrappedValue> = InMemorySingleValueCache()
         ) throws {
