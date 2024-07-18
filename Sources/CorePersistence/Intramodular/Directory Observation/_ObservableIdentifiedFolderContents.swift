@@ -77,7 +77,6 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable, Wrapp
         }
     }
     
-    @MainActor
     public var _wrappedValue: WrappedValue {
         get {
             guard let result = _resolvedWrappedValue else {
@@ -113,14 +112,12 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable, Wrapp
         }
     }
     
-    @MainActor
     public var directoryURL: URL {
         get throws {
             try self.folder._toURL()
         }
     }
     
-    @MainActor
     public var wrappedValue: WrappedValue {
         get {
             _wrappedValue
@@ -139,7 +136,6 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable, Wrapp
     
     private var observation: _DirectoryEventObservation!
     
-    @MainActor(unsafe)
     package init(
         folder: any _FileOrFolderRepresenting,
         fileConfiguration: @escaping (Element) throws -> _RelativeFileConfiguration<Item>,
@@ -154,19 +150,19 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable, Wrapp
         }
     }
     
-    @MainActor
     private func _writeToDisk(newValue: WrappedValue) throws {
-        try cocoaFileManager.withUserGrantedAccess(to: directoryURL) { directoryURL in
-            try _ObservableIdentifiedFolderContentsUpdating_WrappedValue._opaque_update(
-                from: _wrappedValue,
-                to: newValue,
-                directory: directoryURL,
-                for: self
-            )
+        return try MainActor.assumeIsolated {
+            try cocoaFileManager.withUserGrantedAccess(to: directoryURL) { directoryURL in
+                try _ObservableIdentifiedFolderContentsUpdating_WrappedValue._opaque_update(
+                    from: _wrappedValue,
+                    to: newValue,
+                    directory: directoryURL,
+                    for: self
+                )
+            }
         }
     }
     
-    @MainActor
     private func _revertFromDisk() {
         #try(.optimistic) {
             let value: WrappedValue = try _readFromDisk()
@@ -175,7 +171,6 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable, Wrapp
         }
     }
     
-    @MainActor
     private func _setUpDiskObserver() throws {
         observation = _DirectoryEventObserver.shared.observe(directory: try directoryURL) { [weak self] events in
             guard let `self` = self else {
@@ -206,7 +201,6 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable, Wrapp
         self._resolvedWrappedValue = nil
     }
     
-    @MainActor
     private func _readFromDisk() throws -> WrappedValue {
         let directoryURL: URL = try self.directoryURL
         
@@ -218,10 +212,12 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable, Wrapp
             runtimeIssue(error)
         }
         
-        return try cocoaFileManager.withUserGrantedAccess(to: directoryURL) { (url: URL) -> WrappedValue in
-            let wrappedValue: WrappedValue = try _ObservableIdentifiedFolderContentsUpdating_WrappedValue._opaque_initialize(from: url, for: self)
-            
-            return wrappedValue
+        return try MainActor.assumeIsolated {
+            return try cocoaFileManager.withUserGrantedAccess(to: directoryURL) { (url: URL) -> WrappedValue in
+                let wrappedValue: WrappedValue = try _ObservableIdentifiedFolderContentsUpdating_WrappedValue._opaque_initialize(from: url, for: self)
+                
+                return wrappedValue
+            }
         }
     }
 }
@@ -229,7 +225,6 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable, Wrapp
 // MARK: - Internal
 
 extension _ObservableIdentifiedFolderContentsUpdating {
-    @MainActor
     fileprivate static func _opaque_initializePlaceholder<T>(
         for parent: any _ObservableIdentifiedFolderContentsType,
         as: T.Type
@@ -237,7 +232,6 @@ extension _ObservableIdentifiedFolderContentsUpdating {
         try cast(Self.initializePlaceholder(for: cast(parent)), to: T.self)
     }
     
-    @MainActor
     fileprivate static func _opaque_initialize<T>(
         from directory: URL,
         for parent: any _ObservableIdentifiedFolderContentsType
@@ -245,7 +239,6 @@ extension _ObservableIdentifiedFolderContentsUpdating {
         try cast(Self.initialize(from: directory, for: cast(parent)), to: T.self)
     }
     
-    @MainActor
     fileprivate static func _opaque_update<T>(
         from oldValue: T,
         to newValue: T,

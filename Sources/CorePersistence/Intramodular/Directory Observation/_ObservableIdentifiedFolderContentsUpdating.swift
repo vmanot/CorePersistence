@@ -9,18 +9,15 @@ public protocol _ObservableIdentifiedFolderContentsUpdating<WrappedValue> {
     associatedtype WrappedValue
     associatedtype FolderContentsType: _ObservableIdentifiedFolderContentsType
     
-    @MainActor
     static func initializePlaceholder(
         for parent: FolderContentsType
     ) throws -> WrappedValue
     
-    @MainActor
     static func initialize(
         from directory: URL,
         for parent: FolderContentsType
     ) throws -> WrappedValue
     
-    @MainActor
     static func update(
         from oldValue: WrappedValue,
         to newValue: WrappedValue,

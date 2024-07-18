@@ -33,7 +33,6 @@ class _KeyedFileBundleChildBundle<Bundle: FileBundle>: _KeyedFileBundleChildGene
         }
     }
     
-    @MainActor
     init?(
         parameters: InitializationParameters,
         configuration: @escaping () throws -> _RelativeFolderConfiguration<Contents>,

@@ -47,14 +47,12 @@ class _KeyedFileBundleChildGenericBase<Contents>: Identifiable, _KeyedFileBundle
     var preferredFileName: String?
     var stateFlags: StateFlags
     
-    @MainActor
     var contents: Contents {
         get throws {
             fatalError(.abstract)
         }
     }
     
-    @MainActor
     func setContents(_ contents: Contents) throws {
         fatalError(.abstract)
     }
@@ -69,7 +67,6 @@ class _KeyedFileBundleChildGenericBase<Contents>: Identifiable, _KeyedFileBundle
         objectWillChangeRelay.destination = parent
     }
     
-    @MainActor
     func refresh() throws {
         
     }

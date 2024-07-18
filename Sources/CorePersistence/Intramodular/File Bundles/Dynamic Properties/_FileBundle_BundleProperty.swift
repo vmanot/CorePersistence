@@ -35,7 +35,6 @@ public final class _FileBundle_BundleProperty<Parent, Contents: FileBundle>: _Fi
         self.configuration = configuration
     }
     
-    @MainActor
     func _initialize(
         with parameters: InitializationParameters
     ) throws -> Bool {
