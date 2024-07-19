@@ -94,7 +94,7 @@ public struct _SerializedTypeIdentity: Hashable, @unchecked Sendable {
                 }) {
                     runtimeIssue(_RuntimeIssue.recoveringFromCorruptTypeName(_swift_demangledTypeName, using: type))
                     
-                    self._swift_mangledTypeName = _mangledTypeName(type)
+                    self._swift_mangledTypeName = TypeMetadata(type).mangledName
                     self._swift_typeName = _typeName(type)
                     self._objectiveC_className = (type as? AnyObject.Type).map(NSStringFromClass)
                     self._resolvedType = type

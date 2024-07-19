@@ -6,8 +6,24 @@ import Combine
 import FoundationX
 import Swallow
 
+public protocol _ModularTopLevelDecoderOrEncoder {
+    var plugins: [any _ModularCodingPlugin] { get set }
+}
+
+public protocol _ModularTopLevelCoder: _ModularTopLevelDecoderOrEncoder, TopLevelDecoder, TopLevelEncoder, Sendable where Input == Output {
+    typealias EncodedRepresentation = Input
+    
+    func _eraseToAnyModularTopLevelCoder() -> _AnyModularTopLevelCoder<EncodedRepresentation>
+}
+
+extension _ModularTopLevelCoder {
+    public func _opaque_eraseToAnyModularTopLevelCoder() -> any _ModularTopLevelCoder {
+        _eraseToAnyModularTopLevelCoder()
+    }
+}
+
 /// A wrapper coder that allows for polymorphic decoding.
-public struct _ModularTopLevelCoder<EncodedRepresentation>: TopLevelDecoder, TopLevelEncoder, Sendable {
+public struct _AnyModularTopLevelCoder<EncodedRepresentation>: _ModularTopLevelCoder {
     private var decoder: _ModularTopLevelDecoder<EncodedRepresentation>
     private var encoder: _ModularTopLevelEncoder<EncodedRepresentation>
     
@@ -31,8 +47,8 @@ public struct _ModularTopLevelCoder<EncodedRepresentation>: TopLevelDecoder, Top
     public init<Coder: TopLevelDataCoder>(
         coder: Coder
     ) where EncodedRepresentation == Data {
-        self.decoder = _ModularTopLevelDecoder(from: AnyTopLevelDecoder(erasing: coder))
-        self.encoder = _ModularTopLevelEncoder(from: AnyTopLevelEncoder(erasing: coder))
+        self.decoder = _ModularTopLevelDecoder(from: coder)
+        self.encoder = _ModularTopLevelEncoder(from: coder)
     }
     
     public func decode<T>(
@@ -45,11 +61,15 @@ public struct _ModularTopLevelCoder<EncodedRepresentation>: TopLevelDecoder, Top
     public func encode<T>(_ value: T) throws -> EncodedRepresentation {
         try encoder.encode(value)
     }
+    
+    public func _eraseToAnyModularTopLevelCoder() -> _AnyModularTopLevelCoder<EncodedRepresentation> {
+        self
+    }
 }
 
 // MARK: - Conformances
 
-extension _ModularTopLevelCoder: TopLevelDataCoder where EncodedRepresentation == Data {
+extension _AnyModularTopLevelCoder: TopLevelDataCoder where EncodedRepresentation == Data {
     
 }
 
@@ -68,11 +88,11 @@ extension TopLevelEncoder {
 }
 
 extension TopLevelDataCoder {
-    public func _modular() -> _ModularTopLevelCoder<Data> {
-        if let result = self as? _ModularTopLevelCoder<Data> {
-            return result
+    public func _modular() -> _AnyModularTopLevelCoder<Data> {
+        if let result = self as? any _ModularTopLevelCoder {
+            return result._opaque_eraseToAnyModularTopLevelCoder() as! _AnyModularTopLevelCoder<Data>
         } else {
-            return _ModularTopLevelCoder(coder: self)
+            return _AnyModularTopLevelCoder(coder: self)
         }
     }
     

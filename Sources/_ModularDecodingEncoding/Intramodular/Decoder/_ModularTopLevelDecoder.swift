@@ -25,6 +25,10 @@ public struct _ModularTopLevelDecoder<Input>: TopLevelDecoder, @unchecked Sendab
     ) where Decoder.Input == Input {
         self.base = .init(erasing: decoder)
         self.configuration = nil
+        
+        if let decoder = decoder as? _ModularTopLevelDecoderOrEncoder {
+            self.configuration.plugins = decoder.plugins
+        }
     }
     
     public func decode<T>(

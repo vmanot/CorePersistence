@@ -24,6 +24,10 @@ public struct _ModularTopLevelEncoder<Output>: TopLevelEncoder, @unchecked Senda
     ) where Encoder.Output == Output {
         self.base = AnyTopLevelEncoder(erasing: encoder)
         self.configuration = .init()
+        
+        if let encoder = encoder as? _ModularTopLevelDecoderOrEncoder {
+            self.configuration.plugins = encoder.plugins
+        }
     }
     
     public func encode<T>(_ value: T) throws -> Output  {
