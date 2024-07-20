@@ -13,3 +13,9 @@ public struct _UnsafeSerializationPlugin: Hashable, _ModularCodingPlugin {
         
     }
 }
+
+extension _ModularCodingPlugin where Self == _UnsafeSerializationPlugin {
+    public static var allowUnsafeSerialization: Self {
+        Self()
+    }
+}

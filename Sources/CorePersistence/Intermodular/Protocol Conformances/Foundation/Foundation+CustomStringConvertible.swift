@@ -5,7 +5,7 @@
 import Foundation
 import Swift
 
-extension FileManager.SearchPathDirectory: CustomStringConvertible {
+extension FileManager.SearchPathDirectory: Swift.CustomStringConvertible {
     public var description: String {
         switch self {
             case .applicationDirectory:
