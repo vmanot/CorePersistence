@@ -135,7 +135,7 @@ public struct _SerializedTypeIdentity: Hashable, @unchecked Sendable {
     }
     
     public init<T>(of value: T) {
-        self.init(_fromUnwrappedType: _unwrappedType(ofValue: value))
+        self.init(_fromUnwrappedType: _getUnwrappedType(ofValue: value))
     }
 }
 

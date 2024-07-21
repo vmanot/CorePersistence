@@ -60,8 +60,10 @@ extension _FileStorageCoordinators {
         func setValue(
             _ newValue: UnwrappedValue
         ) {
-            if AnyEquatable.equate(newValue, _cachedValue) == true {
-                return
+            if !swift_isClassType(_getUnwrappedType(ofValue: newValue)) {
+                if AnyEquatable.equate(newValue, _cachedValue) == true {
+                    return
+                }
             }
             
             objectWillChange.send()

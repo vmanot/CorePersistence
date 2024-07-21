@@ -3,6 +3,7 @@
 //
 
 import Foundation
+import Swallow
 import SwiftDI
 
 public protocol _ObservableIdentifiedFolderContentsUpdating<WrappedValue> {
@@ -213,43 +214,47 @@ extension _ObservableIdentifiedFolderContentsUpdatingTypes {
             let urls: [URL] = try parent.cocoaFileManager.contentsOfDirectory(at: directory)
             
             for url in urls {
-                guard !parent.cocoaFileManager.isDirectory(at: url) else {
-                    continue
-                }
-                
-                if let filename = url._fileNameWithExtension {
-                    guard !parent.cocoaFileManager._practicallyIgnoredFilenames.contains(filename) else {
+                do {
+                    guard !parent.cocoaFileManager.isDirectory(at: url) else {
                         continue
                     }
-                }
-                
-                let element = _ObservableIdentifiedFolderContentsElement<Item, ID>(
-                    url: FileURL(url),
-                    id: nil
-                )
-
-                var fileConfiguration = try parent.fileConfiguration(element)
-                let relativeFilePath = try fileConfiguration.consumePath()
-                
-                let fileCoordinator = try _FileStorageCoordinators.RegularFile<MutableValueBox<Item>, Item>(
-                    fileSystemResource: {
-                        try FileURL(parent.folder._toURL().appendingPathComponent(relativeFilePath))
-                    },
-                    configuration: fileConfiguration
-                )
-                
-                #try(.optimistic) {
-                    try _withLogicalParent(ofType: AnyObject.self) {
-                        fileCoordinator._enclosingInstance = $0
+                    
+                    if let filename = url._fileNameWithExtension {
+                        guard !parent.cocoaFileManager._practicallyIgnoredFilenames.contains(filename) else {
+                            continue
+                        }
                     }
+                    
+                    let element = _ObservableIdentifiedFolderContentsElement<Item, ID>(
+                        url: FileURL(url),
+                        id: nil
+                    )
+                    
+                    var fileConfiguration = try parent.fileConfiguration(element)
+                    let relativeFilePath = try fileConfiguration.consumePath()
+                    
+                    let fileCoordinator = try _FileStorageCoordinators.RegularFile<MutableValueBox<Item>, Item>(
+                        fileSystemResource: {
+                            try FileURL(parent.folder._toURL().appendingPathComponent(relativeFilePath))
+                        },
+                        configuration: fileConfiguration
+                    )
+                    
+                    #try(.optimistic) {
+                        try _withLogicalParent(ofType: AnyObject.self) {
+                            fileCoordinator._enclosingInstance = $0
+                        }
+                    }
+                    
+                    let item: Item = try fileCoordinator._wrappedValue
+                    let itemID: ID = id(item)
+                    
+                    parent.storage[itemID] = fileCoordinator
+                    
+                    result.append(item)
+                } catch {
+                    runtimeIssue(error)
                 }
-                
-                let item: Item = try fileCoordinator._wrappedValue
-                let itemID: ID = id(item)
-                
-                parent.storage[itemID] = fileCoordinator
-                
-                result.append(item)
             }
             
             return result
@@ -358,10 +363,13 @@ extension _ObservableIdentifiedFolderContentsUpdatingTypes {
             
             for identifier in updated {
                 let updatedElement = newValue[id: identifier]!
+                let fileCoordinator = parent.storage[identifier]!
                 
-                parent.storage[identifier]!.wrappedValue = updatedElement
+                fileCoordinator.wrappedValue = updatedElement
                 
                 updatedNewValue[id: identifier] = updatedElement
+                
+                fileCoordinator.commit()
             }
         }
     }
