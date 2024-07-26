@@ -2,7 +2,7 @@
 // Copyright (c) Vatsal Manot
 //
 
-import Foundation
+import FoundationX
 @_spi(Internal) import Merge
 import Runtime
 import Swallow
@@ -30,7 +30,6 @@ public final class FileStorage<ValueType, UnwrappedType> {
     }()
     private var objectWillChangeConduit: AnyCancellable?
     
-    @MainActor
     public var wrappedValue: UnwrappedType {
         get {
             coordinator.wrappedValue
@@ -171,15 +170,16 @@ extension FileStorage: Equatable where UnwrappedType: Equatable {
 }
 
 extension FileStorage: Hashable where UnwrappedType: Hashable {
-    @MainActor(unsafe)
     public func hash(into hasher: inout Hasher) {
-        do {
-            try hasher.combine(url)
-        } catch {
-            runtimeIssue(error)
+        MainActor.unsafeAssumeIsolated {
+            do {
+                try hasher.combine(url)
+            } catch {
+                runtimeIssue(error)
+            }
+            
+            hasher.combine(wrappedValue)
         }
-        
-        hasher.combine(wrappedValue)
     }
 }
 

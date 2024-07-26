@@ -2,7 +2,7 @@
 // Copyright (c) Vatsal Manot
 //
 
-import Foundation
+import FoundationX
 import Swallow
 
 public struct FileURL: Hashable, Sendable {

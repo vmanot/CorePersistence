@@ -7,36 +7,36 @@ import Diagnostics
 import FoundationX
 import Swallow
 
-public final class _ObservableFileURL: ObservableObject, URLConvertible {
+public final class _ObservableFileURL: ObservableObject, URLConvertible, @unchecked Sendable {
     public typealias AsyncIterator = AnyAsyncIterator<DispatchSource.FileSystemEvent>
     
     private var observation: DispatchSourceFileSystemObjectObservation!
     
-    @MainActor
-    @Published
-    public private(set) var url: URL
-    
-    @MainActor
-    @Published
-    private var bookmark: URL.Bookmark
+    @Published public private(set) var url: URL
+    @Published private var bookmark: URL.Bookmark
     
     private let fileIdentifier: FileSystemIdentifier
     
-    @MainActor(unsafe)
     public init(
         url: URL,
         bookmark: URL.Bookmark?,
         fileIdentifier existingFileIdentifier: FileSystemIdentifier?
     ) throws {
-        let _bookmark: URL.Bookmark
+        var _bookmark: URL.Bookmark!
         
         if let bookmark {
             _bookmark = bookmark
         } else {
             try _tryAssert(FileManager.default.fileExists(at: url))
             
-            _bookmark = try FileManager.default.withUserGrantedAccess(to: url) { url in
-                try URL.Bookmark(for: url)
+            if Thread.isMainThread {
+                try MainActor.unsafeAssumeIsolated {
+                    _bookmark = try FileManager.default.withUserGrantedAccess(to: url) { url in
+                        try URL.Bookmark(for: url)
+                    }
+                }
+            } else {
+                _bookmark = try URL.Bookmark(for: url)
             }
         }
         
@@ -62,6 +62,8 @@ public final class _ObservableFileURL: ObservableObject, URLConvertible {
         observation = try DispatchSourceFileSystemObjectObservation(
             filePath: _bookmark.path,
             onEvent: { [weak self] _ in
+                let `self` = self
+                
                 Task { @MainActor in
                     self?._fileDidUpdate()
                 }
@@ -69,7 +71,7 @@ public final class _ObservableFileURL: ObservableObject, URLConvertible {
         )
     }
     
-    @MainActor(unsafe)
+    @MainActor
     public convenience init(url: URL) throws {
         try self.init(url: url, bookmark: nil, fileIdentifier: nil)
     }
@@ -112,6 +114,7 @@ extension _ObservableFileURL: Codable {
     
     public convenience init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
+       
         let url: URL? = #try(.optimistic) {
             try container.decodeIfPresent(URL.self, forKey: .url)
         }
@@ -133,7 +136,6 @@ extension _ObservableFileURL: Codable {
         )
     }
     
-    @MainActor(unsafe)
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         
@@ -143,12 +145,10 @@ extension _ObservableFileURL: Codable {
 }
 
 extension _ObservableFileURL: Hashable {
-    @MainActor(unsafe)
     public func hash(into hasher: inout Hasher) {
         hasher.combine(fileIdentifier)
     }
     
-    @MainActor(unsafe)
     public static func == (lhs: _ObservableFileURL, rhs: _ObservableFileURL) -> Bool {
         lhs.fileIdentifier == rhs.fileIdentifier
     }

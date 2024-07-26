@@ -4,7 +4,7 @@
 
 #if canImport(SwiftUI) && (os(iOS) || targetEnvironment(macCatalyst))
 
-import Foundation
+import FoundationX
 import Swallow
 import SwiftUI
 import System

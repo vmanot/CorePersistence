@@ -5,7 +5,7 @@
 import Foundation
 import Swallow
 
-extension UUID: HadeanIdentifiable {
+extension Foundation.UUID: CorePersistence.HadeanIdentifiable {
     public static var hadeanIdentifier: HadeanIdentifier {
         "fusam-vomid-huzok-kokuz"
     }

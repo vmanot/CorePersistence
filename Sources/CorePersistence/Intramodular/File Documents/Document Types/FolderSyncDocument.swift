@@ -4,6 +4,7 @@
 
 #if !os(tvOS)
 
+import FoundationX
 import Runtime
 import SwiftUI
 import UniformTypeIdentifiers

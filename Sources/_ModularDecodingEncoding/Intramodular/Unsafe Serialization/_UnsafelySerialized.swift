@@ -177,7 +177,7 @@ extension _UnsafelySerialized: ExpressibleByNilLiteral where Value: ExpressibleB
     }
 }
 
-extension _UnsafelySerialized: Initiable where Value: Initiable {
+extension _UnsafelySerialized: _ThrowingInitiable, Initiable where Value: Initiable {
     public init() {
         self.init(Value.init())
     }

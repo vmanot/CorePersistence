@@ -42,7 +42,6 @@ extension _ObservableIdentifiedFolderContentsUpdatingTypes {
             [:]
         }
         
-        @MainActor
         public static func initialize(
             from directory: URL,
             for parent: FolderContentsType
@@ -115,7 +114,6 @@ extension _ObservableIdentifiedFolderContentsUpdatingTypes {
             return result
         }
         
-        @MainActor
         public static func update(
             from oldValue: WrappedValue,
             to newValue: WrappedValue,
@@ -201,7 +199,6 @@ extension _ObservableIdentifiedFolderContentsUpdatingTypes {
             return IdentifierIndexingArray(id: id)
         }
         
-        @MainActor
         public static func initialize(
             from directory: URL,
             for parent: FolderContentsType
@@ -260,7 +257,6 @@ extension _ObservableIdentifiedFolderContentsUpdatingTypes {
             return result
         }
         
-        @MainActor
         public static func update(
             from oldValue: WrappedValue,
             to newValue: WrappedValue,
@@ -352,9 +348,7 @@ extension _ObservableIdentifiedFolderContentsUpdatingTypes {
                     fileSystemResource: { FileURL(fileURL) },
                     configuration: fileConfiguration
                 )
-                
-                fileCoordinator.commit()
-                
+                                
                 parent.storage[key] = fileCoordinator
                 updatedNewValue[id: key] = item
             }
@@ -368,8 +362,6 @@ extension _ObservableIdentifiedFolderContentsUpdatingTypes {
                 fileCoordinator.wrappedValue = updatedElement
                 
                 updatedNewValue[id: identifier] = updatedElement
-                
-                fileCoordinator.commit()
             }
         }
     }

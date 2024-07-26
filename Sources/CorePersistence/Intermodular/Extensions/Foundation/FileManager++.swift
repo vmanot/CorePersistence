@@ -47,8 +47,6 @@ extension FileManager {
         #if os(macOS)
         let openPanel = NSOpenPanel()
         #else
-        let NSOpenPanel_Type = unsafeBitCast(NSClassFromString("NSOpenPanel"), to: _NSOpenPanelProtocol.Type.self)
-
         let openPanel = _NSOpenPanel_Type.init()
         #endif
         

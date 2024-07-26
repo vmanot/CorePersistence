@@ -9,6 +9,7 @@ import Swift
 /// It's similar to `AppIntents.PersistentlyIdentifiable`, but much more powerful.
 ///
 /// This is useful for maintaining the identity of a type, even when its type name is changed.
+@_alwaysEmitConformanceMetadata
 public protocol PersistentlyRepresentableType {
     associatedtype PersistentTypeRepresentation: IdentityRepresentation
     

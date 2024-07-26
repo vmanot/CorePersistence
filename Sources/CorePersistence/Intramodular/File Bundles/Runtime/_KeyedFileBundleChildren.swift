@@ -184,7 +184,6 @@ final class _KeyedFileBundleChildren<Key: StringRepresentable, Value, WrappedVal
         parent?.childDidUpdate(self)
     }
     
-    @MainActor
     public func setContents(
         _ newValue: Contents
     ) throws {

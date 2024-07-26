@@ -7,7 +7,13 @@ import Merge
 import Swallow
 
 extension _FileStorageCoordinators {
-    public class RegularFile<ValueType, UnwrappedValue>: _AnyFileStorageCoordinator<ValueType, UnwrappedValue> {
+    public class RegularFile<ValueType, UnwrappedValue>: _AnyFileStorageCoordinator<ValueType, UnwrappedValue>, @unchecked Sendable {
+        public enum Tasks {
+            case read
+            case write
+        }
+        
+        private let tasks = KeyedThrowingTaskGroup<Tasks>()
         private let cache: any SingleValueCache<UnwrappedValue>
         private var read: (() throws -> UnwrappedValue)!
         private var write: ((UnwrappedValue) throws -> Void)!
@@ -79,9 +85,8 @@ extension _FileStorageCoordinators {
             _writeValue(newValue)
         }
         
-        @MainActor(unsafe)
         init(
-            fileSystemResource: @MainActor @escaping () throws -> any _FileOrFolderRepresenting,
+            fileSystemResource: @escaping () throws -> any _FileOrFolderRepresenting,
             configuration: _RelativeFileConfiguration<UnwrappedValue>,
             cache: any SingleValueCache<UnwrappedValue> = InMemorySingleValueCache()
         ) throws {
@@ -303,6 +308,7 @@ extension _FileStorageCoordinators {
             _ newValue: UnwrappedValue,
             immediately: Bool = false
         ) {
+            @Sendable
             func _writeValueUnconditionally() {
                 try! self.write(newValue)
                 
@@ -330,10 +336,15 @@ extension _FileStorageCoordinators {
                     delay = .milliseconds(200)
                 }
                 
-                writeQueue.asyncAfter(
-                    deadline: .now() + delay,
-                    execute: workItem
-                )
+                do {
+                    try tasks.insert(.write, policy: .discardPrevious) {
+                        try? await Task.sleep(delay)
+                        
+                        _writeValueUnconditionally()
+                    }
+                } catch {
+                    runtimeIssue(error)
+                }
             }
         }
     }

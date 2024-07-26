@@ -75,7 +75,7 @@ extension _FileOrFolderRepresenting {
     }
 }
 
-extension FileWrapper: _FileOrFolderRepresenting {
+extension FileWrapper: CorePersistence._FileOrFolderRepresenting {
     public func _toURL() throws -> URL {
         throw Never.Reason.illegal
     }

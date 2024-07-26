@@ -4,7 +4,7 @@
 
 import Merge
 import Runtime
-package import OrderedCollections
+internal import OrderedCollections
 import Swallow
 
 @available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *)

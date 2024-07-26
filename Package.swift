@@ -22,8 +22,13 @@ let package = Package(
                 "_SWXMLHash",
                 "_XMLCoder",
                 "Proquint",
-                "UUIDv6",
                 "CorePersistence"
+            ]
+        ),
+        .library(
+            name: "UUIDv6",
+            targets: [
+                "UUIDv6",
             ]
         )
     ],

@@ -11,6 +11,11 @@ public enum _FileStorageCoordinators: _StaticSwift.Namespace {
     
 }
 
+
+@globalActor actor FileCoordinatorActor: GlobalActor {
+    static let shared = FileCoordinatorActor()
+}
+
 public class _AnyFileStorageCoordinator<ValueType, UnwrappedValue>: _ObservableObjectX, @unchecked Sendable {
     public enum StateFlag {
         case initialReadComplete
@@ -42,11 +47,6 @@ public class _AnyFileStorageCoordinator<ValueType, UnwrappedValue>: _ObservableO
     var configuration: _RelativeFileConfiguration<UnwrappedValue>
 
     public internal(set) var stateFlags: Set<StateFlag> = []
-    
-    let writeQueue = DispatchQueue(
-        label: "com.vmanot.Data.FileStorage.Coordinator.write",
-        qos: .default
-    )
         
     open var objectWillChange: AnyObjectWillChangePublisher {
         .init(erasing: _defaultObjectWillChangePublisher)
@@ -64,7 +64,6 @@ public class _AnyFileStorageCoordinator<ValueType, UnwrappedValue>: _ObservableO
         }
     }
         
-    @MainActor(unsafe)
     open var wrappedValue: UnwrappedValue {
         get {
             fatalError(.abstract)
@@ -73,7 +72,6 @@ public class _AnyFileStorageCoordinator<ValueType, UnwrappedValue>: _ObservableO
         }
     }
     
-    @MainActor
     init(
         fileSystemResource: @escaping () throws -> any _FileOrFolderRepresenting,
         configuration: _RelativeFileConfiguration<UnwrappedValue>
@@ -82,7 +80,6 @@ public class _AnyFileStorageCoordinator<ValueType, UnwrappedValue>: _ObservableO
         self.configuration = configuration
     }
     
-    @MainActor
     init(
         fileSystemResource: @autoclosure @escaping () throws -> any _FileOrFolderRepresenting,
         configuration: _RelativeFileConfiguration<UnwrappedValue>
@@ -117,7 +114,7 @@ public class _AnyFileStorageCoordinator<ValueType, UnwrappedValue>: _ObservableO
 extension _FileStorageCoordinators.RegularFile {
     convenience init(
         initialValue: UnwrappedValue?,
-        file: @MainActor @escaping () throws -> any _FileOrFolderRepresenting,
+        file: @escaping () throws -> any _FileOrFolderRepresenting,
         coder: (any _TopLevelFileDecoderEncoder),
         options: FileStorageOptions
     ) throws {

@@ -5,7 +5,7 @@
 #if canImport(CoreServices)
 import CoreServices
 #endif
-import Foundation
+import FoundationX
 import UniformTypeIdentifiers
 
 extension UTType {

@@ -56,12 +56,11 @@ extension FileStorage {
         coder: Coder,
         options: FileStorageOptions
     ) where UnwrappedType: Codable, ValueType == MutableValueBox<UnwrappedType> {
-        let directoryURL: URL = try! location().deletingLastPathComponent()._actuallyStandardizedFileURL
-        
         self.init(
             coordinator: try _FileStorageCoordinators.RegularFile(
                 initialValue: wrappedValue,
                 file: {
+                    let directoryURL: URL = try location().deletingLastPathComponent()._actuallyStandardizedFileURL
                     let url = try FileURL(location()._actuallyStandardizedFileURL)
                     
                     try FileManager.default.createDirectory(
@@ -242,12 +241,11 @@ extension FileStorage {
         coder: Coder,
         options: FileStorageOptions = nil
     ) where ValueType == _UnsafelySerialized<UnwrappedType> {
-        @MainActor
-        func getURL() -> FileURL {
-            let directoryURL = try! location().deletingLastPathComponent()
-            let url = try! FileURL(location())
+        func getURL() throws -> FileURL {
+            let directoryURL = try location().deletingLastPathComponent()
+            let url = try FileURL(location())
             
-            try! FileManager.default.withUserGrantedAccess(to: directoryURL, scope: .directory) {
+            try FileManager.default.requestingUserGrantedAccessIfPossible(for: directoryURL, scope: .directory) {
                 try FileManager.default.createDirectory(at: $0, withIntermediateDirectories: true)
                 
                 assert(FileManager.default.directoryExists(at: directoryURL))

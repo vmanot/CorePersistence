@@ -4,6 +4,7 @@
 
 import Swallow
 
+@_alwaysEmitConformanceMetadata
 public protocol HadeanIdentifiable: PersistentlyRepresentableType {
     static var hadeanIdentifier: HadeanIdentifier { get }
 }

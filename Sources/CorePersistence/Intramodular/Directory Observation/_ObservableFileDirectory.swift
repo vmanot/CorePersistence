@@ -4,8 +4,9 @@
 
 import Combine
 import Dispatch
+import FoundationX
 import System
-import Swift
+import Swallow
 
 public protocol _ObservableFileDirectoryType: Logging, ObservableObject {
     var cocoaFileManager: FileManager { get }
