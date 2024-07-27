@@ -23,7 +23,12 @@ public struct _ModularDecoder: Decoder {
         configuration: Configuration?,
         context: Context
     ) {
-        self.base = base
+        if let base = base as? _PolymorphicDecoder, !(context.type is any _PolymorphicDecodingProxyType.Type) {
+            self.base = base.base
+        } else {
+            self.base = base
+        }
+
         self.configuration = configuration ?? nil
         self.context = context
     }

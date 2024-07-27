@@ -152,14 +152,12 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable, Wrapp
     
     private func _writeToDisk(newValue: WrappedValue) throws {
         return try MainActor.assumeIsolated {
-            try cocoaFileManager.withUserGrantedAccess(to: directoryURL) { directoryURL in
-                try _ObservableIdentifiedFolderContentsUpdating_WrappedValue._opaque_update(
-                    from: _wrappedValue,
-                    to: newValue,
-                    directory: directoryURL,
-                    for: self
-                )
-            }
+            try _ObservableIdentifiedFolderContentsUpdating_WrappedValue._opaque_update(
+                from: _wrappedValue,
+                to: newValue,
+                directory: directoryURL,
+                for: self
+            )
         }
     }
     
@@ -212,12 +210,10 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable, Wrapp
             runtimeIssue(error)
         }
         
-        return try MainActor.assumeIsolated {
-            return try cocoaFileManager.withUserGrantedAccess(to: directoryURL) { (url: URL) -> WrappedValue in
-                let wrappedValue: WrappedValue = try _ObservableIdentifiedFolderContentsUpdating_WrappedValue._opaque_initialize(from: url, for: self)
-                
-                return wrappedValue
-            }
+        return try MainActor.unsafeAssumeIsolated {
+            let wrappedValue: WrappedValue = try _ObservableIdentifiedFolderContentsUpdating_WrappedValue._opaque_initialize(from: directoryURL, for: self)
+            
+            return wrappedValue
         }
     }
 }

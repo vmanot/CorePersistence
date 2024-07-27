@@ -36,41 +36,24 @@ public struct _ModularTopLevelDecoder<Input>: TopLevelDecoder, @unchecked Sendab
         from input: Input
     ) throws -> T {
         try _ModularDecoder.TaskLocalValues.$configuration.withValue(configuration) {
-            if let type = type as? _ModularTopLevelProxyDecodableType.Type {
-                do {
-                    return try cast(
-                        base.decode(
-                            type,
-                            from: input
-                        ),
-                        to: T.self
-                    )
-                } catch let decodingError as Swift.DecodingError {
-                    throw try _ModularDecodingError(
-                        from: decodingError,
-                        type: Input.self,
-                        decoder: base,
-                        input: input
-                    )
-                } catch {
-                    throw error
-                }
-            } else {
-                do {
+            do {
+                if let type = type as? _ModularTopLevelProxyDecodableType.Type {
+                    return try cast(base.decode(type, from: input), to: T.self)
+                } else {
                     return try base.decode(
                         _ModularDecoder.TopLevelProxyDecodable<T>.self,
                         from: input
                     ).value
-                } catch let decodingError as Swift.DecodingError {
-                    throw try _ModularDecodingError(
-                        from: decodingError,
-                        type: Input.self,
-                        decoder: base,
-                        input: input
-                    )
-                } catch {
-                    throw error
                 }
+            } catch let decodingError as Swift.DecodingError {
+                throw try _ModularDecodingError(
+                    from: decodingError,
+                    type: Input.self,
+                    decoder: base,
+                    input: input
+                )
+            } catch {
+                throw error
             }
         }
     }
@@ -88,6 +71,10 @@ extension _ModularDecoder {
     /// A proxy for `Decodable` that forces our custom decoder to be used.
     fileprivate struct TopLevelProxyDecodable<T>: _ModularTopLevelProxyDecodableType {
         var value: T
+        
+        init(value: T) {
+            self.value = value
+        }
     }
 }
 
@@ -97,6 +84,12 @@ extension _ModularDecoder.TopLevelProxyDecodable {
         
         guard !(type is _ModularDecodableProxyType.Type) else {
             fatalError()
+        }
+        
+        guard type != _SerializedTypeIdentity.self else {
+            self.init(value: try cast(_SerializedTypeIdentity.init(from: _decoder)))
+            
+            return
         }
         
         assert(!(_decoder is _ModularDecoder))
@@ -132,7 +125,10 @@ extension _ModularDecoder.TopLevelProxyDecodable {
         
         try sanityCheckFunction()
         
-        if let type: any _UnsafelySerializedType.Type = (decoder.context.type as? any _UnsafelySerializedType.Type), TypeMetadata(type._opaque_WrappedValue).kind == .existentialMetatype {
+        if
+            let type: any _UnsafelySerializedType.Type = (decoder.context.type as? any _UnsafelySerializedType.Type),
+            TypeMetadata(type._opaque_WrappedValue).kind == .existentialMetatype
+        {
             let plugin = try decoder.configuration.plugins
                 .first(byUnwrapping: { $0 as? (any _MetatypeCodingPlugin) })
                 .unwrap()
@@ -449,6 +445,18 @@ extension _ModularDecoder {
 
 extension _ModularDecoder {
     fileprivate enum TaskLocalValues {
+        struct Context {
+            var polymorphic: Bool?
+            var path: CodingPath
+            
+            mutating func append(_ element: CodingPathElement) {
+                polymorphic = nil
+                path.append(element)
+            }
+        }
+        
+        @TaskLocal static var context: Context? = nil
+        
         @TaskLocal static var isDecodingFromSingleValueContainer: Bool?
         @TaskLocal static var configuration: _ModularDecoder.Configuration?
     }

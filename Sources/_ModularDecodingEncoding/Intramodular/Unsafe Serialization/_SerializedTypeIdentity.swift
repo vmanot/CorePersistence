@@ -78,7 +78,9 @@ public struct _SerializedTypeIdentity: Hashable, @unchecked Sendable {
         self._swift_typeName = _swift_typeName
         self._objectiveC_className = _objectiveC_className
         self._CorePersistence_persistentTypeRepresentation = _CorePersistence_persistentTypeRepresentation
-        
+    }
+    
+    mutating func _resolveTypeForInit() throws {
         do {
             let _resolvedType: Any.Type = try resolveType()
             
@@ -147,10 +149,12 @@ extension _SerializedTypeIdentity {
             if let _resolvedType = _resolvedType {
                 return _resolvedType
             } else {
-                let mangledTypeName = try _swift_mangledTypeName.unwrap()
+                let mangledTypeName: String = try _swift_mangledTypeName.unwrap()
                 
                 do {
-                    return try _typeByName(mangledTypeName).unwrap()
+                    return try _memoize(uniquingWith: mangledTypeName) {
+                        try _typeByName(mangledTypeName).unwrap()
+                    }
                 } catch {
                     throw _Error.failedToResolveSwiftTypeByName(mangledTypeName)
                 }
