@@ -2,7 +2,7 @@
 // Copyright (c) Vatsal Manot
 //
 
-#if !os(tvOS)
+#if !os(tvOS) && !os(watchOS)
 
 import FoundationX
 import Runtime
