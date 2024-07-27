@@ -64,6 +64,8 @@ public struct _SerializedTypeIdentity: Hashable, @unchecked Sendable {
         case failedToDeserializePersistentTypeRepresentation(Error)
     }
     
+    static let _permitExpensiveRecovery: Bool = false
+    
     private init(
         version: _SerializedTypeIdentity.Version,
         _swift_mangledTypeName: String?,
@@ -82,7 +84,7 @@ public struct _SerializedTypeIdentity: Hashable, @unchecked Sendable {
             
             self._resolvedType = _resolvedType
         } catch {
-            if let _swift_demangledTypeName {
+            if let _swift_demangledTypeName, Self._permitExpensiveRecovery {
                 runtimeIssue(_RuntimeIssue.failedToDeserializeTypeByName(_swift_demangledTypeName))
                 
                 let _swift_demangledTypeName2: String = _swift_demangledTypeName.dropFirstComponent(separatedBy: ".")
