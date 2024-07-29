@@ -24,12 +24,6 @@ extension _PrimitiveCodingRepresentation {
     }
 }
 
-public protocol _CodingRepresentatable: Codable {
-    associatedtype CodingRepresentationType: CodingRepresentation<Self>
-    
-    static var codingRepresentation: CodingRepresentationType { get }
-}
-
 public final class _ResolvedCodingRepresentation {
     @_LockedState private static var representationsByType: [Metatype<any _CodingRepresentatable.Type>: _ResolvedCodingRepresentation] = [:]
 
@@ -74,10 +68,28 @@ public final class _ResolvedCodingRepresentation {
     }
 }
 
-extension _CodingRepresentatable {
-    public static func _dumpCodingRepresentation() throws -> _ResolvedCodingRepresentation {
-        try cast(codingRepresentation, to: (any _PrimitiveCodingRepresentation).self).__conversion()
+extension CodingRepresentationBuilder {
+    public struct CodingKeyAlias: _PrimitiveCodingRepresentation {
+        public typealias Item = ItemType
+        
+        private let alias: AnyCodingKeyAlias
+        
+        public init(alias: AnyCodingKeyAlias) {
+            self.alias = alias
+        }
+        
+        public init(source: AnyCodingKey, destination: AnyCodingKey) {
+            self.init(alias: AnyCodingKeyAlias(source: source, destination: destination))
+        }
+        
+        public func __conversion() throws -> _ResolvedCodingRepresentation {
+            _ResolvedCodingRepresentation(itemType: ItemType.self, representation: .codingKeyAlias(alias))
+        }
     }
+}
+
+extension _CodingRepresentatable {
+    public typealias CodingKeyAlias = CodingRepresentationBuilder<Self>.CodingKeyAlias
 }
 
 extension Never: CodingRepresentation {

@@ -8,13 +8,13 @@ import Swallow
 extension _ModularDecoder {
     struct KeyedContainer<Key: CodingKey>: KeyedDecodingContainerProtocol {
         private var base: KeyedDecodingContainer<Key>
-        private var parent: _ModularDecoder
+        private var decoder: _ModularDecoder
         
         init(
             base: KeyedDecodingContainer<Key>,
-            parent: _ModularDecoder
+            decoder: _ModularDecoder
         ) {
-            self.parent = parent
+            self.decoder = decoder
             self.base = base
         }
     }
@@ -48,10 +48,10 @@ extension _ModularDecoder.KeyedContainer {
         _ type: T.Type,
         forKey key: Key
     ) throws -> T {
-        if parent.configuration.hides(key, at: base.codingPath) {
+        if decoder.configuration.hides(key, at: base.codingPath) {
             throw _ModularDecodingError.keyForbidden(
                 AnyCodingKey(erasing: key),
-                .init(type: type, codingPath: self.codingPath)
+                _ModularDecodingError.Context(type: type, codingPath: self.codingPath)
             )
         }
 
@@ -98,7 +98,7 @@ extension _ModularDecoder.KeyedContainer {
         _ type: T.Type,
         forKey key: Key
     ) throws -> T? {
-        if parent.configuration.hides(key, at: base.codingPath) {
+        if decoder.configuration.hides(key, at: base.codingPath) {
             return nil
         }
 
@@ -118,7 +118,7 @@ extension _ModularDecoder.KeyedContainer {
         KeyedDecodingContainer(
             _ModularDecoder.KeyedContainer<NestedKey>(
                 base: try base.nestedContainer(keyedBy: type, forKey: key),
-                parent: parent
+                decoder: decoder
             )
         )
     }
@@ -128,14 +128,14 @@ extension _ModularDecoder.KeyedContainer {
     ) throws -> UnkeyedDecodingContainer {
         _ModularDecoder.UnkeyedContainer(
             base: try base.nestedUnkeyedContainer(forKey: key),
-            parent: parent
+            decoder: decoder
         )
     }
     
     func superDecoder() throws -> Decoder {
         _ModularDecoder(
             base: try base.superDecoder(),
-            configuration: parent.configuration,
+            configuration: decoder.configuration,
             context: .init(type: nil)
         )
     }
@@ -143,7 +143,7 @@ extension _ModularDecoder.KeyedContainer {
     func superDecoder(forKey key: Key) throws -> Decoder {
         _ModularDecoder(
             base: try base.superDecoder(forKey: key),
-            configuration: parent.configuration,
+            configuration: decoder.configuration,
             context: .init(type: nil)
         )
     }
@@ -202,11 +202,11 @@ extension _ModularDecoder.KeyedContainer {
         type: T.Type,
         key: Key
     ) throws -> T {
-        if let subjectType = parent.context.type as? any _CodingRepresentatable.Type, let type = type as? Decodable.Type {
+        if let subjectType = decoder.context.type as? any _CodingRepresentatable.Type, let type = type as? Decodable.Type {
             let codingRepresentation = _ResolvedCodingRepresentation._for(subjectType)
             
             let result = codingRepresentation.keysToKeyAliases[AnyCodingKey(erasing: key), default: []].first(byUnwrapping: {
-                return try? parent.base.decode(type, forKey: $0)
+                return try? decoder.base.decode(type, forKey: $0)
             })
             
             if let result {
@@ -224,7 +224,7 @@ extension _ModularDecoder.KeyedContainer {
             throw error
         }
         
-        guard self.parent.configuration.plugins.contains(where: { $0 is _KeyNotFoundRecoveryPlugin }) else {
+        guard self.decoder.configuration.plugins.contains(where: { $0 is _KeyNotFoundRecoveryPlugin }) else {
             throw error
         }
         

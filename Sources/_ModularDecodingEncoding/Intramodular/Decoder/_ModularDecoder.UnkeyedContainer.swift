@@ -7,14 +7,14 @@ import Swallow
 
 extension _ModularDecoder {
     struct UnkeyedContainer: UnkeyedDecodingContainer {
-        private var parent: _ModularDecoder
+        private var decoder: _ModularDecoder
         private var base: UnkeyedDecodingContainer
         
         init(
             base: UnkeyedDecodingContainer,
-            parent: _ModularDecoder
+            decoder: _ModularDecoder
         ) {
-            self.parent = parent
+            self.decoder = decoder
             self.base = base
         }
         
@@ -76,7 +76,7 @@ extension _ModularDecoder {
             .init(
                 KeyedContainer(
                     base: try base.nestedContainer(keyedBy: type),
-                    parent: parent
+                    decoder: decoder
                 )
             )
         }
@@ -84,14 +84,14 @@ extension _ModularDecoder {
         mutating func nestedUnkeyedContainer() throws -> UnkeyedDecodingContainer {
             UnkeyedContainer(
                 base: try base.nestedUnkeyedContainer(),
-                parent: parent
+                decoder: decoder
             )
         }
         
         mutating func superDecoder() throws -> Decoder {
             _ModularDecoder(
                 base: try base.superDecoder(),
-                configuration: parent.configuration,
+                configuration: decoder.configuration,
                 context: .init(type: nil)
             )
         }

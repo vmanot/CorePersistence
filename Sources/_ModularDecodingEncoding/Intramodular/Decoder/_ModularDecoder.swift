@@ -33,18 +33,14 @@ public struct _ModularDecoder: Decoder {
         self.context = context
     }
     
-    public init(wrapping decoder: Decoder) {
+    public init(
+        wrapping decoder: Decoder
+    ) {
         if let decoder = decoder as? Self {
             self = decoder
         } else {
             self.init(base: decoder, configuration: nil, context: .init(type: nil))
         }
-    }
-    
-    public mutating func hideCodingPath<T: CodingKey>(
-        _ path: [T]
-    ) {
-        self.configuration.hiddenCodingPaths.insert(path.map({ AnyCodingKey(erasing: $0) }))
     }
     
     public func container<Key: CodingKey>(
@@ -53,7 +49,7 @@ public struct _ModularDecoder: Decoder {
         KeyedDecodingContainer(
             KeyedContainer(
                 base: try base.container(keyedBy: type),
-                parent: self
+                decoder: self
             )
         )
     }
@@ -61,7 +57,7 @@ public struct _ModularDecoder: Decoder {
     public func unkeyedContainer() throws -> UnkeyedDecodingContainer {
         UnkeyedContainer(
             base: try base.unkeyedContainer(),
-            parent: self
+            decoder: self
         )
     }
     
@@ -70,6 +66,14 @@ public struct _ModularDecoder: Decoder {
             try base.singleValueContainer(),
             parent: self
         )
+    }
+}
+
+extension _ModularDecoder {
+    public mutating func hideCodingPath<T: CodingKey>(
+        _ path: [T]
+    ) {
+        self.configuration.hiddenCodingPaths.insert(path.map({ AnyCodingKey(erasing: $0) }))
     }
 }
 

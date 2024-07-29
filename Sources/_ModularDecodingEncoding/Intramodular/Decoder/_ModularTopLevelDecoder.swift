@@ -97,7 +97,7 @@ extension _ModularDecoder.TopLevelProxyDecodable {
         let decoder = _ModularDecoder(
             base: _decoder,
             configuration: _ModularDecoder.TaskLocalValues.configuration,
-            context: .init(type: T.self)
+            context: _ModularDecoder.Context(type: T.self)
         )
         
         do {
