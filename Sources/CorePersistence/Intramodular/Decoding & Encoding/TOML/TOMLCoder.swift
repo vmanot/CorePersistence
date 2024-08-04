@@ -8,10 +8,18 @@ import FoundationX
 import Swallow
 
 public struct TOMLCoder: TopLevelDataCoder {
+    public var userInfo: [CodingUserInfoKey: Any] {
+        get {
+            fatalError(.unimplemented)
+        } set {
+            fatalError(.unimplemented)
+        }
+    }
+
     public init() {
         
     }
-    
+
     public func encode<T: Encodable>(
         _ value: T
     ) throws -> Data  {

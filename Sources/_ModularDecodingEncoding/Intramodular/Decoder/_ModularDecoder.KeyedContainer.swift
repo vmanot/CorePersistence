@@ -58,7 +58,7 @@ extension _ModularDecoder.KeyedContainer {
         do {
             if let result: T = try _primitiveDecode(type, forKey: key) {
                 return result
-            } else if T.self == _SerializedTypeIdentity.self {
+            } else if T.self == _CodableSwiftType.self {
                 return try base.decode(T.self, forKey: key)
             } else {
                 return try base.decode(_ModularDecoder.KeyedContainerProxyDecodable<T>.self, forKey: key).value
@@ -104,7 +104,7 @@ extension _ModularDecoder.KeyedContainer {
 
         if let result: T = try _primitiveDecodeIfPresent(type, forKey: key) {
             return result
-        } else if T.self == _SerializedTypeIdentity.self {
+        } else if T.self == _CodableSwiftType.self {
             return try base.decodeIfPresent(T.self, forKey: key)
         } else {
             return try base.decodeIfPresent(_ModularDecoder.KeyedContainerProxyDecodable<T>.self, forKey: key)?.value

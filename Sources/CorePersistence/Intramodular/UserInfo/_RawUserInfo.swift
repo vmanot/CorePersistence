@@ -9,8 +9,8 @@ public protocol _RawUserInfoProtocol: Codable, Hashable, Initiable, Sendable {
 }
 
 public enum _RawUserInfoKey: Codable, Hashable, @unchecked Sendable {
-    case type(_SerializedTypeIdentity)
-    case key(_SerializedTypeIdentity)
+    case type(_CodableSwiftType)
+    case key(_CodableSwiftType)
 }
 
 public struct _RawUserInfo: _RawUserInfoProtocol, Initiable, @unchecked Sendable {
@@ -43,13 +43,13 @@ public struct _RawUserInfo: _RawUserInfoProtocol, Initiable, @unchecked Sendable
     private func _key<Key: UserInfoKey>(
         fromType type: Key.Type
     ) -> _RawUserInfoKey{
-        _RawUserInfoKey.key(_SerializedTypeIdentity(from: type))
+        _RawUserInfoKey.key(_CodableSwiftType(from: type))
     }
     
     private func _key<Value: Hashable>(
         fromType type: Value.Type
     ) -> _RawUserInfoKey {
-        _RawUserInfoKey.type(_SerializedTypeIdentity(from: type))
+        _RawUserInfoKey.type(_CodableSwiftType(from: type))
     }
     
     public subscript<Key: UserInfoKey>(

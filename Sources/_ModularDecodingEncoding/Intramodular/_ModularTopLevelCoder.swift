@@ -70,7 +70,13 @@ public struct _AnyModularTopLevelCoder<EncodedRepresentation>: _ModularTopLevelC
 // MARK: - Conformances
 
 extension _AnyModularTopLevelCoder: TopLevelDataCoder where EncodedRepresentation == Data {
-    
+    public var userInfo: [CodingUserInfoKey: Any] {
+        get {
+            fatalError(.unimplemented)
+        } set {
+            fatalError(.unimplemented)
+        }
+    }
 }
 
 // MARK: - Supplementary
@@ -101,7 +107,7 @@ extension TopLevelDataCoder {
     }
 }
 
-extension _AnyTopLevelDataCoder {
+extension _AnySpecializedTopLevelDataCoder {
     public func _modular() -> Self {
         switch self {
             case .dataCodableType:

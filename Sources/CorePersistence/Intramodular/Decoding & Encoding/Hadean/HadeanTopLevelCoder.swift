@@ -86,9 +86,14 @@ extension HadeanTopLevelCoder {
 // MARK: - Conformances
 
 extension HadeanTopLevelCoder: TopLevelDataCoder where EncodedRepresentation == Data {
-    
+    public var userInfo: [CodingUserInfoKey: Any] {
+        get {
+            fatalError(.unimplemented)
+        } set {
+            fatalError(.unimplemented)
+        }
+    }
 }
-
 
 // MARK: - Auxiliary
 

@@ -15,7 +15,7 @@ public protocol _TopLevelFileDecoderEncoder {
 @_documentation(visibility: internal)
 public enum __AnyTopLevelFileDecoderEncoder_RawValue {
     case document(_FileDocument.Type)
-    case topLevelData(_AnyTopLevelDataCoder)
+    case topLevelData(_AnySpecializedTopLevelDataCoder)
 }
 
 public struct _AnyTopLevelFileDecoderEncoder<DataType>: _TopLevelFileDecoderEncoder {
@@ -65,7 +65,7 @@ extension _AnyTopLevelFileDecoderEncoder where DataType == Any {
     }
     
     public init(
-        _ coder: _AnyTopLevelDataCoder,
+        _ coder: _AnySpecializedTopLevelDataCoder,
         supportedTypes: [Any.Type] = []
     ) {
         self.init(rawValue: .topLevelData(coder))
@@ -75,7 +75,7 @@ extension _AnyTopLevelFileDecoderEncoder where DataType == Any {
         _ coder: Coder,
         forUnsafelySerialized type: T.Type
     ) {
-        let coder = _AnyTopLevelDataCoder.custom(
+        let coder = _AnySpecializedTopLevelDataCoder.custom(
             .init(
                 for: type,
                 decode: { (data: Data) -> T in

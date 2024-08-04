@@ -15,8 +15,8 @@ public struct _TypeSerializingAnyCodable: CustomDebugStringConvertible {
         case attemptedToDecodeUnsupportedType(Any.Type)
     }
     
-    package let declaredTypeRepresentation: _SerializedTypeIdentity?
-    package let typeRepresentation: _SerializedTypeIdentity
+    package let declaredTypeRepresentation: _CodableSwiftType?
+    package let typeRepresentation: _CodableSwiftType
     package let data: (any Codable)?
     
     public var description: String {
@@ -37,7 +37,7 @@ public struct _TypeSerializingAnyCodable: CustomDebugStringConvertible {
         assert(!(data is _TypeSerializingAnyCodable))
         
         self.declaredTypeRepresentation = nil
-        self.typeRepresentation = _SerializedTypeIdentity(of: data)
+        self.typeRepresentation = _CodableSwiftType(of: data)
         self.data = data
     }
     
@@ -51,8 +51,8 @@ public struct _TypeSerializingAnyCodable: CustomDebugStringConvertible {
             data = try _openExistentialAndCast(data, to: Codable.self)
         }
         
-        declaredTypeRepresentation = declaredType.map({ _SerializedTypeIdentity(from: $0 )}) ?? _SerializedTypeIdentity(from: T.self)
-        typeRepresentation = _SerializedTypeIdentity(of: data)
+        declaredTypeRepresentation = declaredType.map({ _CodableSwiftType(from: $0 )}) ?? _CodableSwiftType(from: T.self)
+        typeRepresentation = _CodableSwiftType(of: data)
         
         let type: Any.Type = try typeRepresentation.resolveType()
         
@@ -199,14 +199,14 @@ extension _TypeSerializingAnyCodable: Codable {
         do {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             
-            let declaredTypeRepresentation: _SerializedTypeIdentity? = #try(.optimistic) {
+            let declaredTypeRepresentation: _CodableSwiftType? = #try(.optimistic) {
                 try container.decodeIfPresent(
-                    _SerializedTypeIdentity.self,
+                    _CodableSwiftType.self,
                     forKey: .declaredTypeRepresentation
                 )
             }
-            let typeRepresentation: _SerializedTypeIdentity = try container.decode(
-                _SerializedTypeIdentity.self,
+            let typeRepresentation: _CodableSwiftType = try container.decode(
+                _CodableSwiftType.self,
                 forKey: .typeRepresentation
             )
             
@@ -257,7 +257,7 @@ extension _TypeSerializingAnyCodable: Codable {
             
             if let value: any Codable = try? container.decode(AnyCodable.self).value {
                 self.declaredTypeRepresentation = nil
-                self.typeRepresentation = _SerializedTypeIdentity(_fromUnwrappedType: type(of: value))
+                self.typeRepresentation = _CodableSwiftType(_fromUnwrappedType: type(of: value))
                 self.data = value
                 
                 return

@@ -7,7 +7,7 @@ import Swallow
 extension UserInfo {
     public struct Scope: Codable, Hashable, Sendable {
         public enum Payload: Codable, Hashable, Sendable {
-            case domain(_swiftType: _SerializedTypeIdentity)
+            case domain(_swiftType: _CodableSwiftType)
         }
         
         public var payload: Payload
@@ -19,7 +19,7 @@ extension UserInfo {
         public static func domain<DomainType>(_ domain: DomainType.Type) -> Self {
             assert(domain == DomainType.self)
             
-            return Self(payload: .domain(_swiftType: _SerializedTypeIdentity(from: domain)))
+            return Self(payload: .domain(_swiftType: _CodableSwiftType(from: domain)))
         }
     }
 }

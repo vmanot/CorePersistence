@@ -8,10 +8,7 @@ import Runtime
 /// A universal registry that maps `HadeanIdentifier`s to Swift metatypes (`Any.Type`).
 public struct _HadeanSwiftTypeRegistry {
     static let lock = OSUnfairLock()
-            
-    /// Parsed all available Swift binaries to index `HadeanIdentifiable` types.
-    fileprivate static var scrapedAllTypes: Bool = false
-    
+                
     @usableFromInline
     static var typesByIdentifier: [HadeanIdentifier: Any.Type] = [:]
     @usableFromInline
@@ -20,6 +17,11 @@ public struct _HadeanSwiftTypeRegistry {
     static let identifierToTypeResolver = IdentifierToSwiftTypeResolver()
     static let typeToIdentifierResolver = SwiftTypeToIdentifierResolver()
     
+    /// Parsed all available Swift binaries to index `HadeanIdentifiable` types.
+    fileprivate static var scrapedAllTypes: Bool = false
+    @_StaticMirrorQuery(type: (any HadeanIdentifiable).self)
+    static var hadeanIdentifiableTypes: [any HadeanIdentifiable.Type]
+
     @MainActor
     private init() {
         Self.register(
@@ -38,12 +40,8 @@ public struct _HadeanSwiftTypeRegistry {
             scrapedAllTypes = true
         }
                 
-        let types = try TypeMetadata._queryAll(
-            .conformsTo((any HadeanIdentifiable).self),
-            .nonAppleFramework
-        )
-                
-        types.forEach(_register)
+                        
+        hadeanIdentifiableTypes.forEach(_register)
     }
     
     public static func register(

@@ -187,7 +187,7 @@ extension _UnsafelySerialized: _ThrowingInitiable, Initiable where Value: Initia
 
 extension _UnsafelySerialized {
     private enum _IntermediateRepresentation: Codable, Hashable {
-        case metatype(_SerializedTypeIdentity?)
+        case metatype(_CodableSwiftType?)
         case representable(any Hashable & Codable)
         case anything(_TypeSerializingAnyCodable)
         
@@ -226,7 +226,7 @@ extension _UnsafelySerialized {
             if let isMetatype = Self.isMetatypeContainer, isMetatype {
                 let value = try _unwrapPossiblyTypeErasedValue(value)
                     .map({ try cast($0, to: Any.Type.self) })
-                    .map(_SerializedTypeIdentity.init(_fromUnwrappedType:))
+                    .map(_CodableSwiftType.init(_fromUnwrappedType:))
                 
                 if value == nil {
                     try _tryAssert(_isTypeOptionalType(Value.self))
@@ -240,7 +240,7 @@ extension _UnsafelySerialized {
             } else if let type = value as? Any.Type {
                 assert(declaredValueType._isAnyOrNever(unwrapIfNeeded: true))
                 
-                self = .metatype(_SerializedTypeIdentity(from: type))
+                self = .metatype(_CodableSwiftType(from: type))
             } else {
                 self = try .anything(
                     _TypeSerializingAnyCodable(
@@ -251,7 +251,7 @@ extension _UnsafelySerialized {
             }
         }
         
-        private init(_ value: Either<_SerializedTypeIdentity, _TypeSerializingAnyCodable>) {
+        private init(_ value: Either<_CodableSwiftType, _TypeSerializingAnyCodable>) {
             switch value {
                 case .left(let type):
                     self = .metatype(type)
@@ -263,7 +263,7 @@ extension _UnsafelySerialized {
         init(from decoder: Decoder) throws {
             if Self.isMetatypeContainer == true {
                 do {
-                    self = try .metatype(Optional<_SerializedTypeIdentity>(from: decoder))
+                    self = try .metatype(Optional<_CodableSwiftType>(from: decoder))
                 } catch {
                     throw error
                 }
@@ -297,7 +297,7 @@ extension _UnsafelySerialized {
                     }
                     
                     do {
-                        self = try .metatype(container.decode(_SerializedTypeIdentity.self))
+                        self = try .metatype(container.decode(_CodableSwiftType.self))
                     } catch(_) {
                         throw error
                     }

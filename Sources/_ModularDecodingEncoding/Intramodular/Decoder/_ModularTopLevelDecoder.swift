@@ -86,8 +86,8 @@ extension _ModularDecoder.TopLevelProxyDecodable {
             fatalError()
         }
         
-        guard type != _SerializedTypeIdentity.self else {
-            self.init(value: try cast(_SerializedTypeIdentity.init(from: _decoder)))
+        guard type != _CodableSwiftType.self else {
+            self.init(value: try cast(_CodableSwiftType.init(from: _decoder)))
             
             return
         }
