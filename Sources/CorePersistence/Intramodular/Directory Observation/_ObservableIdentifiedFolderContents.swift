@@ -145,8 +145,10 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable, Wrapp
         self.fileConfiguration = fileConfiguration
         self.id = id
         
-        #try(.optimistic) {
-            try _setUpDiskObserver()
+        Task { @MainActor in
+            #try(.optimistic) {
+                try self._setUpDiskObserver()
+            }
         }
     }
     
@@ -169,27 +171,18 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable, Wrapp
         }
     }
     
+    @MainActor
     private func _setUpDiskObserver() throws {
-        observation = _DirectoryEventObserver.shared.observe(directory: try directoryURL) { [weak self] events in
-            guard let `self` = self else {
-                return
+        let directoryURL = try directoryURL
+        
+        try FileManager.default.withUserGrantedAccess(to: directoryURL) { directoryURL in
+            observation = _DirectoryEventObserver.shared.observe(directory: directoryURL) { [weak self] events in
+                guard let `self` = self else {
+                    return
+                }
+                
+                _ = self
             }
-            
-            _ = self
-            
-            /*Task.detached { @MainActor in
-             if events.contains(where: \.eventType.isModificationOrDeletion) {
-             guard self._resolvedWrappedValue != nil else {
-             return
-             }
-             
-             try await self.observation.disableAndPerform {
-             self.objectWillChange?.send()
-             self._resetImmediately()
-             self._revertFromDisk()
-             }
-             }
-             }*/
         }
     }
     
