@@ -59,9 +59,7 @@ public struct _CodableSwiftType: Hashable, @unchecked Sendable {
         self.version = .v0_0_2
         
         self._resolvedType = type
-        
-        self._swift_mangledTypeName = _mangledTypeName(type)
-        self._swift_typeName = _typeName(type)
+                
         self._objectiveC_className = (type as? AnyObject.Type).map(NSStringFromClass)
         
         if let type = type as? (any PersistentlyRepresentableType.Type) {
@@ -69,8 +67,25 @@ public struct _CodableSwiftType: Hashable, @unchecked Sendable {
         } else {
             self._CorePersistence_persistentTypeRepresentation = nil
         }
+        
+        _unconditionallyDumpTypeName()
     }
 
+    private mutating func _unconditionallyDumpTypeName() {
+        guard let type = self._resolvedType else {
+            guard (_swift_mangledTypeName ?? _swift_typeName) != nil else {
+                assertionFailure()
+                
+                return
+            }
+            
+            return
+        }
+        
+        self._swift_mangledTypeName = _mangledTypeName(type)
+        self._swift_typeName = _typeName(type)
+    }
+    
     private init(
         version: _CodableSwiftType.Version,
         _swift_mangledTypeName: String?,
@@ -182,11 +197,15 @@ extension _CodableSwiftType: Codable {
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         
-        try container.encode(version, forKey: .version)
-        try container.encodeIfPresent(_swift_mangledTypeName, forKey: ._swift_mangledTypeName)
-        try container.encodeIfPresent(_swift_typeName, forKey: ._swift_typeName)
-        try container.encodeIfPresent(_objectiveC_className, forKey: ._objectiveC_className)
-        try container.encodeIfPresent(_CorePersistence_persistentTypeRepresentation, forKey: ._CorePersistence_persistentTypeRepresentation)
+        var _self = self
+        
+        _self._unconditionallyDumpTypeName()
+                
+        try container.encode(_self.version, forKey: .version)
+        try container.encodeIfPresent(_self._swift_mangledTypeName, forKey: ._swift_mangledTypeName)
+        try container.encodeIfPresent(_self._swift_typeName, forKey: ._swift_typeName)
+        try container.encodeIfPresent(_self._objectiveC_className, forKey: ._objectiveC_className)
+        try container.encodeIfPresent(_self._CorePersistence_persistentTypeRepresentation, forKey: ._CorePersistence_persistentTypeRepresentation)
     }
 }
 

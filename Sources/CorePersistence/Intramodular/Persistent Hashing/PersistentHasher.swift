@@ -28,6 +28,12 @@ extension PersistentHasher {
     }
 }
 
+// MARK: - Implemented Conformances
+
+extension _DJB2PersistentHasher: PersistentHasher {
+    
+}
+
 public struct _JSONPersistentHasher: PersistentHasher {
     public typealias HashType = String
     
@@ -35,6 +41,13 @@ public struct _JSONPersistentHasher: PersistentHasher {
         public var data: [AnyCodable] = []
     }
     
+    private var encoder: JSONEncoder = {
+        let result = JSONEncoder()
+        
+        result.outputFormatting = [.sortedKeys]
+        
+        return result
+    }()
     private var state = State()
     
     public init() {
@@ -46,7 +59,7 @@ public struct _JSONPersistentHasher: PersistentHasher {
     }
     
     public func finalize() throws -> String {
-        let data: Data = try JSONEncoder().encode(state)
+        let data: Data = try encoder.encode(state)
         let sha256 = SHA256.hash(data: data)
         
         return sha256.hexadecimalString
@@ -56,7 +69,9 @@ public struct _JSONPersistentHasher: PersistentHasher {
 // MARK: - Supplementary
 
 extension ProcessInfo.Fingerprint: _CoreIdentity.PersistentIdentifierConvertible {
-    public var persistentID: String {
+    public typealias PersistentID = String
+    
+    public var persistentID: PersistentID {
         try! _JSONPersistentHasher.hash(self)
     }
 }

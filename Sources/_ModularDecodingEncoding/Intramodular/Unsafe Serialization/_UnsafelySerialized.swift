@@ -233,9 +233,7 @@ extension _UnsafelySerialized {
                 }
                 
                 self = .metatype(value)
-            } else if let value = value as? any _UnsafeSerializationRepresentable {
-                assert(Value.self is any _UnsafeSerializationRepresentable.Type)
-                
+            } else if let value = value as? any _UnsafeSerializationRepresentable, Value.self is any _UnsafeSerializationRepresentable.Type {                
                 self = try .representable(value._unsafeSerializationRepresentation)
             } else if let type = value as? Any.Type {
                 assert(declaredValueType._isAnyOrNever(unwrapIfNeeded: true))

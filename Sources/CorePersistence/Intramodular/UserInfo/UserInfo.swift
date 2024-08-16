@@ -42,6 +42,18 @@ public struct UserInfo: HeterogeneousDictionaryProtocol, Hashable, Sendable {
     }
 }
 
+// MARK: - Conformances
+
+extension UserInfo: Codable {
+    
+}
+
+extension UserInfo: CustomStringConvertible {
+    public var description: String {
+        "\(storage)"
+    }
+}
+
 extension UserInfo: ThrowingMergeOperatable {
     public func mergeInPlace(with other: UserInfo) throws {
         

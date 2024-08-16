@@ -8,13 +8,22 @@ public protocol _RawUserInfoProtocol: Codable, Hashable, Initiable, Sendable {
     
 }
 
-public enum _RawUserInfoKey: Codable, Hashable, @unchecked Sendable {
+public enum _RawUserInfoKey: Codable, CustomStringConvertible, Hashable, @unchecked Sendable {
     case type(_CodableSwiftType)
     case key(_CodableSwiftType)
+    
+    public var description: String {
+        switch self {
+            case .type(let type):
+                return "\(try! type.resolveType())"
+            case .key(let type):
+                return "\(try! type.resolveType())"
+        }
+    }
 }
 
 public struct _RawUserInfo: _RawUserInfoProtocol, Initiable, @unchecked Sendable {
-    private var storage: [_RawUserInfoKey: Any] = [:]
+    private var storage: [_RawUserInfoKey: _UnsafelySerialized<Any>] = [:]
     
     public var isEmpty: Bool {
         storage.isEmpty
@@ -23,15 +32,7 @@ public struct _RawUserInfo: _RawUserInfoProtocol, Initiable, @unchecked Sendable
     public init() {
         
     }
-    
-    public init(from decoder: any Decoder) throws {
-        self.storage = try Dictionary<_RawUserInfoKey, _UnsafelySerialized<Any>>(from: decoder).mapValues({ $0.wrappedValue })
-    }
-    
-    public func encode(to encoder: any Encoder) throws {
-        try storage.mapValues({ _UnsafelySerialized<Any>(wrappedValue: $0) }).encode(to: encoder)
-    }
-    
+        
     public mutating func assign<Value: Hashable>(
         _ value: Value
     ) {
@@ -87,6 +88,12 @@ public struct _RawUserInfo: _RawUserInfoProtocol, Initiable, @unchecked Sendable
 
 // MARK: - Conformances
 
+extension _RawUserInfo: CustomStringConvertible {
+    public var description: String {
+        storage.mapValues({ $0.wrappedValue }).description
+    }
+}
+
 extension _RawUserInfo: Equatable {
     public static func == (lhs: Self, rhs: Self) -> Bool {
         if lhs.isEmpty && rhs.isEmpty {
@@ -125,7 +132,7 @@ extension _RawUserInfo: Hashable {
     public func hash(into hasher: inout Hasher) {
         for (key, value) in storage {
             hasher.combine(key)
-            hasher.combine(_HashableExistential<Any>(wrappedValue: value))
+            hasher.combine(value)
         }
     }
 }
@@ -138,7 +145,7 @@ extension _RawUserInfo: ThrowingMergeOperatable {
             if let otherValue = other.storage[key], var value = value as? (any ThrowingMergeOperatable) {
                 try value._opaque_mergeInPlace(with: otherValue)
                 
-                self.storage[key] = value
+                self.storage[key] = _UnsafelySerialized(wrappedValue: value)
             }
         }
         
