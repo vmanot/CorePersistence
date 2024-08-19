@@ -23,7 +23,7 @@ public enum _RawUserInfoKey: Codable, CustomStringConvertible, Hashable, @unchec
 }
 
 public struct _RawUserInfo: _RawUserInfoProtocol, Initiable, @unchecked Sendable {
-    private var storage: [_RawUserInfoKey: _UnsafelySerialized<Any>] = [:]
+    private var storage: [_RawUserInfoKey: _TypeSerializingAnyCodable] = [:]
     
     public var isEmpty: Bool {
         storage.isEmpty
@@ -33,16 +33,16 @@ public struct _RawUserInfo: _RawUserInfoProtocol, Initiable, @unchecked Sendable
         
     }
         
-    public mutating func assign<Value: Hashable>(
+    public mutating func assign<Value: Codable & Hashable>(
         _ value: Value
     ) {
         let key = _key(fromType: Swift.type(of: value))
         
-        storage[key] = _UnsafelySerialized(wrappedValue: value)
+        storage[key] = _TypeSerializingAnyCodable(value)
     }
     
     private func _key<Key: UserInfoKey>(
-        fromType type: Key.Type
+        fromKeyType type: Key.Type
     ) -> _RawUserInfoKey{
         _RawUserInfoKey.key(_CodableSwiftType(from: type))
     }
@@ -53,17 +53,36 @@ public struct _RawUserInfo: _RawUserInfoProtocol, Initiable, @unchecked Sendable
         _RawUserInfoKey.type(_CodableSwiftType(from: type))
     }
     
+    public subscript<T>(
+        _key key: _RawUserInfoKey,
+        as type: T.Type
+    ) -> T? {
+        get {
+            return try! storage[key].map({ try cast($0.decode(T.self)) })
+        } set {
+            do {
+                storage[key] = try _TypeSerializingAnyCodable(newValue)
+            } catch {
+                assertionFailure(error)
+            }
+        }
+    }
+
     public subscript<Key: UserInfoKey>(
         _ type: Key.Type
     ) -> Key.Value {
         get {
-            let key = _key(fromType: type)
+            let key = _key(fromKeyType: type)
             
-            return try! storage[key].map({ try cast($0, to: Key.Value.self) }) ?? Key.defaultValue
+            return try! storage[key].map({ try cast($0.decode(Key.Value.self)) }) ?? Key.defaultValue
         } set {
-            let key = _key(fromType: type)
-            
-            storage[key] = _UnsafelySerialized(wrappedValue: newValue)
+            do {
+                let key = _key(fromKeyType: type)
+                
+                storage[key] = try _TypeSerializingAnyCodable(newValue)
+            } catch {
+                assertionFailure(error)
+            }
         }
     }
     
@@ -75,12 +94,16 @@ public struct _RawUserInfo: _RawUserInfoProtocol, Initiable, @unchecked Sendable
             
             return try! storage[key].map({ try cast($0, to: Value.self) })
         } set {
-            let key = _key(fromType: type)
-            
-            if let newValue {
-                storage[key] = _UnsafelySerialized(wrappedValue: newValue)
-            } else {
-                storage[key] = nil
+            do {
+                let key = _key(fromType: type)
+                
+                if let newValue {
+                    storage[key] = try _TypeSerializingAnyCodable(newValue)
+                } else {
+                    storage[key] = nil
+                }
+            } catch {
+                assertionFailure(error)
             }
         }
     }
@@ -90,7 +113,7 @@ public struct _RawUserInfo: _RawUserInfoProtocol, Initiable, @unchecked Sendable
 
 extension _RawUserInfo: CustomStringConvertible {
     public var description: String {
-        storage.mapValues({ $0.wrappedValue }).description
+        storage.compactMapValues({ $0.data }).description
     }
 }
 
@@ -145,7 +168,7 @@ extension _RawUserInfo: ThrowingMergeOperatable {
             if let otherValue = other.storage[key], var value = value as? (any ThrowingMergeOperatable) {
                 try value._opaque_mergeInPlace(with: otherValue)
                 
-                self.storage[key] = _UnsafelySerialized(wrappedValue: value)
+                self.storage[key] = try _TypeSerializingAnyCodable(value)
             }
         }
         

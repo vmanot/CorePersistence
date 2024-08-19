@@ -26,7 +26,7 @@ public struct _HadeanSwiftTypeRegistry {
     private init() {
         Self.register(
             Self.lock.withCriticalScope {
-                RuntimeDiscoverableTypes.enumerate(typesConformingTo: (any HadeanIdentifiable).self)
+                RuntimeDiscoveryIndex.enumerate(typesConformingTo: (any HadeanIdentifiable).self)
             }
         )
     }

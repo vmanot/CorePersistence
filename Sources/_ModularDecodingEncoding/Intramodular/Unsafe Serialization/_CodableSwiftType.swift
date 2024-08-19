@@ -211,11 +211,19 @@ extension _CodableSwiftType: Codable {
 
 extension _CodableSwiftType {
     public func hash(into hasher: inout Hasher) {
-        if let type = _resolvedType ?? (try? resolveType()) {
+        do {
+            let type = try resolveType()
+            
             ObjectIdentifier(type).hash(into: &hasher)
+        } catch {
+            assertionFailure(error)
         }
         
         _CorePersistence_persistentTypeRepresentation?.hash(into: &hasher)
+    }
+    
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.hashValue == rhs.hashValue
     }
 }
 
