@@ -6,6 +6,6 @@ import Swift
 
 @attached(extension, conformances: HadeanIdentifiable, names: named(hadeanIdentifier))
 public macro HadeanIdentifier(_ identifier: String) = #externalMacro(
-    module: "CorePersistenceMacros",
+    module: "SwallowMacros",
     type: "HadeanIdentifierMacro"
 )

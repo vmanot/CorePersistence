@@ -9,9 +9,17 @@ import Swallow
 import Runtime
 
 public struct _ModularTopLevelDecoder<Input>: TopLevelDecoder, @unchecked Sendable {
-    private let base: AnyTopLevelDecoder<Input>
+    private var base: AnyTopLevelDecoder<Input>
     private var configuration: _ModularDecoder.Configuration
     
+    public var userInfo: [CodingUserInfoKey: Any] {
+        get {
+            base.userInfo
+        } set {
+            base.userInfo = newValue
+        }
+    }
+
     public var plugins: [any _ModularCodingPlugin] {
         get {
             configuration.plugins

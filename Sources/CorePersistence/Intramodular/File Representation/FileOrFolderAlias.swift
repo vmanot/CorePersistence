@@ -24,7 +24,7 @@ public struct FileOrFolderAlias: Codable, CustomStringConvertible, Hashable, Sen
 }
 
 #if os(macOS)
-extension FileOrFolderAlias {
+extension FileOrFolderAlias: _FailableThrowingInitiableFromURL {
     public init?(
         url: URL
     ) throws {
@@ -43,7 +43,7 @@ extension FileOrFolderAlias {
     }
 }
 #else
-extension FileOrFolderAlias {
+extension FileOrFolderAlias: _FailableThrowingInitiableFromURL {
     public init?(
         url: URL
     ) throws {

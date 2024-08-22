@@ -37,13 +37,6 @@ let package = Package(
         .package(url: "https://github.com/vmanot/Swallow.git", branch: "master")
     ],
     targets: [
-        .macro(
-            name: "CorePersistenceMacros",
-            dependencies: [
-                .product(name: "MacroBuilder", package: "Swallow"),
-            ],
-            path: "Sources/CorePersistenceMacros"
-        ),
         .target(
             name: "_ModularDecodingEncoding",
             dependencies: [
@@ -57,10 +50,10 @@ let package = Package(
         .target(
             name: "_CoreIdentity",
             dependencies: [
-                "CorePersistenceMacros",
                 "Merge",
                 "Proquint",
-                "Swallow"
+                "Swallow",
+                .product(name: "SwallowMacrosClient", package: "Swallow"),
             ],
             path: "Sources/_CoreIdentity",
             swiftSettings: []
@@ -99,10 +92,10 @@ let package = Package(
                 "_CoreIdentity",
                 "_JSON",
                 "_ModularDecodingEncoding",
-                "CorePersistenceMacros",
                 "Merge",
                 "Proquint",
-                "Swallow"
+                "Swallow",
+                .product(name: "SwallowMacrosClient", package: "Swallow"),
             ],
             swiftSettings: [
                 .enableExperimentalFeature("AccessLevelOnImport"),

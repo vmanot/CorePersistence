@@ -36,6 +36,15 @@ public struct _AnyModularTopLevelCoder<EncodedRepresentation>: _ModularTopLevelC
         }
     }
     
+    public var userInfo: [CodingUserInfoKey: Any] {
+        get {
+            encoder.userInfo
+        } set {
+            encoder.userInfo = newValue
+            decoder.userInfo = newValue
+        }
+    }
+    
     public init<Decoder: TopLevelDecoder, Encoder: TopLevelEncoder>(
         decoder: Decoder,
         encoder: Encoder
@@ -70,13 +79,7 @@ public struct _AnyModularTopLevelCoder<EncodedRepresentation>: _ModularTopLevelC
 // MARK: - Conformances
 
 extension _AnyModularTopLevelCoder: TopLevelDataCoder where EncodedRepresentation == Data {
-    public var userInfo: [CodingUserInfoKey: Any] {
-        get {
-            fatalError(.unimplemented)
-        } set {
-            fatalError(.unimplemented)
-        }
-    }
+    
 }
 
 // MARK: - Supplementary

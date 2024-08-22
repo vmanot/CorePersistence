@@ -7,10 +7,18 @@ import Combine
 import FoundationX
 import Swallow
 
-public struct _ModularTopLevelEncoder<Output>: TopLevelEncoder, @unchecked Sendable {
-    private let base: AnyTopLevelEncoder<Output>
+public struct _ModularTopLevelEncoder<Output>: _TopLevelDecoderOrEncoderWithUserInfo, TopLevelEncoder, @unchecked Sendable {
+    private var base: AnyTopLevelEncoder<Output>
     private var configuration: _ModularEncoder.Configuration
     
+    public var userInfo: [CodingUserInfoKey: Any] {
+        get {
+            base.userInfo
+        } set {
+            base.userInfo = newValue
+        }
+    }
+
     public var plugins: [any _ModularCodingPlugin] {
         get {
             configuration.plugins
@@ -18,7 +26,7 @@ public struct _ModularTopLevelEncoder<Output>: TopLevelEncoder, @unchecked Senda
             configuration.plugins = newValue
         }
     }
-    
+        
     public init<Encoder: TopLevelEncoder>(
         from encoder: Encoder
     ) where Encoder.Output == Output {

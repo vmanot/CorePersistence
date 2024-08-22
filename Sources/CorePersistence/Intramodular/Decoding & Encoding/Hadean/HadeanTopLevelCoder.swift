@@ -88,9 +88,9 @@ extension HadeanTopLevelCoder {
 extension HadeanTopLevelCoder: TopLevelDataCoder where EncodedRepresentation == Data {
     public var userInfo: [CodingUserInfoKey: Any] {
         get {
-            fatalError(.unimplemented)
+            base.userInfo
         } set {
-            fatalError(.unimplemented)
+            base.userInfo = newValue
         }
     }
 }
