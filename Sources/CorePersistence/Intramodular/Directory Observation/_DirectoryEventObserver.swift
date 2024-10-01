@@ -42,7 +42,7 @@ public final class _DirectoryEventObserver {
             guard eventStreams[directory] == nil else {
                 continue
             }
-
+            
             eventStreams[directory] = DirectoryEventStream(
                 directory: directory.path,
                 callback: { [weak self] events in
@@ -161,7 +161,9 @@ public final class _DirectoryEventObservation {
     deinit {
         owner?.removeObservation(self)
     }
-    
+}
+
+extension _DirectoryEventObservation {
     public func disableAndPerform<T>(
         _ block: () throws -> T
     ) rethrows -> T {
@@ -195,6 +197,28 @@ public final class _DirectoryEventObservation {
             stateFlags.remove(.ignoreEvents)
             
             throw error
+        }
+    }
+}
+
+extension Optional where Wrapped == _DirectoryEventObservation {
+    public func disableAndPerform<T>(
+        _ block: () throws -> T
+    ) rethrows -> T {
+        if let self {
+            return try self.disableAndPerform(block)
+        } else {
+            return try block()
+        }
+    }
+    
+    public func disableAndPerform<T>(
+        _ block: () async throws -> T
+    ) async rethrows -> T {
+        if let self {
+            return try await self.disableAndPerform(block)
+        } else {
+            return try await block()
         }
     }
 }

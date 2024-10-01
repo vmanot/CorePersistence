@@ -5,6 +5,6 @@
 import Dispatch
 import Foundation
 
-public final class PermittedURL {
+/*public final class PermittedURL {
     
-}
+}*/

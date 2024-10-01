@@ -6,35 +6,6 @@ import FoundationX
 import Merge
 import Swallow
 
-public struct _ObservableIdentifiedFolderContentsElement<Item, ID: Hashable> {
-    public enum Value {
-        case url(any _FileOrFolderRepresenting)
-        case inMemory(Item)
-    }
-    
-    public var value: Value
-    public var id: ID?
-    
-    public init(value: Value, id: ID?) {
-        self.value = value
-        self.id = id
-        
-        #try(.optimistic) {
-            if id == nil, case .url(let url) = value, ID.self == URL.self {
-                self.id = try cast(url._toURL())
-            }
-        }
-    }
-    
-    public init(value: Item, id: ID?) {
-        self.init(value: .inMemory(value), id: id)
-    }
-    
-    public init(url: any _FileOrFolderRepresenting, id: ID?) {
-        self.init(value: .url(url), id: id)
-    }
-}
-
 public protocol _ObservableIdentifiedFolderContentsType {
     associatedtype Item
     associatedtype ID: Hashable
@@ -67,6 +38,8 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable, Wrapp
     
     public private(set) var _resolvedWrappedValue: WrappedValue?
     
+    private var observation: _DirectoryEventObservation?
+
     public var _ObservableIdentifiedFolderContentsUpdating_WrappedValue: any _ObservableIdentifiedFolderContentsUpdating.Type {
         if let wrappedValueType = WrappedValue.self as? any _IdentifierIndexingArrayOf_Protocol.Type {
             return try! wrappedValueType.folderContentsUpdating(forType: WrappedValue.self)
@@ -133,9 +106,7 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable, Wrapp
             }
         }
     }
-    
-    private var observation: _DirectoryEventObservation!
-    
+        
     package init(
         folder: any _FileOrFolderRepresenting,
         fileConfiguration: @escaping (Element) throws -> _RelativeFileConfiguration<Item>,
@@ -151,26 +122,7 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable, Wrapp
             }
         }
     }
-    
-    private func _writeToDisk(newValue: WrappedValue) throws {
-        return try MainActor.assumeIsolated {
-            try _ObservableIdentifiedFolderContentsUpdating_WrappedValue._opaque_update(
-                from: _wrappedValue,
-                to: newValue,
-                directory: directoryURL,
-                for: self
-            )
-        }
-    }
-    
-    private func _revertFromDisk() {
-        #try(.optimistic) {
-            let value: WrappedValue = try _readFromDisk()
-            
-            self._resolvedWrappedValue = value
-        }
-    }
-    
+        
     @MainActor
     private func _setUpDiskObserver() throws {
         let directoryURL = try directoryURL
@@ -192,9 +144,34 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable, Wrapp
         self._resolvedWrappedValue = nil
     }
     
+    private func _writeToDisk(newValue: WrappedValue) throws {
+        return try MainActor.assumeIsolated {
+            try _ObservableIdentifiedFolderContentsUpdating_WrappedValue._opaque_update(
+                from: _wrappedValue,
+                to: newValue,
+                directory: directoryURL,
+                for: self
+            )
+        }
+    }
+    
+    private func _revertFromDisk() {
+        #try(.optimistic) {
+            let value: WrappedValue = try _readFromDisk()
+            
+            self._resolvedWrappedValue = value
+        }
+    }
+
     private func _readFromDisk() throws -> WrappedValue {
         let directoryURL: URL = try self.directoryURL
         
+        if FileManager.default.regularFileExists(at: directoryURL) {
+            if FileManager.default.isEmptyFile(at: directoryURL) {
+                try FileManager.default.removeItemIfNecessary(at: directoryURL)
+            }
+        }
+
         do {
             if !cocoaFileManager.fileExists(at: directoryURL) {
                 try cocoaFileManager.createDirectory(at: directoryURL, withIntermediateDirectories: true)
@@ -208,6 +185,37 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable, Wrapp
             
             return wrappedValue
         }
+    }
+}
+
+// MARK: - Auxiliary
+
+public struct _ObservableIdentifiedFolderContentsElement<Item, ID: Hashable> {
+    public enum Value {
+        case url(any _FileOrFolderRepresenting)
+        case inMemory(Item)
+    }
+    
+    public var value: Value
+    public var id: ID?
+    
+    public init(value: Value, id: ID?) {
+        self.value = value
+        self.id = id
+        
+        #try(.optimistic) {
+            if id == nil, case .url(let url) = value, ID.self == URL.self {
+                self.id = try cast(url._toURL())
+            }
+        }
+    }
+    
+    public init(value: Item, id: ID?) {
+        self.init(value: .inMemory(value), id: id)
+    }
+    
+    public init(url: any _FileOrFolderRepresenting, id: ID?) {
+        self.init(value: .url(url), id: id)
     }
 }
 
