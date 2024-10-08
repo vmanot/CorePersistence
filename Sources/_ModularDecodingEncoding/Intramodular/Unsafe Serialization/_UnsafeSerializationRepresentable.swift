@@ -117,7 +117,7 @@ extension Array: _UnsafeSerializationRepresentable {
     
     var _unsafeSerializationRepresentation: _UnsafeSerializationRepresentation {
         get throws {
-            try map({ try _TypeSerializingAnyCodable($0) })
+            try map({ try _TypeSerializingAnyCodable($0, declaredAs: Element.self) })
         }
     }
     

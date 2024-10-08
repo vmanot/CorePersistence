@@ -14,7 +14,7 @@ extension _ObservableFileDirectoryType where Self: _ObservableFileDirectory {
         _ keyPath: KeyPath<Self, T>,
         toDirectory directory: URLRepresentable,
         replaceExisting: Bool
-    ) throws where T.Element: _URLConvertible {
+    ) throws where T.Element: URLConvertible {
         let source = FileOrFolderTarget(keyPath)
         let destination = FileOrFolderTarget(directory)
         let operation = CopyOperation(source: source, destination: destination, replaceExisting: replaceExisting)
@@ -28,7 +28,7 @@ extension _ObservableFileDirectoryType where Self: _ObservableFileDirectory {
         _ keyPath: KeyPath<Self, T>,
         to url: URL,
         replaceExisting: Bool
-    ) throws where T.Element: _URLConvertible {
+    ) throws where T.Element: URLConvertible {
         try _tryAssert(cocoaFileManager.isDirectory(at: url))
         
         return try copy(keyPath, to: url, replaceExisting: replaceExisting)
@@ -57,7 +57,7 @@ extension _ObservableFileDirectory {
         
         public init<Root: _ObservableFileDirectoryType, Value: Collection>(
             _ keyPath: KeyPath<Root, Value>
-        ) where Value.Element: _URLConvertible {
+        ) where Value.Element: URLConvertible {
             self.expression = KeyPathExpression(keyPath: keyPath)
         }
     }
