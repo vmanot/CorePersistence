@@ -117,9 +117,20 @@ extension _DirectoryEventStream {
         
         for (index, dictionary) in eventDictionaries.enumerated() {
             guard let path = dictionary[kFSEventStreamEventExtendedDataPathKey] as? String,
-                  let event = FSEvent(rawValue: eventFlags[index])
+                  var event = FSEvent(rawValue: eventFlags[index])
             else {
                 continue
+            }
+            
+            /// Even though `FSEventStreamEventFlags` reported that our file has been created, it might have actually been deleted instead
+            /// There is some weirdness going on internally which causes BOTH `kFSEventStreamEventFlagItemCreated` and `kFSEventStreamEventFlagItemRemoved` to match simultaneously when you create and delete the same file in succession
+            /// Since the `FSEvent(rawValue:)` initializer matches `.itemCreated` first, it reports that (even if multiple flags match)
+            /// We can avoid this by checking for the existence of the file and changing the event.
+            let fileExists = FileManager.default.fileExists(atPath: path)
+            if case .itemCreated = event, !fileExists {
+                event = .itemRemoved
+            } else if case .itemRemoved = event, fileExists {
+                event = .itemCreated
             }
             
             events.append(DirectoryEventStream.Event(filePath: path, eventType: event))
@@ -131,7 +142,7 @@ extension _DirectoryEventStream {
 #else
 extension _DirectoryEventStream {
     fileprivate func startEventStream(directory: String) {
-        
+    
     }
     
     fileprivate func stopEventStream() {

@@ -15,6 +15,22 @@ public struct _TypeSerializingAnyCodable: CustomDebugStringConvertible {
         case attemptedToDecodeUnsupportedType(Any.Type)
     }
     
+    public struct DebugInfo {
+        public enum Origin {
+            case decoder
+            case initializer
+        }
+        
+        public var origin: Origin?
+        
+        public init() {
+            
+        }
+    }
+    
+    @HashIgnored
+    package var debugInfo = DebugInfo()
+    
     package let declaredTypeRepresentation: _CodableSwiftType?
     package let typeRepresentation: _CodableSwiftType
     package let data: (any Codable)?
@@ -39,6 +55,8 @@ public struct _TypeSerializingAnyCodable: CustomDebugStringConvertible {
         self.declaredTypeRepresentation = nil
         self.typeRepresentation = _CodableSwiftType(of: data)
         self.data = data
+        
+        debugInfo.origin = .initializer
     }
     
     public init<T>(
@@ -51,8 +69,8 @@ public struct _TypeSerializingAnyCodable: CustomDebugStringConvertible {
             data = try _openExistentialAndCast(data, to: Codable.self)
         }
         
-        declaredTypeRepresentation = declaredType.map({ _CodableSwiftType(from: $0 )}) ?? _CodableSwiftType(from: T.self)
-        typeRepresentation = _CodableSwiftType(of: data)
+        self.declaredTypeRepresentation = declaredType.map({ _CodableSwiftType(from: $0 )}) ?? _CodableSwiftType(from: T.self)
+        self.typeRepresentation = _CodableSwiftType(of: data)
         
         let type: Any.Type = try typeRepresentation.resolveType()
         
@@ -67,6 +85,8 @@ public struct _TypeSerializingAnyCodable: CustomDebugStringConvertible {
         } else {
             self.data = nil
         }
+        
+        self.debugInfo.origin = .initializer
     }
     
     public init<T>(
@@ -252,6 +272,7 @@ extension _TypeSerializingAnyCodable: Codable {
             self.declaredTypeRepresentation = declaredTypeRepresentation
             self.typeRepresentation = typeRepresentation
             self.data = data
+            self.debugInfo.origin = .decoder
         } catch {
             let container = try decoder.singleValueContainer()
             
@@ -259,7 +280,8 @@ extension _TypeSerializingAnyCodable: Codable {
                 self.declaredTypeRepresentation = nil
                 self.typeRepresentation = _CodableSwiftType(_fromUnwrappedType: type(of: value))
                 self.data = value
-                
+                self.debugInfo.origin = .decoder
+
                 return
             }
             

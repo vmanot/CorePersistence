@@ -34,6 +34,59 @@ extension _DJB2PersistentHasher: PersistentHasher {
     
 }
 
+/// A persistent hasher that reads the contents of files and hashes them.
+public struct _SecureFileContentsHasher<Base: HashFunction>: PersistentHasher {
+    private var base = Base()
+    
+    public init(base: Base) {
+        self.base = base
+    }
+    
+    public mutating func combine<H: Codable>(_ value: H) throws {
+        let handle: FileHandle
+        
+        if let value = value as? URL {
+            handle = try FileHandle(forReadingFrom: value)
+        } else if let value = value as? FileHandle {
+            handle = value
+        } else {
+            throw Error.unsupportedValue(ofType: type(of: value))
+        }
+        
+        while autoreleasepool(invoking: {
+            let nextChunk = handle.readData(ofLength: Base.blockByteCount)
+            
+            guard !nextChunk.isEmpty else {
+                return false
+            }
+            
+            base.update(data: nextChunk)
+            
+            return true
+        }) { }
+    }
+    
+    public init() {
+        
+    }
+    
+    public func finalize() throws -> Data {
+        let digest = base.finalize()
+        
+        return Data(digest)
+    }
+    
+    public enum Error: Swift.Error {
+        case unsupportedValue(ofType: Any.Type)
+    }
+}
+
+extension _SecureFileContentsHasher where Base == CryptoKit.SHA256 {
+    public static var SHA256: Self {
+        Self(base: CryptoKit.SHA256())
+    }
+}
+
 public struct _JSONPersistentHasher: PersistentHasher {
     public typealias HashType = String
     

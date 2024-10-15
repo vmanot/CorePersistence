@@ -143,9 +143,7 @@ extension FileManager {
                 }
             } else if let securityScopedParent = nearestAccessibleSecurityScopedAncestor(for: url) {
                 guard securityScopedParent.startAccessingSecurityScopedResource() else {
-                    assertionFailure("Failed to acquire permission to write to parent URL: \(securityScopedParent) (parent for \(url)")
-                    
-                    return
+                    throw _EncodingError.failedToAcquirePermissionToWriteToSecurityScopedParent(securityScopedParent, child: url)
                 }
                 
                 endSecurityScopedAccess = {
@@ -177,5 +175,9 @@ extension FileManager {
         }
         
         endSecurityScopedAccess?()
+    }
+    
+    fileprivate enum _EncodingError: Swift.Error {
+        case failedToAcquirePermissionToWriteToSecurityScopedParent(URL, child: URL)
     }
 }
