@@ -48,7 +48,7 @@ open class _ObservableFileDirectory: _ObservableFileDirectoryType {
         
         if let member = member as? FileOrFolderTarget, targetType == [URL].self {
             if let expression = member.expression as? FileOrFolderTarget.KeyPathExpression {
-                return try expression.keyPath._accessValue(of: self, as: Array<any _URLConvertible>.self).map({ $0.url }) as! TargetType
+                return try expression.keyPath._accessValue(of: self, as: Array<any URLConvertible>.self).map({ $0.url }) as! TargetType
             }
         }
         

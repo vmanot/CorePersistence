@@ -5,7 +5,7 @@
 import FoundationX
 import Swallow
 
-public struct FileSystemIdentifier: Codable, Hashable, Sendable, _ThrowingInitiableFromURL {
+public struct FileSystemIdentifier: Codable, Hashable, Sendable, URLInitiable {
     private let inodeNumber: UInt64
     public let deviceID: UInt64
     
