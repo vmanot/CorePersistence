@@ -12,7 +12,7 @@ extension FileStorage {
         wrappedValue: UnwrappedType,
         location: @escaping () throws -> URL,
         coder: Coder,
-        options: FileStorageOptions
+        options: FileStorageOptions = nil
     ) where UnwrappedType: Codable, ValueType == MutableValueBox<UnwrappedType> {
         self.init(
             coordinator: try _FileStorageCoordinators.RegularFile(
@@ -27,7 +27,7 @@ extension FileStorage {
     public convenience init<Coder: TopLevelDataCoder>(
         location: @escaping () throws -> URL,
         coder: Coder,
-        options: FileStorageOptions
+        options: FileStorageOptions = nil
     ) where UnwrappedType: Codable & Initiable, ValueType == MutableValueBox<UnwrappedType> {
         self.init(
             wrappedValue: .init(),
@@ -54,7 +54,7 @@ extension FileStorage {
         wrappedValue: UnwrappedType,
         location: @autoclosure @escaping () throws -> URL,
         coder: Coder,
-        options: FileStorageOptions
+        options: FileStorageOptions = nil
     ) where UnwrappedType: Codable, ValueType == MutableValueBox<UnwrappedType> {
         self.init(
             coordinator: try _FileStorageCoordinators.RegularFile(
@@ -83,7 +83,7 @@ extension FileStorage {
         _ location: CanonicalFileDirectory,
         path: String,
         coder: Coder,
-        options: FileStorageOptions
+        options: FileStorageOptions = nil
     ) where UnwrappedType: Codable, ValueType == MutableValueBox<UnwrappedType> {
         self.init(
             wrappedValue: wrappedValue,

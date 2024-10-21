@@ -20,6 +20,7 @@ extension _FileStorageCoordinators {
         
         private var writeWorkItem: DispatchWorkItem? = nil
         private var valueObjectWillChangeListener: AnyCancellable?
+        private var _fakeObservationTrackedValue = _RuntimeConditionalObservationTrackedValue<Void>(wrappedValue: ())
         
         private var _cachedValue: UnwrappedValue? {
             get {
@@ -49,17 +50,21 @@ extension _FileStorageCoordinators {
         
         public override var wrappedValue: UnwrappedValue {
             get {
-                if let value = self._cachedValue {
-                    return value
-                } else {
-                    return try! readInitialValue()
+                _fakeObservationTrackedValue.notifyingObservationRegistrar(.accessOnly) {
+                    if let value = self._cachedValue {
+                        return value
+                    } else {
+                        return try! readInitialValue()
+                    }
                 }
             } set {
-                defer {
-                    stateFlags.insert(.didWriteOnce)
+                _fakeObservationTrackedValue.notifyingObservationRegistrar(.mutation) {
+                    defer {
+                        stateFlags.insert(.didWriteOnce)
+                    }
+                    
+                    setValue(newValue)
                 }
-                
-                setValue(newValue)
             }
         }
         
@@ -132,7 +137,7 @@ extension _FileStorageCoordinators.RegularFile {
         
         _writeValue(newValue)
     }
-        
+    
     private func setUpReadWriteClosures() {
         var _strongSelf: AnyObject? = self
         
@@ -285,7 +290,7 @@ extension _FileStorageCoordinators.RegularFile {
         
         return value
     }
-        
+    
     private func _readValueWithRecovery() throws -> UnwrappedValue {
         do {
             let value = try read()
