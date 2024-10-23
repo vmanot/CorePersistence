@@ -17,8 +17,12 @@ public struct HadeanIdentifier: RawRepresentable, Sendable {
         self.rawValue = rawValue
     }
     
+    internal init(from string: String) throws {
+        self.rawValue = try RawValue(string).unwrap()
+    }
+
     internal init(_unchecked string: String) {
-        self.rawValue = try! RawValue(string).unwrap()
+        try! self.init(from: string)
     }
 }
 

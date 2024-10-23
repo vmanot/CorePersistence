@@ -31,7 +31,8 @@ public struct HadeanTopLevelCoder<EncodedRepresentation>: _ModularTopLevelCoder 
             _DotNetTypeIdentifierCodingPlugin(
                 idResolver: _HadeanSwiftTypeRegistry.typeToIdentifierResolver,
                 typeResolver: _HadeanSwiftTypeRegistry.identifierToTypeResolver
-            )
+            ),
+            _UnsafeSerializationPlugin(),
         ]
         
         base.plugins.append(contentsOf: newPlugins)
