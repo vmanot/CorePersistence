@@ -5,7 +5,7 @@
 import Foundation
 import Swallow
 
-public protocol ContentSelectingFileDocument: _FileDocument {
+public protocol ContentSelectingFileDocument: PersistentFileDocument {
     /// Could be a page of a PDF, a markdown section, a portion of a CSV document.
     associatedtype ContentSelection
 }

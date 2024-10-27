@@ -6,7 +6,7 @@ import Foundation
 import Swift
 import UniformTypeIdentifiers
 
-public struct _FileDocumentWriteConfiguration {
+public struct PersistentFileDocumentWriteConfiguration {
     public let contentType: UTType?
     public let existingFile: FileWrapper?
     
@@ -19,7 +19,7 @@ public struct _FileDocumentWriteConfiguration {
     }
 }
 
-extension _FileDocumentWriteConfiguration {
+extension PersistentFileDocumentWriteConfiguration {
     public init(
         existingFile: FileWrapper?,
         url: URL?

@@ -17,12 +17,12 @@ public struct ReferenceFileDocumentSnapshotConfiguration {
     }
 }
 
-public protocol _ReferenceFileDocument {
+public protocol PersistentReferenceFileDocument {
     associatedtype Snapshot
     
-    typealias ReadConfiguration = _FileDocumentReadConfiguration
+    typealias ReadConfiguration = PersistentFileDocumentReadConfiguration
     typealias SnapshotConfiguration = ReferenceFileDocumentSnapshotConfiguration
-    typealias WriteConfiguration = _FileDocumentWriteConfiguration
+    typealias WriteConfiguration = PersistentFileDocumentWriteConfiguration
     
     static var readableContentTypes: [UTType] { get }
     static var writableContentTypes: [UTType] { get }
@@ -39,7 +39,7 @@ public protocol _ReferenceFileDocument {
     ) throws -> FileWrapper
 }
 
-extension _ReferenceFileDocument {
+extension PersistentReferenceFileDocument {
     public func _fileWrapper(
         configuration: WriteConfiguration
     ) throws -> FileWrapper {
@@ -52,7 +52,9 @@ extension _ReferenceFileDocument {
     }
 }
 
-extension _ReferenceFileDocument {
+// MARK: - Internal
+
+extension PersistentReferenceFileDocument {
     func _opaque_fileWrapper(
         snapshot: Any,
         configuration: WriteConfiguration
@@ -62,3 +64,8 @@ extension _ReferenceFileDocument {
         return try fileWrapper(snapshot: snapshot, configuration: configuration)
     }
 }
+
+// MARK: - Deprecated
+
+@available(*, deprecated, renamed: "PersistentReferenceFileDocument")
+public typealias _ReferenceFileDocument = PersistentReferenceFileDocument

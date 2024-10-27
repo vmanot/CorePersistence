@@ -6,14 +6,14 @@ import Swallow
 import UniformTypeIdentifiers
 
 public protocol FileDocumentContentSelection: Codable, Hashable, Sendable {
-    associatedtype Document: _FileDocument
+    associatedtype Document: PersistentFileDocument
 }
 
-public enum DefaultFileDocumentContentSelection<Document: _FileDocument>: FileDocumentContentSelection {
+public enum DefaultFileDocumentContentSelection<Document: PersistentFileDocument>: FileDocumentContentSelection {
     case wholeDocument
 }
 
-public struct _ContentSelectionSpecified<Base: _FileDocument, ContentSelection: FileDocumentContentSelection>: ContentSelectingFileDocument, _FileDocument where ContentSelection.Document == Base {
+public struct _ContentSelectionSpecified<Base: PersistentFileDocument, ContentSelection: FileDocumentContentSelection>: ContentSelectingFileDocument, PersistentFileDocument where ContentSelection.Document == Base {
     public static var readableContentTypes: [UTType] {
         Base.readableContentTypes
     }
@@ -29,13 +29,13 @@ public struct _ContentSelectionSpecified<Base: _FileDocument, ContentSelection: 
     }
     
     public init(
-        configuration: _FileDocumentReadConfiguration
+        configuration: PersistentFileDocumentReadConfiguration
     ) throws {
         try self.init(base: .init(configuration: configuration))
     }
     
     public func fileWrapper(
-        configuration: _FileDocumentWriteConfiguration
+        configuration: PersistentFileDocumentWriteConfiguration
     ) throws -> FileWrapper {
         try base._fileWrapper(configuration: configuration)
     }

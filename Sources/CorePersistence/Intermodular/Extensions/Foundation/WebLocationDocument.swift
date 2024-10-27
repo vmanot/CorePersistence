@@ -59,7 +59,7 @@ extension WebLocationDocument: Codable {
     }
 }
 
-extension WebLocationDocument: _FileDocument {
+extension WebLocationDocument: PersistentFileDocument {
     public static var readableContentTypes = [UTType.internetLocation]
     
     public init(configuration: ReadConfiguration) throws {

@@ -14,9 +14,9 @@ public final class _AnyReferenceFileDocument: ObservableObject {
         case unsupportedTypeCast(to: Any.Type)
     }
     
-    @Published private var _base: any _FileDocument
+    @Published private var _base: any PersistentFileDocument
     
-    public var base: any _FileDocument {
+    public var base: any PersistentFileDocument {
         get {
             _base
         } set {
@@ -24,7 +24,7 @@ public final class _AnyReferenceFileDocument: ObservableObject {
         }
     }
     
-    init(base: any _FileDocument) {
+    init(base: any PersistentFileDocument) {
         self._base = base
     }
 }
@@ -40,7 +40,7 @@ extension _AnyReferenceFileDocument {
         try self.init(configuration: .init(url: url))
     }
     
-    public convenience init(_ document: any _FileDocument) {
+    public convenience init(_ document: any PersistentFileDocument) {
         self.init(base: document)
     }
     
@@ -49,7 +49,7 @@ extension _AnyReferenceFileDocument {
             assertionFailure()
         }
         
-        if let value = value as? _FileDocument {
+        if let value = value as? PersistentFileDocument {
             self.init(base: value)
         } else if let value = value as? Codable {
             self.init(_codable: value)
@@ -59,7 +59,7 @@ extension _AnyReferenceFileDocument {
     }
     
     private convenience init<T: Codable>(_codable value: T) {
-        assert(!(value is _FileDocument))
+        assert(!(value is PersistentFileDocument))
         
         self.init(base: _JSONCodingDocument(value: value))
     }
@@ -86,7 +86,7 @@ extension _AnyReferenceFileDocument {
 extension _AnyReferenceFileDocument {
     public func _typedAccessor<T>(_ type: T.Type) -> _NonAsyncAndAsyncAccessor<Void, T> {
         func _setSynchronously(_ newValue: T) throws {
-            if let newValue = newValue as? _FileDocument {
+            if let newValue = newValue as? PersistentFileDocument {
                 self.base = newValue
             } else if let newValue = newValue as? Codable {
                 try newValue._opaque_encode(toJSONCodingDocument: &self.base)
@@ -129,7 +129,7 @@ extension _AnyReferenceFileDocument {
         to type: T.Type,
         preserveResultInPlace: Bool
     ) async throws -> T {
-        if let type = type as? _FileDocument.Type {
+        if let type = type as? PersistentFileDocument.Type {
             return try await Swallow.cast(_cast(to: type, preserveResultInPlace: preserveResultInPlace), to: T.self)
         } else if let type = type as? Codable.Type {
             return try await Swallow.cast(_cast(to: type, preserveResultInPlace: preserveResultInPlace), to: T.self)
@@ -156,7 +156,7 @@ extension _AnyReferenceFileDocument {
         }
     }
     
-    private func _cast<T: _FileDocument>(
+    private func _cast<T: PersistentFileDocument>(
         to type: T.Type,
         preserveResultInPlace: Bool
     ) async throws -> T {
@@ -189,7 +189,7 @@ extension _AnyReferenceFileDocument {
         to type: T.Type,
         preserveResultInPlace: Bool
     ) throws -> T {
-        if let type = type as? _FileDocument.Type {
+        if let type = type as? PersistentFileDocument.Type {
             return try Swallow.cast(_castSynchronously(to: type, preserveResultInPlace: preserveResultInPlace), to: T.self)
         } else if let type = type as? Codable.Type {
             return try Swallow.cast(_castSynchronously(to: type, preserveResultInPlace: preserveResultInPlace), to: T.self)
@@ -214,7 +214,7 @@ extension _AnyReferenceFileDocument {
         }
     }
     
-    private func _castSynchronously<T: _FileDocument>(
+    private func _castSynchronously<T: PersistentFileDocument>(
         to type: T.Type,
         preserveResultInPlace: Bool
     ) throws -> T {
@@ -236,17 +236,17 @@ extension _AnyReferenceFileDocument {
 
 // MARK: - Conformances
 
-extension _AnyReferenceFileDocument: _FileDocument, _ReferenceFileDocument {
+extension _AnyReferenceFileDocument: PersistentFileDocument, PersistentReferenceFileDocument {
     public enum Snapshot {
         case data(Data)
-        case document(any _FileDocument)
-        case documentSnapshot(Any, document: any _ReferenceFileDocument)
+        case document(any PersistentFileDocument)
+        case documentSnapshot(Any, document: any PersistentReferenceFileDocument)
     }
     
     public func snapshot(
         configuration: SnapshotConfiguration
     ) throws -> Snapshot {
-        if let base = base as? any _ReferenceFileDocument {
+        if let base = base as? any PersistentReferenceFileDocument {
             let snapshot = try base.snapshot(configuration: configuration)
             
             return .documentSnapshot(snapshot, document: base)
@@ -288,7 +288,7 @@ extension _AnyReferenceFileDocument: _FileDocument, _ReferenceFileDocument {
 
 extension Decodable where Self: Encodable {
     fileprivate static func _opaque_decode(
-        fromJSONCodingDocument document: _FileDocument
+        fromJSONCodingDocument document: PersistentFileDocument
     ) throws -> Any {
         if let document = document as? _FileWrapperDocument {
             return try _JSONCodingDocument<Self>(
@@ -303,7 +303,7 @@ extension Decodable where Self: Encodable {
     }
     
     fileprivate func _opaque_encode(
-        toJSONCodingDocument document: inout _FileDocument
+        toJSONCodingDocument document: inout PersistentFileDocument
     ) throws {
         try _tryAssert(document is _JSONCodingDocument<Self> || document is _FileWrapperDocument)
         

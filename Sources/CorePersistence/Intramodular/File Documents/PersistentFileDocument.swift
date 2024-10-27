@@ -7,9 +7,9 @@ import Swallow
 import SwiftUI
 import UniformTypeIdentifiers
 
-public protocol _FileDocument {
-    typealias ReadConfiguration = _FileDocumentReadConfiguration
-    typealias WriteConfiguration = _FileDocumentWriteConfiguration
+public protocol PersistentFileDocument {
+    typealias ReadConfiguration = PersistentFileDocumentReadConfiguration
+    typealias WriteConfiguration = PersistentFileDocumentWriteConfiguration
     
     static var readableContentTypes: [UTType] { get }
     static var writableContentTypes: [UTType] { get }
@@ -19,7 +19,7 @@ public protocol _FileDocument {
     func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper
 }
 
-extension _FileDocument {
+extension PersistentFileDocument {
     @_disfavoredOverload
     public func _fileWrapper(
         configuration: WriteConfiguration
@@ -28,16 +28,16 @@ extension _FileDocument {
     }
 }
 
-extension _FileDocument {
+extension PersistentFileDocument {
     static func _opaque_fileWrapper(
         for value: Any,
-        configuration: _FileDocumentWriteConfiguration
+        configuration: PersistentFileDocumentWriteConfiguration
     ) throws -> FileWrapper {
         try cast(value, to: Self.self)._fileWrapper(configuration: configuration)
     }
 }
 
-extension _FileDocument {
+extension PersistentFileDocument {
     public static var readableContentTypes: [UTType] {
         []
     }
@@ -47,7 +47,7 @@ extension _FileDocument {
     }
 }
 
-extension _ReferenceFileDocument {
+extension PersistentReferenceFileDocument {
     public static var readableContentTypes: [UTType] {
         []
     }
@@ -57,7 +57,7 @@ extension _ReferenceFileDocument {
     }
 }
 
-extension _ReferenceFileDocument where Self: _FileDocument {
+extension PersistentReferenceFileDocument where Self: PersistentFileDocument {
     public static var readableContentTypes: [UTType] {
         []
     }
@@ -66,3 +66,8 @@ extension _ReferenceFileDocument where Self: _FileDocument {
         readableContentTypes
     }
 }
+
+// MARK: - Deprecated
+
+@available(*, deprecated, renamed: "PersistentFileDocument")
+public typealias _FileDocument = PersistentFileDocument

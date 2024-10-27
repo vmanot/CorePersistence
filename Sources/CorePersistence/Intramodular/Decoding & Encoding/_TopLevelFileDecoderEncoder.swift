@@ -14,7 +14,7 @@ public protocol _TopLevelFileDecoderEncoder {
 
 @_documentation(visibility: internal)
 public enum __AnyTopLevelFileDecoderEncoder_RawValue {
-    case document(_FileDocument.Type)
+    case document(PersistentFileDocument.Type)
     case topLevelData(_AnySpecializedTopLevelDataCoder)
 }
 
@@ -52,14 +52,14 @@ extension _AnyTopLevelFileDecoderEncoder where DataType == Any {
     }
     
     public init(
-        _ documentType: any _FileDocument.Type,
-        supportedTypes: [any _FileDocument.Type] = []
+        _ documentType: any PersistentFileDocument.Type,
+        supportedTypes: [any PersistentFileDocument.Type] = []
     ) {
         self.init(rawValue: .document(documentType))
     }
     
     public init(
-        documentType: any _FileDocument.Type
+        documentType: any PersistentFileDocument.Type
     ) {
         self.init(rawValue: .document(documentType))
     }

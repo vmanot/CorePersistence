@@ -6,7 +6,7 @@ import Foundation
 import Swift
 import UniformTypeIdentifiers
 
-public struct _FileDocumentReadConfiguration {
+public struct PersistentFileDocumentReadConfiguration {
     public let contentType: UTType?
     public let file: FileWrapper
     
@@ -26,7 +26,7 @@ public struct _FileDocumentReadConfiguration {
     }
 }
 
-extension _FileDocumentReadConfiguration {
+extension PersistentFileDocumentReadConfiguration {
     public init(file: FileWrapper, url: URL?) {
         self.init(
             contentType: url.flatMap({ UTType(from: $0) }),

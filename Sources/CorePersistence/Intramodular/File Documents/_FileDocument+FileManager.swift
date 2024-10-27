@@ -26,7 +26,7 @@ extension FileManager {
         return result
     }
     
-    public func _sanityCheckWritability<T: _FileDocument>(
+    public func _sanityCheckWritability<T: PersistentFileDocument>(
         ofType type: T.Type,
         at url: URL
     ) throws {
@@ -37,14 +37,14 @@ extension FileManager {
         }
     }
     
-    public func decode<T: _FileDocument>(
+    public func decode<T: PersistentFileDocument>(
         _ type: T.Type,
         from url: URL
     ) throws -> T {
-        try T(configuration :_FileDocumentReadConfiguration(url: url))
+        try T(configuration :PersistentFileDocumentReadConfiguration(url: url))
     }
     
-    public func decode<T: _FileDocument>(
+    public func decode<T: PersistentFileDocument>(
         _ type: Optional<T>.Type,
         from url: URL
     ) throws -> Optional<T> {
@@ -55,7 +55,7 @@ extension FileManager {
         }
     }
     
-    public func decode<T: _FileDocument>(
+    public func decode<T: PersistentFileDocument>(
         _ documents: [URL.RelativePath: T].Type,
         from url: URL
     ) throws -> [URL.RelativePath: T] {
@@ -70,7 +70,7 @@ extension FileManager {
                 if try isFileOfType(T.readableContentTypes, at: itemURL) {
                     let path = try itemFileURL.path(relativeTo: fileURL)
                     
-                    result[path] = try T(configuration: _FileDocumentReadConfiguration(url: fileURL))
+                    result[path] = try T(configuration: PersistentFileDocumentReadConfiguration(url: fileURL))
                 }
             } catch {
                 assertionFailure(error)
@@ -82,7 +82,7 @@ extension FileManager {
         return result
     }
     
-    public func encode<T: _FileDocument>(
+    public func encode<T: PersistentFileDocument>(
         _ documents: [URL.PathComponent: T],
         to url: URL
     ) throws {

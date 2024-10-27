@@ -99,7 +99,7 @@ extension FileStorage {
         wrappedValue: UnwrappedType,
         location: @escaping () throws -> URL,
         options: FileStorageOptions = nil
-    ) where UnwrappedType: _FileDocument, ValueType == MutableValueBox<UnwrappedType> {
+    ) where UnwrappedType: PersistentFileDocument, ValueType == MutableValueBox<UnwrappedType> {
         self.init(
             coordinator: try _FileStorageCoordinators.RegularFile(
                 initialValue: wrappedValue,
@@ -114,7 +114,7 @@ extension FileStorage {
         wrappedValue: UnwrappedType,
         location: @escaping () throws -> CanonicalFileDirectory,
         options: FileStorageOptions = nil
-    ) where UnwrappedType: _FileDocument, ValueType == MutableValueBox<UnwrappedType> {
+    ) where UnwrappedType: PersistentFileDocument, ValueType == MutableValueBox<UnwrappedType> {
         self.init(
             coordinator: try _FileStorageCoordinators.RegularFile(
                 initialValue: wrappedValue,
@@ -129,7 +129,7 @@ extension FileStorage {
         wrappedValue: UnwrappedType,
         location: @autoclosure @escaping () -> CanonicalFileDirectory,
         options: FileStorageOptions = nil
-    ) where UnwrappedType: _FileDocument, ValueType == MutableValueBox<UnwrappedType> {
+    ) where UnwrappedType: PersistentFileDocument, ValueType == MutableValueBox<UnwrappedType> {
         self.init(
             wrappedValue: wrappedValue,
             location: location,
@@ -140,7 +140,7 @@ extension FileStorage {
     public convenience init(
         location: @autoclosure @escaping () -> CanonicalFileDirectory,
         options: FileStorageOptions = nil
-    ) where UnwrappedType: _FileDocument & Initiable, ValueType == MutableValueBox<UnwrappedType> {
+    ) where UnwrappedType: PersistentFileDocument & Initiable, ValueType == MutableValueBox<UnwrappedType> {
         self.init(
             wrappedValue: .init(),
             location: location,
@@ -152,7 +152,7 @@ extension FileStorage {
         wrappedValue: UnwrappedType,
         location: @escaping () throws -> URL,
         options: FileStorageOptions = nil
-    ) where UnwrappedType: Codable & _FileDocument, ValueType == MutableValueBox<UnwrappedType> {
+    ) where UnwrappedType: Codable & PersistentFileDocument, ValueType == MutableValueBox<UnwrappedType> {
         self.init(
             coordinator: try _FileStorageCoordinators.RegularFile(
                 initialValue: wrappedValue,
