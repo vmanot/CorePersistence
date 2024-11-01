@@ -15,7 +15,7 @@ public enum _FileStorageCoordinators: _StaticSwift.Namespace {
     static let shared = FileCoordinatorActor()
 }
 
-public class _AnyFileStorageCoordinator<ValueType, UnwrappedValue>: _ObservableObjectX, @unchecked Sendable {
+public class _AnyFileStorageCoordinator<ValueType, UnwrappedValue>: ObjectDidChangeObservableObject, @unchecked Sendable {
     public enum StateFlag {
         case initialReadComplete
         case didWriteOnce

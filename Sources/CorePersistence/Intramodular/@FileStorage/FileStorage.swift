@@ -119,7 +119,7 @@ extension FileStorage {
 
 // MARK: - Conformances
 
-extension FileStorage: _ObservableObjectX {
+extension FileStorage: ObjectDidChangeObservableObject {
     public var objectWillChange: AnyObjectWillChangePublisher {
         coordinator.eraseObjectWillChangePublisher()
     }

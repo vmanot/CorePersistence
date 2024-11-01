@@ -22,7 +22,7 @@ public protocol _ObservableIdentifiedFolderContentsType {
     var wrappedValue: WrappedValue { get set }
 }
 
-public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable, WrappedValue>: _ObservableIdentifiedFolderContentsType, MutablePropertyWrapper, _ObservableObjectX {
+public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable, WrappedValue>: _ObservableIdentifiedFolderContentsType, MutablePropertyWrapper, ObjectDidChangeObservableObject {
     public typealias Element = _ObservableIdentifiedFolderContentsElement<Item, ID>
     
     public let _objectWillChange = ObservableObjectPublisher()
