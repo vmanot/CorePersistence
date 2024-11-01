@@ -58,6 +58,8 @@ extension _FileStorageCoordinators {
                     }
                 }
             } set {
+                // FIXME: (@vmanot) the newValue printed does not reflect the actual newValue set by FileStorage's wrappedValue. (print statement added for debugging)
+                Swift.debugPrint("wrapped value setter called with newValue: \(newValue)")
                 _fakeObservationTrackedValue.notifyingObservationRegistrar(.mutation) {
                     defer {
                         stateFlags.insert(.didWriteOnce)
@@ -120,7 +122,7 @@ extension _FileStorageCoordinators.RegularFile {
         _ newValue: UnwrappedValue
     ) {
         if !swift_isClassType(_getUnwrappedType(ofValue: newValue)) {
-            if AnyEquatable.equate(newValue, _cachedValue) == true {
+            if AnyEquatable.equate(newValue, _cachedValue) {
                 return
             }
         }

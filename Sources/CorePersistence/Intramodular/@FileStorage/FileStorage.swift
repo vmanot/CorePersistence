@@ -34,7 +34,10 @@ public final class FileStorage<ValueType, UnwrappedType> {
         get {
             coordinator.wrappedValue
         } set {
+            // FIXME: (@vmanot) if you run the Icons app and add an account, you'll notice the newValue here updates correctly, but the coordinator's wrappedValue setter does not reflect the change. (print statements added for debugging)
+            Swift.debugPrint("setting coordinator.wrappedValue to \(newValue)")
             coordinator.wrappedValue = newValue
+            Swift.debugPrint(coordinator.wrappedValue)
         }
     }
     
