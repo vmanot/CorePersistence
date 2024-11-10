@@ -8,20 +8,6 @@ public protocol _RawUserInfoProtocol: Codable, Hashable, Initiable, Sendable {
     
 }
 
-public enum _RawUserInfoKey: Codable, CustomStringConvertible, Hashable, @unchecked Sendable {
-    case type(_CodableSwiftType)
-    case key(_CodableSwiftType)
-    
-    public var description: String {
-        switch self {
-            case .type(let type):
-                return "\(try! type.resolveType())"
-            case .key(let type):
-                return "\(try! type.resolveType())"
-        }
-    }
-}
-
 public struct _RawUserInfo: _RawUserInfoProtocol, Initiable, @unchecked Sendable {
     private var storage: [_RawUserInfoKey: _TypeSerializingAnyCodable] = [:]
     
@@ -151,6 +137,12 @@ extension _RawUserInfo: Equatable {
     }
 }
 
+extension _RawUserInfo: ExpressibleByNilLiteral {
+    public init(nilLiteral: ()) {
+        
+    }
+}
+
 extension _RawUserInfo: Hashable {
     public func hash(into hasher: inout Hasher) {
         for (key, value) in storage {
@@ -178,19 +170,18 @@ extension _RawUserInfo: ThrowingMergeOperatable {
     }
 }
 
-extension ThrowingMergeOperatable {
-    mutating func _opaque_mergeInPlace<T>(with other: T) throws {
-        let other: Self = try cast(other, to: Self.self)
-        
-        try mergeInPlace(with: other)
-    }
-}
+// MARK: - Auxiliary
 
-// MARK: - Conformances
-
-@available(iOS 16.0, macOS 13.0, tvOS 16.0, watchOS 9.0, *)
-extension _RawUserInfo: ExpressibleByNilLiteral {
-    public init(nilLiteral: ()) {
-        
+public enum _RawUserInfoKey: Codable, CustomStringConvertible, Hashable, @unchecked Sendable {
+    case type(_CodableSwiftType)
+    case key(_CodableSwiftType)
+    
+    public var description: String {
+        switch self {
+            case .type(let type):
+                return "\(try! type.resolveType())"
+            case .key(let type):
+                return "\(try! type.resolveType())"
+        }
     }
 }

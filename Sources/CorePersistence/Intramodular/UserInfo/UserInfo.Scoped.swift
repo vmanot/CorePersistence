@@ -38,7 +38,9 @@ extension UserInfo {
             self.base = base
         }
         
-        public subscript<Key: UserInfoKey>(_ key: Key.Type) -> Key.Value {
+        public subscript<Key: UserInfoKey>(
+            _ key: Key.Type
+        ) -> Key.Value {
             get {
                 base.storage[key]
             } set {
@@ -47,7 +49,9 @@ extension UserInfo {
         }
     }
     
-    public subscript<DomainType>(domain domain: DomainType.Type) -> ScopedTo<DomainType> {
+    public subscript<DomainType>(
+        domain domain: DomainType.Type
+    ) -> ScopedTo<DomainType> {
         get {
             ScopedTo(base: self[_scope: .domain(domain)])
         } set {

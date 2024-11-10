@@ -7,6 +7,9 @@ import Foundation
 import Runtime
 @_spi(Internal) import Swallow
 
+/// A type similar to `Swallow.AnyCodable`.
+///
+/// `_TypeSerializingAnyCodable` uses the Swift runtime to store the type of the value being stored alongside the data of the value.
 public struct _TypeSerializingAnyCodable: CustomDebugStringConvertible {
     private enum _Error: Swift.Error {
         case nonNilValueWithNonCodableType(value: Any, type: Any.Type)

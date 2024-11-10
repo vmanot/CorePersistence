@@ -25,7 +25,7 @@ extension _PrimitiveCodingRepresentation {
 }
 
 public final class _ResolvedCodingRepresentation {
-    @_LockedState private static var representationsByType: [Metatype<any _CodingRepresentatable.Type>: _ResolvedCodingRepresentation] = [:]
+    @_LockedState private static var representationsByType: [Metatype<any _CodingRepresentationProvider.Type>: _ResolvedCodingRepresentation] = [:]
 
     public enum Element: Codable, Hashable, Sendable {
         case codingKeyAlias(AnyCodingKeyAlias)
@@ -62,9 +62,9 @@ public final class _ResolvedCodingRepresentation {
     }
             
     public static func _for(
-        _ type: any _CodingRepresentatable.Type
+        _ type: any _CodingRepresentationProvider.Type
     ) -> _ResolvedCodingRepresentation {
-        _ResolvedCodingRepresentation.representationsByType[Metatype(type), defaultInPlace: try! type._dumpCodingRepresentation()]
+        _ResolvedCodingRepresentation.representationsByType[Metatype(type), defaultInPlace: try! type._resolveCodingRepresentation()]
     }
 }
 
@@ -88,7 +88,7 @@ extension CodingRepresentationBuilder {
     }
 }
 
-extension _CodingRepresentatable {
+extension _CodingRepresentationProvider {
     public typealias CodingKeyAlias = CodingRepresentationBuilder<Self>.CodingKeyAlias
 }
 

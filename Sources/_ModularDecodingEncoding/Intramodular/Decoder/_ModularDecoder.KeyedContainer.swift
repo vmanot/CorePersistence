@@ -202,7 +202,7 @@ extension _ModularDecoder.KeyedContainer {
         type: T.Type,
         key: Key
     ) throws -> T {
-        if let subjectType = decoder.context.type as? any _CodingRepresentatable.Type, let type = type as? Decodable.Type {
+        if let subjectType = decoder.context.type as? any _CodingRepresentationProvider.Type, let type = type as? Decodable.Type {
             let codingRepresentation = _ResolvedCodingRepresentation._for(subjectType)
             
             let result = codingRepresentation.keysToKeyAliases[AnyCodingKey(erasing: key), default: []].first(byUnwrapping: {
