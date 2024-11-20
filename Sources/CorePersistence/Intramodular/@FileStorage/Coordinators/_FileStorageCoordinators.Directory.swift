@@ -69,8 +69,12 @@ extension _FileStorageCoordinators {
             )
         }
         
-        override public func commit() {
-            // do nothing
+        override public var wantsCommit: Bool {
+            self.base.directoryChildrenFileCoordinators.contains(where: { $0.wantsCommit })
+        }
+
+        override public func commitUnconditionally() {
+            self.base.directoryChildrenFileCoordinators.forEach({ $0.commitUnconditionally() })
         }
     }
 }

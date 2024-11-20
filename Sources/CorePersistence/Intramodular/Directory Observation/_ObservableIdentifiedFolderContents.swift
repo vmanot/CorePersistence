@@ -34,7 +34,11 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable, Wrapp
     public let fileConfiguration: (Element) throws -> _RelativeFileConfiguration<Item>
     public let id: ((Item) -> ID)?
     
-    var storage: [ID: _FileStorageCoordinators.RegularFile<MutableValueBox<Item>, Item>] = [:]
+    internal var storage: [ID: _FileStorageCoordinators.RegularFile<MutableValueBox<Item>, Item>] = [:]
+    
+    var directoryChildrenFileCoordinators: [_AnyFileStorageCoordinator<MutableValueBox<Item>, Item>] {
+        storage.values.map({ $0 })
+    }
     
     public private(set) var _resolvedWrappedValue: WrappedValue?
     

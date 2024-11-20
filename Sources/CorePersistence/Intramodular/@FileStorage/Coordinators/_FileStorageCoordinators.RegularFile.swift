@@ -95,11 +95,15 @@ extension _FileStorageCoordinators {
             setUpAppRunningStateObserver()
         }
         
-        override public func commit() {
+        override public var wantsCommit: Bool {
             guard !stateFlags.contains(.discarded), stateFlags.contains(.didWriteOnce) else {
-                return
+                return false
             }
             
+            return true
+        }
+        
+        override public func commitUnconditionally() {
             guard let value = _cachedValue else {
                 #try(.optimistic) {
                     if !FileManager.default.fileExists(at: try fileSystemResource._toURL()) {

@@ -164,7 +164,7 @@ extension _ObservableIdentifiedFolderContentsUpdatingTypes {
                     configuration: fileConfiguration
                 )
                 
-                fileCoordinator.commit()
+                fileCoordinator.commitUnconditionally()
                 
                 parent.storage[key] = fileCoordinator
                 updatedNewValue[key] = item
@@ -348,6 +348,8 @@ extension _ObservableIdentifiedFolderContentsUpdatingTypes {
                     fileSystemResource: { FileURL(fileURL) },
                     configuration: fileConfiguration
                 )
+                
+                fileCoordinator.commitUnconditionally()
                                 
                 parent.storage[key] = fileCoordinator
                 updatedNewValue[id: key] = item

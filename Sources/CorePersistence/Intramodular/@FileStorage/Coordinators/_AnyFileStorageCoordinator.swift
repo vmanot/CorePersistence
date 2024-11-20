@@ -87,7 +87,21 @@ public class _AnyFileStorageCoordinator<ValueType, UnwrappedValue>: ObjectDidCha
         self.configuration = configuration
     }
     
-    open func commit() {
+    open func commitUnconditionally() {
+        fatalError(.abstract)
+    }
+    
+    open var wantsCommit: Bool {
+        get {
+            fatalError(.abstract)
+        }
+    }
+    
+    public final func commit() {
+        guard wantsCommit else {
+            return
+        }
+        
         fatalError(.abstract)
     }
     
