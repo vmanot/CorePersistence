@@ -82,7 +82,7 @@ public struct _OneToManyIdentifiersSet<Key: Hashable, ID: Hashable>: Hashable {
     }
 }
 
-// MARK: - Implemented Conformances
+// MARK: - Conformees
 
 extension _OneToManyIdentifiersSet: Sequence {
     public typealias Element = (key: Key, value: Set<ID>)

@@ -394,8 +394,10 @@ extension CSV {
     public func write(
         to location: URLRepresentable
     ) throws {
-        let writer = try CSVWriter(stream: try OutputStream(url: location, append: false).unwrap())
-        
-        try write(to: writer)
+        try location.withResolvedURL { (url: URL) in
+            let writer = try CSVWriter(stream: try OutputStream(url: url, append: false).unwrap())
+            
+            try write(to: writer)
+        }
     }
 }

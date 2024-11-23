@@ -40,6 +40,12 @@ extension FileURL: Codable {
 extension FileURL: _FileOrFolderRepresenting {
     public typealias FilesystemChild = FileURL
 
+    public func withResolvedURL<R>(
+        perform operation: (URL) throws -> R
+    ) throws -> R {
+        try operation(_toURL())
+    }
+
     public func _toURL() throws -> URL {
         base
     }

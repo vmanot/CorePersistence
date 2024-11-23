@@ -11,6 +11,10 @@ import System
 public protocol _FileOrFolderRepresenting: Identifiable {
     associatedtype FilesystemChild: _FileOrFolderRepresenting = FileURL
     
+    func withResolvedURL<R>(
+        perform operation: (URL) throws -> R
+    ) throws -> R
+    
     func _toURL() throws -> URL
     
     func decode(
@@ -76,8 +80,14 @@ extension _FileOrFolderRepresenting {
 }
 
 extension FileWrapper: CorePersistence._FileOrFolderRepresenting {
+    public func withResolvedURL<R>(
+        perform operation: (URL) throws -> R
+    ) throws -> R {
+        try operation(_toURL())
+    }
+    
     public func _toURL() throws -> URL {
-        throw Never.Reason.illegal
+        try self._contentsURL.unwrap()
     }
     
     public func decode(
@@ -102,5 +112,13 @@ extension FileWrapper: CorePersistence._FileOrFolderRepresenting {
         at path: URL.RelativePath
     ) throws -> FilesystemChild {
         throw Never.Reason.illegal
+    }
+}
+
+// MARK: - Internal
+
+extension FileWrapper {
+    @nonobjc fileprivate var _contentsURL: URL? {
+        self[instanceVariableNamed: "_contentsURL"] as? URL
     }
 }

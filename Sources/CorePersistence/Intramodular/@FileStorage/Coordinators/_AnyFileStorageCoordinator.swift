@@ -42,7 +42,7 @@ public class _AnyFileStorageCoordinator<ValueType, UnwrappedValue>: ObjectDidCha
     let cancellables = Cancellables()
     let lock = Merge.OSUnfairLock()
     
-    var resolveFileSystemResource: () throws -> any _FileOrFolderRepresenting
+    var resolveFileSystemResource: () throws -> (any _FileOrFolderRepresenting)?
     var configuration: _RelativeFileConfiguration<UnwrappedValue>
 
     public internal(set) var stateFlags: Set<StateFlag> = []
@@ -56,10 +56,18 @@ public class _AnyFileStorageCoordinator<ValueType, UnwrappedValue>: ObjectDidCha
     }
 
     var fileSystemResource: any _FileOrFolderRepresenting {
-        get {
-            try! resolveFileSystemResource()
-        } set {
-            resolveFileSystemResource = { newValue }
+        get throws {
+            try lock.withCriticalScope {
+                try resolveFileSystemResource().unwrap()
+            }
+        }
+    }
+    
+    func setFileSystemResource(
+        _ newValue: any _FileOrFolderRepresenting
+    ) {
+        lock.withCriticalScope {
+            self.resolveFileSystemResource = { newValue }
         }
     }
         

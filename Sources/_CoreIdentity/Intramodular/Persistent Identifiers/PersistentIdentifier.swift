@@ -45,7 +45,7 @@ public struct _DefaultPersistentIdentifierSpace<Identifier: PersistentIdentifier
     }
 }
 
-// MARK: - Implemented Conformances
+// MARK: - Conformees
 
 public struct CSSearchableItemID: PersistentIdentifier, Sendable {
     public let uniqueIdentifier: String

@@ -12,7 +12,7 @@ extension FileBundle {
 }
 
 @available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
-class _KeyedFileBundleChildFile<Contents>: _KeyedFileBundleChildGenericBase<Contents>, _FileOrFolderRepresenting, ObservableObject {
+class _KeyedFileBundleChildFile<Contents>: _KeyedFileBundleChildGenericBase<Contents>, ObservableObject {
     private var wantsCreation: Bool = false
     private let configuration: () throws -> _RelativeFileConfiguration<Contents>
     
@@ -127,7 +127,16 @@ class _KeyedFileBundleChildFile<Contents>: _KeyedFileBundleChildGenericBase<Cont
         
         return try coordinator.unwrap()
     }
-    
+}
+
+@available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
+extension _KeyedFileBundleChildFile: _FileOrFolderRepresenting {
+    func withResolvedURL<R>(
+        perform operation: (URL) throws -> R
+    ) throws -> R {
+        try operation(_toURL())
+    }
+
     func decode(
         using coder: some _TopLevelFileDecoderEncoder
     ) throws -> Any? {

@@ -118,7 +118,9 @@ extension FileStorage {
         self.init(
             coordinator: try _FileStorageCoordinators.RegularFile(
                 initialValue: wrappedValue,
-                file: { try FileURL(try location()) },
+                file: {
+                    try FileURL(try location())
+                },
                 coder: _AnyTopLevelFileDecoderEncoder(documentType: UnwrappedType.self),
                 options: options
             )

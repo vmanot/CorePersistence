@@ -38,7 +38,7 @@ extension _UnsafeSerializationRepresentable {
     }
 }
 
-// MARK: - Implemented Conformances
+// MARK: - Conformees
 
 extension HeterogeneousDictionary: _UnsafeSerializationRepresentable {
     typealias _UnsafeSerializationRepresentation = [_UnsafelySerializedKeyValuePair]

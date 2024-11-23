@@ -28,7 +28,7 @@ extension PersistentHasher {
     }
 }
 
-// MARK: - Implemented Conformances
+// MARK: - Conformees
 
 extension _DJB2PersistentHasher: PersistentHasher {
     

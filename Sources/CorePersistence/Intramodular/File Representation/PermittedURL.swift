@@ -46,6 +46,24 @@ extension PermittedURL: Codable {
 }
 
 extension PermittedURL: _FileOrFolderRepresenting {
+    public func withResolvedURL<R>(
+        perform operation: (URL) throws -> R
+    ) throws -> R {
+        var result: R!
+        
+        if Thread.isMainThread {
+            try MainActor.unsafeAssumeIsolated {
+                try FileManager.default.withUserGrantedAccess(to: base) { url in
+                    result = try operation(url)
+                }
+            }
+        } else {
+            result = try operation(base)
+        }
+        
+        return result
+    }
+    
     public func _toURL() throws -> URL {
         if Thread.isMainThread {
             try MainActor.unsafeAssumeIsolated {

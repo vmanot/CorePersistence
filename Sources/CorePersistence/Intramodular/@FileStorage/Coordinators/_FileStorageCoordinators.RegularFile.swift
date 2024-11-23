@@ -82,11 +82,19 @@ extension _FileStorageCoordinators {
                 configuration: configuration
             )
             
-            Task(priority: .userInitiated) { @MainActor () -> Void in
-                let url: URL = try fileSystemResource()._toURL()
-                
-                if !FileManager.default.fileExists(at: url) {
-                    _ = try FileManager.default.fileExists(at: PermittedURL(url)._toURL())
+            Task.detached(priority: .userInitiated) { @MainActor () -> Void in
+                do {
+                    await Task.yield()
+                    
+                    let url: URL = try self.fileSystemResource._toURL()
+                    
+                    if !FileManager.default.fileExists(at: url) {
+                        _ = try FileManager.default.fileExists(at: PermittedURL(url)._toURL())
+                    }
+                } catch CanonicalFileDirectory.Error.directoryNotSpecified {
+                    return
+                } catch {
+                    throw error
                 }
             }
             // scheduleEagerRead() // FIXME: !!! disabled because it's maxing out CPU
@@ -104,6 +112,8 @@ extension _FileStorageCoordinators {
         }
         
         override public func commitUnconditionally() {
+            assert((try? self.fileSystemResource) != nil)
+
             guard let value = _cachedValue else {
                 #try(.optimistic) {
                     if !FileManager.default.fileExists(at: try fileSystemResource._toURL()) {
@@ -157,7 +167,7 @@ extension _FileStorageCoordinators.RegularFile {
             _strongSelf = nil
             
             var result: UnwrappedValue? = try _withLogicalParent(self._enclosingInstance) { () -> UnwrappedValue? in
-                let resource: any _FileOrFolderRepresenting = self.fileSystemResource
+                let resource: any _FileOrFolderRepresenting = try self.fileSystemResource
                 
                 if let serialization: _FileOrFolderSerializationConfiguration<UnwrappedValue> = self.configuration.serialization {
                     guard let decoded: Any = try? resource.decode(using: serialization.coder) else {
@@ -192,10 +202,14 @@ extension _FileStorageCoordinators.RegularFile {
             
             try _withLogicalParent(self._enclosingInstance) {
                 if let serialization = self.configuration.serialization {
-                    try self.fileSystemResource.encode(
+                    var resource = try self.fileSystemResource
+                    
+                    try resource.encode(
                         newValue,
                         using: serialization.coder
                     )
+                    
+                    self.setFileSystemResource(resource)
                 }
             }
         }

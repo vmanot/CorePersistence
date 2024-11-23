@@ -30,7 +30,7 @@ public protocol _PersistenceRepresentationBuiltin {
     ) throws
 }
 
-// MARK: - Implemented Conformances
+// MARK: - Conformees
 
 extension Never: PersistenceRepresentation {
     @_implements(PersistenceRepresentation, body)

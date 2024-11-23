@@ -14,13 +14,13 @@ public protocol FileLocationResolvable {
 
 extension FileLocationResolvable where Self: URLRepresentable {
     public func resolveFileLocation() throws -> BookmarkedURL {
-        let url = self.url
-        
-        guard url.isFileURL else {
-            throw FileSystemError.isNotFileURL(url)
+        return try withResolvedURL { (url: URL) in
+            guard url.isFileURL else {
+                throw FileSystemError.isNotFileURL(url)
+            }
+            
+            return BookmarkedURL(_unsafe: url.standardizedFileURL)
         }
-        
-        return .init(_unsafe: url.standardizedFileURL)
     }
 }
 

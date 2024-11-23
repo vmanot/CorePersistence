@@ -13,7 +13,7 @@ public protocol UniversallyUniqueIdentifier: IdentifierProtocol, Sendable {
     
 }
 
-// MARK: - Implemented Conformances
+// MARK: - Conformees
 
 extension _AutoIncrementingIdentifier: IdentifierProtocol {
     public var body: some IdentityRepresentation {

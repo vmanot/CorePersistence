@@ -33,7 +33,7 @@ extension IdentityRepresentation where Self == UTType {
     }
 }
 
-// MARK: - Implemented Conformances
+// MARK: - Conformees
 
 extension _TypeAssociatedID: IdentityRepresentation where RawValue: IdentityRepresentation {
     public var body: some IdentityRepresentation {

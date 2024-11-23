@@ -40,11 +40,19 @@ public struct _FileRepresentingFileWrapper<ID: Hashable>: _FileOrFolderRepresent
         
         try encode(contents, using: coder)
     }
-    
+}
+
+extension _FileRepresentingFileWrapper {
+    public func withResolvedURL<R>(
+        perform operation: (URL) throws -> R
+    ) throws -> R {
+        try operation(_toURL())
+    }
+
     public func _toURL() throws -> URL {
         throw Never.Reason.unimplemented
     }
-    
+
     public func decode(
         using coder: some _TopLevelFileDecoderEncoder
     ) throws -> Any? {

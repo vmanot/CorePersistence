@@ -48,8 +48,18 @@ public final class FileStorage<ValueType, UnwrappedType> {
         }
     }
     
-    public func setLocation(_ url: URL) throws {
-        coordinator.fileSystemResource = FileURL(url)
+    public func setLocation(
+        _ url: URL
+    ) throws {
+        if Thread.isMainThread {
+            try MainActor.unsafeAssumeIsolated {
+                try FileManager.default.withUserGrantedAccess(to: url) { url in
+                    coordinator.setFileSystemResource(FileURL(url))
+                }
+            }
+        } else {
+            coordinator.setFileSystemResource(FileURL(url))
+        }
     }
     
     public func setLocation(_ directory: CanonicalFileDirectory, path: String) throws {
@@ -139,8 +149,16 @@ extension FileStorage: Publisher {
 }
 
 extension FileStorage: _FileOrFolderRepresenting {
+    public func withResolvedURL<R>(
+        perform operation: (URL) throws -> R
+    ) throws -> R {
+        try self.coordinator.fileSystemResource.withResolvedURL { (url: URL) in
+            try operation(url)
+        }
+    }
+
     public func _toURL() throws -> URL {
-        try url
+        try self.coordinator.fileSystemResource._toURL()
     }
     
     public func encode<T>(

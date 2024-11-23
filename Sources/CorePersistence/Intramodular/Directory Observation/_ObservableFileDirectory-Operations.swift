@@ -29,9 +29,11 @@ extension _ObservableFileDirectoryType where Self: _ObservableFileDirectory {
         to url: URL,
         replaceExisting: Bool
     ) throws where T.Element: URLConvertible {
-        try _tryAssert(cocoaFileManager.isDirectory(at: url))
-        
-        return try copy(keyPath, to: url, replaceExisting: replaceExisting)
+        try url.withResolvedURL { url in
+            try _tryAssert(cocoaFileManager.isDirectory(at: url))
+            
+            return try copy(keyPath, to: url, replaceExisting: replaceExisting)
+        }
     }
 }
 
