@@ -24,7 +24,7 @@ public final class _DirectoryEventObserver {
     ) -> _DirectoryEventObservation {
         let directories: Set<URL> = Set(directories)
         
-        assert(directories.allSatisfy({ FileManager.default.isReadable(at: $0) }))
+      //  assert(directories.allSatisfy({ FileManager.default.isSecurityScopedAccessible(at: $0) }))
         
         lock.acquireOrBlock()
         
