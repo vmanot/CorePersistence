@@ -152,7 +152,11 @@ extension _TypeSerializingAnyCodable {
         } else if !(type is any _UnsafeSerializationRepresentable.Type) {
             do {
                 do {
-                    return try cast(data, to: type)
+                    if let dataUnwrapped = data {
+                        return try cast(dataUnwrapped, to: type)
+                    } else {
+                        return try cast(data, to: type)
+                    }
                 } catch {
                     do {
                         if let data: any Codable {
