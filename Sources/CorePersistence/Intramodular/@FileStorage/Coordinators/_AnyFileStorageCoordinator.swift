@@ -110,7 +110,7 @@ public class _AnyFileStorageCoordinator<ValueType, UnwrappedValue>: ObjectDidCha
             return
         }
         
-        fatalError(.abstract)
+        commitUnconditionally()
     }
     
     open func discard() {
