@@ -28,7 +28,7 @@ public struct JSONSchema: Hashable, Sendable {
     public var description: String?
     public var properties: [String: JSONSchema]?
     @Indirect
-    public var additionalProperties: JSONSchema?
+    public var additionalProperties: JSONSchema.AdditionalProperties?
     public var required: [String]?
     public var type: SchemaType?
     public var `enum`: [EnumValue]?
@@ -68,7 +68,7 @@ extension JSONSchema {
         description: String? = nil,
         properties: [String: JSONSchema]? = nil,
         required: [String]? = nil,
-        additionalProperties: JSONSchema? = nil,
+        additionalProperties: JSONSchema.AdditionalProperties? = nil,
         items: JSONSchema? = nil
     ) {
         self.id = nil
@@ -100,7 +100,7 @@ extension JSONSchema {
         self.title = nil
         self.description = description
         self.properties = properties
-        self.additionalProperties = additionalProperties
+        self.additionalProperties = additionalProperties.map({ JSONSchema.AdditionalProperties.schema($0) })
         self.required = required ? (properties?.keys).map({ Array($0) }) : nil
         self.type = type
         self.enum = nil
@@ -117,7 +117,7 @@ extension JSONSchema {
 // MARK: - Conformances
 
 extension JSONSchema: Codable {
-    public enum CodingKeys: String, CodingKey {
+    public enum CodingKeys: String, CodingKey, CodingKeyRepresentable {
         case id = "$id"
         case title = "title"
         case description = "description"
@@ -143,7 +143,7 @@ extension JSONSchema: Codable {
             self.title = try keyedContainer.decodeIfPresent(String.self, forKey: .title)
             self.description = try keyedContainer.decodeIfPresent(String.self, forKey: .description)
             self.properties = try keyedContainer.decodeIfPresent([String: JSONSchema].self, forKey: .properties)
-            self.additionalProperties = try keyedContainer.decodeIfPresent(JSONSchema.self, forKey: .additionalProperties)
+            self.additionalProperties = try keyedContainer.decodeIfPresent(JSONSchema.AdditionalProperties.self, forKey: .additionalProperties)
             self.required = try keyedContainer.decodeIfPresent([String].self, forKey: .required)
             self.type = try keyedContainer.decodeIfPresent(SchemaType.self, forKey: .type)
             self.enum = try keyedContainer.decodeIfPresent([EnumValue].self, forKey: .enum)
@@ -224,6 +224,7 @@ extension JSONSchema: Codable {
             // Since `additionalProperties` was not specified, it's omitted to avoid assuming a default behavior.
             // The behavior here is adjusted to not explicitly encode a default value,
             // adhering to JSON Schema's interpretation norms.
+            assert(self.additionalProperties == nil)
         }
         
         // Encode `items` using the custom encoding logic if present
