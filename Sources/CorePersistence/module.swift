@@ -10,6 +10,7 @@
 @_exported import _CoreIdentity
 @_exported import _CSV
 @_exported import _JSON
+@_exported import _JSONSchema
 @_exported import _ModularDecodingEncoding
 
 public enum _module {

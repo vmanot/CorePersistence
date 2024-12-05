@@ -10,9 +10,7 @@ import XCTest
 
 final class TypeDiscriminatedCodingTests: XCTestCase {
     func test() throws {
-        let coder = _ModularTopLevelCoder(
-            coder: JSONCoder(outputFormatting: [.prettyPrinted, .sortedKeys])
-        )
+        let coder = JSONCoder(outputFormatting: [.prettyPrinted, .sortedKeys])._modular()
         
         let data = Baz(
             child1: Foo(x: 42),

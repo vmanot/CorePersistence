@@ -3,6 +3,7 @@
 //
 
 import CorePersistence
+import FoundationX
 import XCTest
 
 /// lamuf-dosih-fipus-fatut
@@ -15,7 +16,7 @@ import XCTest
 /// viluh-tobom-sijis-sovul
 final class _MetatypeCodingPluginTests: XCTestCase {
     func test() throws {
-        var coder = _ModularTopLevelCoder(coder: .json)
+        var coder = JSONCoder()._modular()
         
         coder.plugins = [_HadeanTypeCodingPlugin()]
         

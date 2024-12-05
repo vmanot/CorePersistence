@@ -10,7 +10,7 @@ import XCTest
 
 final class ModularCodingTests: XCTestCase {
     func test() throws {
-        var coder = _ModularTopLevelCoder(coder: JSONCoder(outputFormatting: [.prettyPrinted, .sortedKeys]))
+        var coder = JSONCoder(outputFormatting: [.prettyPrinted, .sortedKeys])._modular()
         
         coder.plugins = [
             _DotNetTypeIdentifierCodingPlugin(

@@ -5,7 +5,7 @@
 import Swallow
 
 extension JSONSchema {
-    public enum AdditionalProperties: Hashable, Sendable, ExpressibleByBooleanLiteral {
+    public indirect enum AdditionalProperties: Hashable, Sendable, ExpressibleByBooleanLiteral {
         case boolean(Bool)
         case schema(JSONSchema)
                 

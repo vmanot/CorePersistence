@@ -5,11 +5,7 @@
 import Foundation
 import Swallow
 
-/// Broad description of the JSON schema. It is agnostic and independent of any programming language.
-///
-/// Based on: https://json-schema.org/draft/2019-09/json-schema-core.html it implements
-/// only concepts used in the `rum-events-format` schemas.
-public struct JSONSchema: Hashable, Sendable {
+extension JSONSchema {
     public enum SchemaType: String, Codable, Hashable, Sendable {
         case boolean
         case object
@@ -18,16 +14,17 @@ public struct JSONSchema: Hashable, Sendable {
         case string
         case integer
     }
-    
-    fileprivate init() {
-        
-    }
-    
+}
+
+/// Broad description of the JSON schema. It is agnostic and independent of any programming language.
+///
+/// Based on: https://json-schema.org/draft/2019-09/json-schema-core.html it implements
+/// only concepts used in the `rum-events-format` schemas.
+public struct JSONSchema: Hashable, Sendable {
     public var id: String?
     public var title: String?
     public var description: String?
     public var properties: [String: JSONSchema]?
-    @Indirect
     public var additionalProperties: JSONSchema.AdditionalProperties?
     public var required: [String]?
     public var type: SchemaType?
@@ -39,78 +36,34 @@ public struct JSONSchema: Hashable, Sendable {
     
     /// Reference to another schema.
     /// https://json-schema.org/draft/2019-09/json-schema-core.html#ref
-    private var ref: String?
+    public var ref: String?
     
     /// Subschemas to be resolved.
     /// https://json-schema.org/draft/2019-09/json-schema-core.html#rfc.section.9.2.1.1
-    var allOf: [JSONSchema]?
+    public var allOf: [JSONSchema]?
     
     /// Subschemas to be resolved.
     /// https://json-schema.org/draft/2019-09/json-schema-core.html#rfc.section.9.2.1.2
-    var anyOf: [JSONSchema]?
+    public var anyOf: [JSONSchema]?
     
     /// Subschemas to be resolved.
     /// https://json-schema.org/draft/2019-09/json-schema-core.html#rfc.section.9.2.1.3
-    var oneOf: [JSONSchema]?
+    public var oneOf: [JSONSchema]?
+    
+    fileprivate init() {
+        
+    }
+}
 
-    public subscript(property name: String) -> JSONSchema? {
+extension JSONSchema {
+    public subscript(
+        property name: String
+    ) -> JSONSchema? {
         get {
             self.properties?[name]
         } set {
             self.properties![name] = newValue
         }
-    }
-}
-
-extension JSONSchema {    
-    public init(
-        type: SchemaType?,
-        description: String? = nil,
-        properties: [String: JSONSchema]? = nil,
-        required: [String]? = nil,
-        additionalProperties: JSONSchema.AdditionalProperties? = nil,
-        items: JSONSchema? = nil
-    ) {
-        self.id = nil
-        self.title = nil
-        self.description = description
-        self.properties = properties
-        self.additionalProperties = additionalProperties
-        self.required = required
-        self.type = type
-        self.enum = nil
-        self.const = nil
-        self.items = items
-        self.readOnly = nil
-        self.ref = nil
-        self.allOf = nil
-        self.anyOf = nil
-        self.oneOf = nil
-    }
-    
-    public init(
-        type: SchemaType?,
-        description: String? = nil,
-        properties: [String: JSONSchema]? = nil,
-        required: Bool,
-        additionalProperties: JSONSchema? = nil,
-        items: JSONSchema? = nil
-    ) {
-        self.id = nil
-        self.title = nil
-        self.description = description
-        self.properties = properties
-        self.additionalProperties = additionalProperties.map({ JSONSchema.AdditionalProperties.schema($0) })
-        self.required = required ? (properties?.keys).map({ Array($0) }) : nil
-        self.type = type
-        self.enum = nil
-        self.const = nil
-        self.items = items
-        self.readOnly = nil
-        self.ref = nil
-        self.allOf = nil
-        self.anyOf = nil
-        self.oneOf = nil
     }
 }
 
@@ -337,3 +290,4 @@ extension Array where Element == JSONSchema.EnumValue {
         return nil
     }
 }
+

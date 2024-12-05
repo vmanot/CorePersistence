@@ -18,6 +18,7 @@ let package = Package(
                 "_CoreIdentity",
                 "_CSV",
                 "_JSON",
+                "_JSONSchema",
                 "_ModularDecodingEncoding",
                 "_SWXMLHash",
                 "_XMLCoder",
@@ -75,6 +76,15 @@ let package = Package(
             swiftSettings: []
         ),
         .target(
+            name: "_JSONSchema",
+            dependencies: [
+                "_JSON",
+                "Swallow"
+            ],
+            path: "Sources/_JSONSchema",
+            swiftSettings: []
+        ),
+        .target(
             name: "_SWXMLHash",
             dependencies: [],
             path: "Sources/_SWXMLHash",
@@ -91,6 +101,7 @@ let package = Package(
             dependencies: [
                 "_CoreIdentity",
                 "_JSON",
+                "_JSONSchema",
                 "_ModularDecodingEncoding",
                 "Merge",
                 "Proquint",
@@ -118,6 +129,11 @@ let package = Package(
         .testTarget(
             name: "CorePersistenceTests",
             dependencies: [
+                "_JSON",
+                "_JSONSchema",
+                "CorePersistence"
+            ],
+            sources: [
                 "CorePersistence"
             ]
         ),
