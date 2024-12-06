@@ -6,26 +6,7 @@ import FoundationX
 import Swallow
 import UniformTypeIdentifiers
 
-extension FileManager {
-    public func isFileOfType(
-        _ types: some Sequence<UTType>,
-        at url: URL
-    ) throws -> Bool {
-        let types = Set(types)
-        
-        try _tryAssert(fileExists(at: url))
-        
-        guard let existingFileType = UTType(from: url) else {
-            assertionFailure()
-            
-            return false
-        }
-        
-        let result = types.contains(where: { $0 == existingFileType || $0.isSubtype(of: existingFileType) })
-        
-        return result
-    }
-    
+extension FileManager {    
     public func _sanityCheckWritability<T: PersistentFileDocument>(
         ofType type: T.Type,
         at url: URL
