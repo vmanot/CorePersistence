@@ -5,70 +5,65 @@
 import Diagnostics
 import FoundationX
 import Runtime
-
-extension TypeMetadata {
-    /// A prototype instance of a Swift type.
-    public struct InstancePrototype<InstanceType> {
-        public let type: TypeMetadata
-        public let instance: InstanceMirror<InstanceType>
-        
-        fileprivate init(
-            type: TypeMetadata,
-            instance: InstanceMirror<InstanceType>
-        ) {
-            self.type = type
-            self.instance = instance
-        }
-        
-        public init<T>(
-            reflecting type: T.Type
-        ) throws {
-            let placeholder = try cast(_generatePlaceholder(ofType: type), to: InstanceType.self)
-            
-            self.init(
-                type: TypeMetadata(type),
-                instance: try InstanceMirror<InstanceType>(reflecting: placeholder)
-            )
-        }
-    }
-}
+import Swallow
 
 extension TypeMetadata {
     fileprivate struct JSONSchemaConversionContext {
         let type: TypeMetadata
         let path: CodingPath
-        let superProtoype: TypeMetadata.InstancePrototype<any Codable>?
-        let prototype: TypeMetadata.InstancePrototype<any Codable>?
+        
+        let containerPrototype: TypeMetadata._InstancePrototype<any Codable>?
+        let containerRelativeFieldPrototype: TypeMetadata._InstancePrototype<any Codable>.Field?
+        let instancePrototype: TypeMetadata._InstancePrototype<any Codable>?
+        
+        var schemaAnnotations: [any _JSONSchemaAnnotationProtocol] {
+            var result: [any _JSONSchemaAnnotationProtocol] = []
+            
+            if let annotation = containerRelativeFieldPrototype?.propertyWrapperMirror?.subject as? any _JSONSchemaAnnotationProtocol {
+                result.append(annotation)
+            }
+            
+            return result
+        }
         
         private init(
             type: TypeMetadata,
             path: CodingPath,
-            superProtoype: TypeMetadata.InstancePrototype<any Codable>?,
-            prototype: TypeMetadata.InstancePrototype<any Codable>?
+            containerPrototype: TypeMetadata._InstancePrototype<any Codable>?,
+            containerRelativeFieldPrototype: TypeMetadata._InstancePrototype<any Codable>.Field?,
+            instancePrototype: TypeMetadata._InstancePrototype<any Codable>?
         ) {
             self.type = type
             self.path = path
-            self.superProtoype = superProtoype
-            self.prototype = prototype
+            self.containerPrototype = containerPrototype
+            self.containerRelativeFieldPrototype = containerRelativeFieldPrototype
+            self.instancePrototype = instancePrototype
         }
         
-        init<T>(reflecting type: T.Type) throws {
+        init<T>(
+            reflecting type: T.Type
+        ) throws {
             self.init(
                 type: TypeMetadata(type),
                 path: [],
-                superProtoype: nil,
-                prototype: try TypeMetadata.InstancePrototype<any Codable>(reflecting: type)
+                containerPrototype: nil,
+                containerRelativeFieldPrototype: nil,
+                instancePrototype: try TypeMetadata._InstancePrototype<any Codable>(reflecting: type)
             )
         }
         
         func nestedContainer(
             forField field: NominalTypeMetadata.Field
-        ) -> Self {
-            Self(
+        ) throws -> Self {
+            let instancePrototype: TypeMetadata._InstancePrototype<any Codable> = try instancePrototype.unwrap()
+            let fieldPrototype = try instancePrototype[field: field.key]
+            
+            return Self(
                 type: field.type,
-                path: path.appending(field.key),
-                superProtoype: prototype,
-                prototype: prototype
+                path: path.appending(fieldPrototype.key),
+                containerPrototype: instancePrototype,
+                containerRelativeFieldPrototype: fieldPrototype,
+                instancePrototype: nil
             )
         }
     }
@@ -108,16 +103,17 @@ extension TypeMetadata {
             var properties: [String: JSONSchema] = [:]
             var requiredProperties: [String: JSONSchema] = [:]
             
-            for field in type.fields {
-                let subcontext: TypeMetadata.JSONSchemaConversionContext = context.nestedContainer(forField: field)
+            try type.fields.forEach { (field:  NominalTypeMetadata.Field) in
+                let subcontext: TypeMetadata.JSONSchemaConversionContext = try context.nestedContainer(forField: field)
+                let isOptional: Bool = _isTypeOptionalType(field.type.base)
+                let fieldKey: AnyCodingKey = try subcontext.containerRelativeFieldPrototype.unwrap().key
                 
-                let isOptional = _isTypeOptionalType(field.type.base)
-                let fieldType = TypeMetadata(_getUnwrappedType(from: field.type.base))
+                var schema: JSONSchema = try field._reflectJSONSchema(context: subcontext)
                 
                 if isOptional {
-                    properties[field.name] = try fieldType._reflectJSONSchema(context: subcontext)
+                    properties[fieldKey.stringValue] = schema
                 } else {
-                    requiredProperties[field.name] = try fieldType._reflectJSONSchema(context: subcontext)
+                    requiredProperties[fieldKey.stringValue] = schema
                 }
             }
             
@@ -133,39 +129,34 @@ extension TypeMetadata {
 }
 
 extension TypeMetadata.Nominal.Field {
-    private func _reflectJSONSchema(
+    fileprivate func _reflectJSONSchema(
         context: TypeMetadata.JSONSchemaConversionContext
     ) throws -> JSONSchema {
-        let type = _unwrappedType(from: self.type.base)
+        let type: Any.Type = try context.containerRelativeFieldPrototype.unwrap().unwrappedValueType.base
         let schemaType: JSONSchema.SchemaType
         let itemsSchema: JSONSchema?
-        
-        var annotations: [any _JSONSchemaAnnotationProtocol.Type] = []
         
         switch type {
             case String.self:
                 schemaType = .string
                 itemsSchema = nil
-            case is (any BinaryInteger).Type:
+            case is any BinaryInteger.Type:
                 schemaType = .integer
                 itemsSchema = nil
             case Bool.self:
                 schemaType = .boolean
                 itemsSchema = nil
-            case is (any FloatingPoint).Type:
+            case is any FloatingPoint.Type:
                 schemaType = .number
                 itemsSchema = nil
             case let type as any _ArrayProtocol.Type:
                 schemaType = .array
                 itemsSchema = try TypeMetadata(type._opaque_ArrayProtocol_ElementType)._reflectJSONSchema(context: context)
-            case let type as any _JSONSchemaAnnotationProtocol.Type:
-                schemaType = try _primitiveTypeToJSONSchemaType(type._opaque_WrappedValue).unwrap()
-                itemsSchema = nil
             default:
                 throw Never.Reason.illegal
         }
         
-        let result = JSONSchema(
+        var result = JSONSchema(
             type: schemaType,
             description: nil,
             properties: nil,
@@ -173,6 +164,10 @@ extension TypeMetadata.Nominal.Field {
             additionalProperties: nil,
             items: itemsSchema
         )
+        
+        try context.schemaAnnotations.forEach({
+            try $0._annotate(path: [], in: &result)
+        })
         
         return result
     }
@@ -183,13 +178,19 @@ extension TypeMetadata.Nominal.Field {
         let schemaType: JSONSchema.SchemaType
         
         switch type {
-            case String.self:
-                schemaType = .string
-            case is (any BinaryInteger).Type:
-                schemaType = .integer
-            case Bool.self:
+            case is Bool.Type:
                 schemaType = .boolean
-            case is (any FloatingPoint).Type:
+            case is String.Type:
+                schemaType = .string
+            case is Int8.Type, is Int16.Type, is Int32.Type, is Int64.Type, is Int.Type:
+                schemaType = .integer
+            case is UInt8.Type, is UInt16.Type, is UInt32.Type, is UInt64.Type, is UInt.Type:
+                schemaType = .integer
+            case is Float.Type, is Double.Type:
+                schemaType = .number
+            case is any BinaryInteger.Type:
+                schemaType = .integer
+            case is any FloatingPoint.Type:
                 schemaType = .number
             case let type as any _ArrayProtocol.Type:
                 schemaType = .array

@@ -22,7 +22,7 @@ public struct _JSONSchemaDescriptionAnnotation<Value: Codable & Hashable & Senda
     
     public init(
         wrappedValue: Value,
-        description: String
+        _ description: String
     ) {
         self.wrappedValue = wrappedValue
         self.description = description
@@ -30,7 +30,7 @@ public struct _JSONSchemaDescriptionAnnotation<Value: Codable & Hashable & Senda
     
     public init(
         wrappedValue: Value = .init(),
-        description: String
+        _ description: String
     ) where Value: Initiable {
         self.wrappedValue = wrappedValue
         self.description = description
@@ -38,8 +38,16 @@ public struct _JSONSchemaDescriptionAnnotation<Value: Codable & Hashable & Senda
     
     public init(
         wrappedValue: Value = nil,
-        description: String
+        _ description: String
     ) where Value: ExpressibleByNilLiteral {
+        self.wrappedValue = wrappedValue
+        self.description = description
+    }
+    
+    public init(
+        wrappedValue: Value = nil,
+        _ description: String
+    ) where Value: ExpressibleByNilLiteral & Initiable {
         self.wrappedValue = wrappedValue
         self.description = description
     }
@@ -52,60 +60,6 @@ public struct _JSONSchemaDescriptionAnnotation<Value: Codable & Hashable & Senda
     }
 }
 
-extension JSONSchema {
-    public subscript(
-        path: Swallow.CodingPath
-    ) -> JSONSchema? {
-        get {
-            guard !path.isEmpty else {
-                return self
-            }
-            
-            assert(self.type == .object)
-            
-            var path = Array(path)
-            let firstKey: String = path.removeFirst().stringValue
-            
-            if let result = self.properties?[firstKey] {
-                return result
-            } else {
-                return nil
-            }
-        } set {
-            guard !path.isEmpty else {
-                assert(newValue != nil)
-                
-                if let newValue {
-                    self = newValue
-                }
-                
-                return
-            }
-            
-            var remainingPath = Array(path)
-            let firstKey: String = remainingPath.removeFirst().stringValue
-    
-            if let newValue {
-                let allKeys: Set<String> = Set(self.properties.map({ Array($0.keys) }) ?? [])
-                
-                if allKeys.contains(firstKey) {
-                    self.properties?._forEach(mutating: {
-                        if $0.key == firstKey {
-                            $0.value[CodingPath(remainingPath)] = newValue
-                        }
-                    })
-                } else {
-                    assert(remainingPath.isEmpty)
-                    
-                    self.properties ??= [:]
-                    
-                    self.properties![firstKey] = newValue
-                }
-            } else {
-                if path.isEmpty {
-                    self.properties?[firstKey] = nil
-                }
-            }
-        }
-    }
+extension Decodable {
+    public typealias JSONSchemaDescription<T: Codable & Hashable & Sendable> = _JSONSchemaDescriptionAnnotation<T>
 }

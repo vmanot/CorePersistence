@@ -10,10 +10,6 @@ import Swallow
 import XCTest
 
 
-extension Decodable {
-    public typealias JSONSchemaDescription<T: Codable & Hashable & Sendable> = _JSONSchemaDescriptionAnnotation<T>
-}
-
 final class JSONSchemaTests: XCTestCase {
     static let bookRestaurantParametersJSONSchema = JSONSchema(
         type: .object,
@@ -44,9 +40,15 @@ final class JSONSchemaTests: XCTestCase {
     )
     
     struct BookRestaurantIntentParameters: Codable, Hashable, Initiable, Sendable {
+        @JSONSchemaDescription("The name of the restaurant")
         var restaurant_name: String?
+        
+        @JSONSchemaDescription("The date of the restaurant booking in yyyy-MM-dd format. Should be a date with a year, month, day. NOTHING ELSE")
         var reservation_date: String?
+        
+        @JSONSchemaDescription("The time of the reservation in HH:mm format. Should include hours and minutes. NOTHING ELSE")
         var reservation_time: String?
+        
         var number_of_guests: Int?
         
         init() {
@@ -59,9 +61,6 @@ final class JSONSchemaTests: XCTestCase {
             reflecting: BookRestaurantIntentParameters.self,
             description: "Information required to make a restaurant booking",
             propertyDescriptions: [
-                "restaurant_name": "The name of the restaurant",
-                "reservation_date": "The date of the restaurant booking in yyyy-MM-dd format. Should be a date with a year, month, day. NOTHING ELSE",
-                "reservation_time": "The time of the reservation in HH:mm format. Should include hours and minutes. NOTHING ELSE",
                 "number_of_guests": "The total number of people the reservation is for",
             ],
             required: false
