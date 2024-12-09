@@ -108,7 +108,7 @@ extension TypeMetadata {
                 let isOptional: Bool = _isTypeOptionalType(field.type.base)
                 let fieldKey: AnyCodingKey = try subcontext.containerRelativeFieldPrototype.unwrap().key
                 
-                var schema: JSONSchema = try field._reflectJSONSchema(context: subcontext)
+                let schema: JSONSchema = try field._reflectJSONSchema(context: subcontext)
                 
                 if isOptional {
                     properties[fieldKey.stringValue] = schema
