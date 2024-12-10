@@ -60,6 +60,17 @@ public struct _JSONSchemaDescriptionAnnotation<Value: Codable & Hashable & Senda
     }
 }
 
+extension _JSONSchemaDescriptionAnnotation {
+    public init(from decoder: any Decoder) throws {
+        self.wrappedValue = try Value(from: decoder)
+        self.description = nil
+    }
+    
+    public func encode(to encoder: any Encoder) throws {
+        try wrappedValue.encode(to: encoder)
+    }
+}
+
 extension Decodable {
     public typealias JSONSchemaDescription<T: Codable & Hashable & Sendable> = _JSONSchemaDescriptionAnnotation<T>
 }
