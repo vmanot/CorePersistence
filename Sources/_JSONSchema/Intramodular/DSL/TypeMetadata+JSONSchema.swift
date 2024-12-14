@@ -40,8 +40,8 @@ extension TypeMetadata {
             self.instancePrototype = instancePrototype
         }
         
-        init<T>(
-            reflecting type: T.Type
+        init(
+            reflecting type: Any.Type
         ) throws {
             self.init(
                 type: TypeMetadata(type),
@@ -224,8 +224,8 @@ extension Calendar.Date: JSONSchema._SchemaTypeHinting {
 // MARK: - Supplementary
 
 extension JSONSchema {
-    public init<T>(
-        reflecting type: T.Type,
+    public init(
+        reflecting type: Any.Type,
         description: String? = nil,
         propertyDescriptions: [String: String]? = nil,
         required: Either<[String], Bool>? = nil
@@ -250,8 +250,8 @@ extension JSONSchema {
         }
     }
     
-    public init<T>(
-        reflecting type: T.Type,
+    public init(
+        reflecting type: Any.Type,
         description: String? = nil,
         propertyDescriptions: [String: String]? = nil,
         required: Bool

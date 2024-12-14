@@ -4,6 +4,7 @@
 
 import Runtime
 @_spi(Internal) import Swallow
+import SwallowMacrosClient
 
 /// A universal registry that maps `HadeanIdentifier`s to Swift metatypes (`Any.Type`).
 public struct _HadeanSwiftTypeRegistry {
@@ -19,14 +20,15 @@ public struct _HadeanSwiftTypeRegistry {
     
     /// Parsed all available Swift binaries to index `HadeanIdentifiable` types.
     fileprivate static var scrapedAllTypes: Bool = false
-    @_StaticMirrorQuery(type: (any HadeanIdentifiable).self)
+    
+    @_StaticMirrorQuery(#metatype((any HadeanIdentifiable).self), .nonAppleFramework)
     static var hadeanIdentifiableTypes: [any HadeanIdentifiable.Type]
 
     @MainActor
     private init() {
         Self.register(
             Self.lock.withCriticalScope {
-                RuntimeDiscoveryIndex.enumerate(typesConformingTo: (any HadeanIdentifiable).self)
+                _RuntimeTypeDiscoveryIndex.enumerate(typesConformingTo: (any HadeanIdentifiable).self)
             }
         )
     }
