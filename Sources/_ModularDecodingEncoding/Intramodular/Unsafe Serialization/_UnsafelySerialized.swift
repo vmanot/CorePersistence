@@ -52,7 +52,7 @@ public struct _UnsafelySerialized<Value>: _UnsafelySerializedType, Parameterless
             self.wrappedValue = wrappedValue
         }
         
-        _recomputeCachedHashValue()
+        // _recomputeCachedHashValue()
     }
     
     public init<T>(
@@ -81,7 +81,7 @@ extension _UnsafelySerialized: Codable {
         
         try self.init(
             wrappedValue: intermediate.value,
-            _cachedHashValue: intermediate.hashValue
+            _cachedHashValue: nil
         )
         
         if wrappedValue is any _UnsafelySerializedType {
@@ -114,6 +114,12 @@ extension _UnsafelySerialized: Equatable {
     public static func == (lhs: Self, rhs: Self) -> Bool {
         if let _lhsHashValue = lhs._cachedHashValue, let _rhsHashValue = rhs._cachedHashValue {
             return _lhsHashValue == _rhsHashValue
+        }
+        
+        if type(of: lhs.wrappedValue) == type(of: rhs.wrappedValue) {
+            if let lhs = lhs.wrappedValue as? any Equatable, let rhs = rhs.wrappedValue as? any Equatable {
+                return lhs.eraseToAnyEquatable() == rhs.eraseToAnyEquatable()
+            }
         }
         
         do {
@@ -188,7 +194,8 @@ extension _UnsafelySerialized: _ThrowingInitiable, Initiable where Value: Initia
 extension _UnsafelySerialized {
     private enum _IntermediateRepresentation: Codable, Hashable {
         case metatype(_CodableSwiftType?)
-        case representable(any Hashable & Codable)
+        case unsafeSerializationRepresentable(any _UnsafeSerializationRepresentable)
+        case unsafeSerializationRepresentation(any Hashable & Codable)
         case anything(_TypeSerializingAnyCodable)
         
         /// Whether this `_UnsafelySerialized` is representing a metatype.
@@ -205,14 +212,20 @@ extension _UnsafelySerialized {
         var value: Value {
             get throws {
                 switch self {
-                    case .metatype(let value):
+                    case .metatype(let value): do {
                         return try cast(try value?.resolveType(), to: Value.self)
-                    case .representable(let value):
+                    }
+                    case .unsafeSerializationRepresentable(let value): do {
+                        return try _forceCast(value, to: Value.self)
+                    }
+                    case .unsafeSerializationRepresentation(let value): do {
                         let valueType = try cast(Value.self, to: (any _UnsafeSerializationRepresentable.Type).self)
                         
                         return try cast(valueType.init(_opaque_unsafeSerializationRepresentation: value), to: Value.self)
-                    case .anything(let value):
+                    }
+                    case .anything(let value): do {
                         return try value.decode(Value.self)
+                    }
                 }
             }
         }
@@ -233,8 +246,10 @@ extension _UnsafelySerialized {
                 }
                 
                 self = .metatype(value)
-            } else if let value = value as? any _UnsafeSerializationRepresentable, Value.self is any _UnsafeSerializationRepresentable.Type {                
-                self = try .representable(value._unsafeSerializationRepresentation)
+            } else if let value = value as? any _UnsafeSerializationRepresentable, Value.self is any _UnsafeSerializationRepresentable.Type {
+                self = .unsafeSerializationRepresentable(value)
+                
+                //self = try .unsafeSerializationRepresentation(value._unsafeSerializationRepresentation)
             } else if let type = value as? Any.Type {
                 assert(declaredValueType._isAnyOrNever(unwrapIfNeeded: true))
                 
@@ -270,7 +285,9 @@ extension _UnsafelySerialized {
                     switch Value.self {
                         case let valueType as any _UnsafeSerializationRepresentable.Type:
                             do {
-                                self = .representable(try valueType._opaque_decodeUnsafeSerializationRepresentation(from: decoder))
+                                self = .unsafeSerializationRepresentable(try valueType._opaque_decodeThroughUnsafeSerializationRepresentation(from: decoder))
+                                
+                                // self = .unsafeSerializationRepresentation(try valueType._opaque_decodeUnsafeSerializationRepresentation(from: decoder))
                             } catch {
                                 throw error
                             }
@@ -307,7 +324,9 @@ extension _UnsafelySerialized {
             switch self {
                 case .metatype(let value):
                     try value.encode(to: encoder)
-                case .representable(let value):
+                case .unsafeSerializationRepresentable(let value):
+                    try value._unsafeSerializationRepresentation.encode(to: encoder)
+                case .unsafeSerializationRepresentation(let value):
                     try value.encode(to: encoder)
                 case .anything(let value):
                     try value.encode(to: encoder)
@@ -315,33 +334,52 @@ extension _UnsafelySerialized {
         }
         
         static func == (lhs: Self, rhs: Self) -> Bool {
-            switch (lhs, rhs) {
-                case (.metatype(let lhs), .metatype(let rhs)):
-                    return lhs == rhs
-                case (.representable(let lhs), .representable(let rhs)):
-                    return lhs.eraseToAnyHashable() == rhs.eraseToAnyHashable()
-                case (.anything(let lhs), .anything(let rhs)):
-                    return lhs == rhs
-                default:
-                    return false
+            do {
+                switch (lhs, rhs) {
+                    case (.metatype(let lhs), .metatype(let rhs)):
+                        return lhs == rhs
+                    case (.unsafeSerializationRepresentable(let lhs), .unsafeSerializationRepresentable(let rhs)):
+                        if type(of: lhs) == type(of: rhs) {
+                            return AnyEquatable.equate(lhs, rhs)
+                        } else {
+                            return try lhs._unsafeSerializationRepresentation.eraseToAnyHashable() == rhs._unsafeSerializationRepresentation.eraseToAnyHashable()
+                        }
+                    case (.unsafeSerializationRepresentation(let lhs), .unsafeSerializationRepresentation(let rhs)):
+                        return lhs.eraseToAnyHashable() == rhs.eraseToAnyHashable()
+                    case (.anything(let lhs), .anything(let rhs)):
+                        return lhs == rhs
+                    default:
+                        return false
+                }
+            } catch {
+                assertionFailure()
+                
+                return false
             }
         }
         
         func hash(into hasher: inout Hasher) {
-            switch self {
-                case .metatype(let value):
-                    value.hash(into: &hasher)
-                case .representable(let value):
-                    value.hash(into: &hasher)
-                case .anything(let value):
-                    if let value = value.data as? any Hashable {
-                        hasher.combine(value)
-                    } else {
+            do {
+                switch self {
+                    case .metatype(let value):
                         value.hash(into: &hasher)
-                    }
+                    case .unsafeSerializationRepresentable(let value):
+                        try value._unsafeSerializationRepresentation.hash(into: &hasher)
+                    case .unsafeSerializationRepresentation(let value):
+                        value.hash(into: &hasher)
+                    case .anything(let value):
+                        if let value = value.data as? any Hashable {
+                            hasher.combine(value)
+                        } else {
+                            value.hash(into: &hasher)
+                        }
+                }
+            } catch {
+                assertionFailure(error)
             }
         }
     }
+    
     private func _makeIntermediateRepresentation() throws -> _IntermediateRepresentation {
         let intermediateRepresentation = try _IntermediateRepresentation(
             wrappedValue,
@@ -364,7 +402,7 @@ extension _UnsafelySerialized: _UnsafeSerializationRepresentable where Value: _U
     init(
         _unsafeSerializationRepresentation: _UnsafeSerializationRepresentation
     ) throws {
-        self.init(wrappedValue: try .init(_unsafeSerializationRepresentation: _unsafeSerializationRepresentation))
+        self.init(wrappedValue: try Value(_unsafeSerializationRepresentation: _unsafeSerializationRepresentation))
     }
 }
 
