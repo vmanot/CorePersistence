@@ -117,7 +117,7 @@ extension TupleTransferRepresentation: _opaque_PrimitiveTransferRepresentation {
     
     public func _opaque_destructureTransferRepresentation() throws -> [_AnyPrimitiveTransferRepresentation] {
         try Mirror(reflecting: self)
-            ._reflectDescendant(at: "value")
+            ._getMirror(ofDescendantAtPath: "value")
             .unwrap()
             ._flattenAndDestructureTuple()
             .map {
