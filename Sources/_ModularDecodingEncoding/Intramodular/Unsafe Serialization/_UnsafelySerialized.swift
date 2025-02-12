@@ -77,15 +77,37 @@ public struct _UnsafelySerialized<Value>: _UnsafelySerializedType, Parameterless
 
 extension _UnsafelySerialized: Codable {
     public init(from decoder: Decoder) throws {
-        let intermediate = try _IntermediateRepresentation(from: decoder)
-        
-        try self.init(
-            wrappedValue: intermediate.value,
-            _cachedHashValue: nil
-        )
-        
-        if wrappedValue is any _UnsafelySerializedType {
-            assertionFailure()
+        do {
+            let intermediate = try _IntermediateRepresentation(from: decoder)
+            
+            try self.init(
+                wrappedValue: intermediate.value,
+                _cachedHashValue: nil
+            )
+            
+            if wrappedValue is any _UnsafelySerializedType {
+                assertionFailure()
+            }
+        } catch {
+            if let decodingError = _ModularDecodingError(error) {
+                if case .valueNotFound = decodingError {
+                    guard try decoder.singleValueContainer().decodeNil() else {
+                        throw error
+                    }
+                    
+                    if let type = Value.self as? any ExpressibleByNilLiteral.Type {
+                        let nilValue: Value = try _forceCast(type.init(nilLiteral: ()))
+                        
+                        self.init(wrappedValue: nilValue)
+                    } else {
+                        throw error
+                    }
+                } else {
+                    throw error
+                }
+            } else {
+                throw error
+            }
         }
     }
     

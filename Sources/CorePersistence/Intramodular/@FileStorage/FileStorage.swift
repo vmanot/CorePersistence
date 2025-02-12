@@ -21,7 +21,7 @@ public enum _FileStorageReadErrorRecoveryStrategy: String, Codable, Hashable, Se
 ///
 /// Writing is done asynchronously on a high-priority background thread, and synchronously on the deinitialization of the internal storage of this property wrapper.
 @propertyWrapper
-public final class FileStorage<ValueType, UnwrappedType> {
+public final class FileStorage<ValueType, UnwrappedType>: Logging {
     public typealias Coordinator = _AnyFileStorageCoordinator<ValueType, UnwrappedType>
     
     private var makeCoordinator: () throws -> Coordinator
@@ -121,6 +121,10 @@ public final class FileStorage<ValueType, UnwrappedType> {
 extension FileStorage {
     public func commit() {
         coordinator.commit()
+    }
+    
+    public func commitUnconditionally() {
+        coordinator.commitUnconditionally()
     }
 }
 

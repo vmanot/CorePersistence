@@ -32,7 +32,9 @@ extension PDFFileDocument: PersistentFileDocument {
         }
     }
     
-    public func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper {
+    public func fileWrapper(
+        configuration: WriteConfiguration
+    ) throws -> FileWrapper {
         FileWrapper(regularFileWithContents: try pdf.dataRepresentation().unwrap())
     }
 }
