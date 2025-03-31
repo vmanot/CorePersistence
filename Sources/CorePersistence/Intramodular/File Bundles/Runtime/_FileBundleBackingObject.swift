@@ -61,7 +61,7 @@ extension _FileBundleBackingObject: _FileOrFolderRepresenting {
 extension _FileBundleBackingObject {
     final class Root: _FileBundleBackingObject {
         private let objectWillChangeRelay = ObjectWillChangePublisherRelay()
-        private let directory: FileURL
+        private let directory: AnyFileURL
         private let writeScheduler = DispatchQueue(qos: .userInitiated)._debounce(for: .milliseconds(50))
         
         public override var knownFileURL: URL? {
@@ -72,7 +72,7 @@ extension _FileBundleBackingObject {
         
         init(
             _enclosingInstance: any FileBundle,
-            directory: FileURL,
+            directory: AnyFileURL,
             readOptions: Set<FileDocumentReadOption>
         ) throws {
             let url = try directory._toURL()

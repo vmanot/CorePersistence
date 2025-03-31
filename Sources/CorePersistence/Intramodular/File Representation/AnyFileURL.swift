@@ -5,7 +5,7 @@
 import FoundationX
 import Swallow
 
-public struct FileURL: Hashable, Sendable {
+public struct AnyFileURL: Hashable, Sendable {
     public let base: URL
     
     fileprivate init(base: URL) {
@@ -15,7 +15,7 @@ public struct FileURL: Hashable, Sendable {
 
 // MARK: - Initializers
 
-extension FileURL {
+extension AnyFileURL {
     public init(_ url: URL) {
         self.init(base: url)
     }
@@ -27,7 +27,7 @@ extension FileURL {
 
 // MARK: - Conformances
 
-extension FileURL: Codable {
+extension AnyFileURL: Codable {
     public init(from decoder: any Decoder) throws {
         self.init(base: try URL(from: decoder))
     }
@@ -37,8 +37,8 @@ extension FileURL: Codable {
     }
 }
 
-extension FileURL: _FileOrFolderRepresenting {
-    public typealias FilesystemChild = FileURL
+extension AnyFileURL: _FileOrFolderRepresenting {
+    public typealias FilesystemChild = AnyFileURL
 
     public func withResolvedURL<R>(
         perform operation: (URL) throws -> R
@@ -76,7 +76,7 @@ extension FileURL: _FileOrFolderRepresenting {
                     _AsyncDirectoryIterator(directoryURL: base)
                 }
                 .map {
-                    FileURL(base: $0)
+                    AnyFileURL(base: $0)
                 }
                 .eraseToAnyAsyncSequence()
             }
@@ -90,7 +90,7 @@ extension FileURL: _FileOrFolderRepresenting {
     }
 }
 
-extension FileURL: Identifiable {
+extension AnyFileURL: Identifiable {
     public var id: AnyHashable {
         base
     }

@@ -26,7 +26,7 @@ public final class _FileBundle_KeyedChildrenProperty<Key: StringRepresentable, V
     public var wrappedValue: [Key: Value] {
         get {
             #try(.optimistic) {
-                try base.unwrap().contents
+                try self.base.unwrap().contents
             } ?? [:]
         } set {
             #try(.optimistic) {

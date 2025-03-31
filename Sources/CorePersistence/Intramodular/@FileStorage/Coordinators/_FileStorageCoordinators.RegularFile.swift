@@ -4,6 +4,7 @@
 
 import FoundationX
 import Merge
+import Runtime
 import Swallow
 
 extension _FileStorageCoordinators {
@@ -21,6 +22,7 @@ extension _FileStorageCoordinators {
         private var writeWorkItem: DispatchWorkItem? = nil
         private var valueObjectWillChangeListener: AnyCancellable?
         private var _fakeObservationTrackedValue = _RuntimeConditionalObservationTrackedValue<Void>(wrappedValue: ())
+        private var __ContinuousObservationTrackingSubscription: _ContinuousObservationTrackingSubscription?
         
         private var _cachedValue: UnwrappedValue? {
             get {
@@ -28,7 +30,7 @@ extension _FileStorageCoordinators {
             } set {
                 cache.store(newValue)
                 
-                setUpObservableObjectObserver()
+                _didInitializeOrDidSetCachedValue(value: newValue)
             }
         }
         
@@ -89,7 +91,7 @@ extension _FileStorageCoordinators {
                     let url: URL = try self.fileSystemResource._toURL()
                     
                     if !FileManager.default.fileExists(at: url) {
-                        _ = try FileManager.default.fileExists(at: PermittedURL(url)._toURL())
+                        _ = try FileManager.default.fileExists(at: _AnyUserPermittedURL(url)._toURL())
                     }
                 } catch CanonicalFileDirectory.Error.directoryNotSpecified {
                     return
@@ -104,8 +106,16 @@ extension _FileStorageCoordinators {
         }
         
         override public var wantsCommit: Bool {
-            guard !stateFlags.contains(.discarded), stateFlags.contains(.didWriteOnce) else {
+            guard !stateFlags.contains(.discarded) else {
                 return false
+            }
+            
+            if !stateFlags.contains(.didWriteOnce) {
+                return true
+            }
+            
+            guard stateFlags.contains(.latestWritten) else {
+                return true
             }
             
             return true
@@ -116,8 +126,8 @@ extension _FileStorageCoordinators {
 
             guard let value = _cachedValue else {
                 #try(.optimistic) {
-                    if !FileManager.default.fileExists(at: try fileSystemResource._toURL()) {
-                        _writeValue(self.wrappedValue, immediately: true)
+                    if !FileManager.default.fileExists(at: try self.fileSystemResource._toURL()) {
+                        self._writeValue(self.wrappedValue, immediately: true)
                     }
                 }
                 
@@ -125,6 +135,32 @@ extension _FileStorageCoordinators {
             }
             
             _writeValue(value, immediately: true)
+        }
+        
+        private func _didInitializeOrDidSetCachedValue(value: UnwrappedValue?) {
+            _setUpObservableObjectObserver()
+            _setUpObservationTrackingIfNecessary(value: value)
+        }
+        
+        private func _setUpObservationTrackingIfNecessary(value: UnwrappedValue?) {
+            guard #available(macOS 14.0, iOS 17.0, watchOS 10.0, tvOS 17.0, *), let value: any Observable = value as? (any Observable) else {
+                __ContinuousObservationTrackingSubscription?.cancel()
+                __ContinuousObservationTrackingSubscription = nil
+
+                return
+            }
+            
+            __ContinuousObservationTrackingSubscription = _withContinuousObservationTrackingIfAvailable {
+                value._accessAllKeyPathsIfTypeIsKeyPathIterable()
+            } onChange: { [weak self] in
+                self?._markDirty()
+            }
+        }
+        
+        private func _markDirty() {
+            lock.withCriticalScope {
+                self.stateFlags.remove(.latestWritten)
+            }
         }
     }
 }
@@ -143,8 +179,6 @@ extension _FileStorageCoordinators.RegularFile {
         
         lock.withCriticalScope {
             _cachedValue = newValue
-            
-            setUpObservableObjectObserver()
         }
         
         objectDidChange.send()
@@ -171,7 +205,7 @@ extension _FileStorageCoordinators.RegularFile {
                 
                 if let serialization: _FileOrFolderSerializationConfiguration<UnwrappedValue> = self.configuration.serialization {
                     guard let decoded: Any = try? resource.decode(using: serialization.coder) else {
-                        guard let decoded: Any = try PermittedURL(resource._toURL()).decode(using: serialization.coder) else {
+                        guard let decoded: Any = try _AnyUserPermittedURL(resource._toURL()).decode(using: serialization.coder) else {
                             return nil
                         }
                         
@@ -218,7 +252,9 @@ extension _FileStorageCoordinators.RegularFile {
     private func setUpAppRunningStateObserver() {
         AppRunningState.EventNotificationPublisher()
             .sink { [unowned self] event in
-                guard lock.withCriticalScope({ !self.stateFlags.contains(.latestWritten) }) else {
+                let latestWritten: Bool = lock.withCriticalScope({ self.stateFlags.contains(.latestWritten) })
+                
+                guard !latestWritten else {
                     return
                 }
                 
@@ -255,7 +291,7 @@ extension _FileStorageCoordinators.RegularFile {
         }
     }
     
-    private func setUpObservableObjectObserver() {
+    private func _setUpObservableObjectObserver() {
         guard let value = _cachedValue as? (any ObservableObject) else {
             return
         }
@@ -294,7 +330,7 @@ extension _FileStorageCoordinators.RegularFile {
             return try self._cachedValue.forceUnwrap()
         }
         
-        let value = try _readValueWithRecovery()
+        let value: UnwrappedValue = try _readValueWithRecovery()
         
         lock.withCriticalScope {
             if self._cachedValue == nil {

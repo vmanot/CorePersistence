@@ -21,7 +21,7 @@ public final class _FileBundle_ManifestProperty<Value: Equatable & Sendable>: _F
             try! base.unwrap().contents
         } set {
             #try(.optimistic) {
-                try base.unwrap().setContents(newValue)
+                try self.base.unwrap().setContents(newValue)
             }
         }
     }

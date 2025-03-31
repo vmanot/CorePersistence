@@ -38,7 +38,7 @@ extension _FileBundle where Self: FileBundle {
         try self.init(
             parameters: .init(
                 parent: nil,
-                file: FileURL(directory),
+                file: AnyFileURL(directory),
                 readOptions: options,
                 owner: nil
             )
@@ -118,7 +118,7 @@ extension FileBundle {
     func _initializeBackingObject(
         parameters: _FileBundleInitializationParameters
     ) throws -> Bool {
-        if let file = parameters.file as? FileURL {
+        if let file = parameters.file as? AnyFileURL {
             _fileBundleObject = try _FileBundleBackingObject.Root(
                 _enclosingInstance: self,
                 directory: file,

@@ -60,7 +60,7 @@ final class _ConcreteFolderAsyncPersistentStorageBase<Resource: _AsyncPersistent
         resource: @escaping ResourceAccessor
     ) throws {
         try self.init(
-            directory: FileURL(directory),
+            directory: AnyFileURL(directory),
             resource: resource
         )
     }

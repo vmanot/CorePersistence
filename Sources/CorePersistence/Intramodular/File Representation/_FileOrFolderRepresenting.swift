@@ -9,7 +9,7 @@ import System
 
 /// A type that represents a file or folder.
 public protocol _FileOrFolderRepresenting: Identifiable {
-    associatedtype FilesystemChild: _FileOrFolderRepresenting = FileURL
+    associatedtype FilesystemChild: _FileOrFolderRepresenting = AnyFileURL
     
     func withResolvedURL<R>(
         perform operation: (URL) throws -> R

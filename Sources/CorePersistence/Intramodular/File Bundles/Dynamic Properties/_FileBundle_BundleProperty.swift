@@ -24,7 +24,7 @@ public final class _FileBundle_BundleProperty<Parent, Contents: FileBundle>: _Fi
             try! base.unwrap().contents
         } set {
             #try(.optimistic) {
-                try base.unwrap().setContents(newValue)
+                try self.base.unwrap().setContents(newValue)
             }
         }
     }

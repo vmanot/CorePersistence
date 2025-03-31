@@ -5,7 +5,7 @@
 import FoundationX
 import Swallow
 
-public struct PermittedURL: Hashable, Sendable {
+public struct _AnyUserPermittedURL: Hashable, Sendable {
     public let base: URL
     
     fileprivate init(base: URL) {
@@ -15,7 +15,7 @@ public struct PermittedURL: Hashable, Sendable {
 
 // MARK: - Initializers
 
-extension PermittedURL {
+extension _AnyUserPermittedURL {
     public init(_ url: URL) {
         self.init(base: url)
     }
@@ -27,7 +27,7 @@ extension PermittedURL {
 
 // MARK: - Conformances
 
-extension PermittedURL: Codable {
+extension _AnyUserPermittedURL: Codable {
     public init(from decoder: any Decoder) throws {
         self.init(base: try URL(from: decoder))
     }
@@ -45,7 +45,7 @@ extension PermittedURL: Codable {
     }
 }
 
-extension PermittedURL: _FileOrFolderRepresenting {
+extension _AnyUserPermittedURL: _FileOrFolderRepresenting {
     public func withResolvedURL<R>(
         perform operation: (URL) throws -> R
     ) throws -> R {
@@ -107,7 +107,7 @@ extension PermittedURL: _FileOrFolderRepresenting {
     
     @_spi(Internal)
     @available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *)
-    public func observeFilesystemChildrenAsynchronously() throws -> AsyncThrowingStream<AnyAsyncSequence<PermittedURL>, Error> {
+    public func observeFilesystemChildrenAsynchronously() throws -> AsyncThrowingStream<AnyAsyncSequence<_AnyUserPermittedURL>, Error> {
         try _DirectoryEventPublisher(url: base, queue: nil)
             .autoconnect()
             .prepend(())
@@ -118,7 +118,7 @@ extension PermittedURL: _FileOrFolderRepresenting {
                     _AsyncDirectoryIterator(directoryURL: base)
                 }
                 .map {
-                    PermittedURL(base: $0)
+                    _AnyUserPermittedURL(base: $0)
                 }
                 .eraseToAnyAsyncSequence()
             }
@@ -132,7 +132,7 @@ extension PermittedURL: _FileOrFolderRepresenting {
     }
 }
 
-extension PermittedURL: Identifiable {
+extension _AnyUserPermittedURL: Identifiable {
     public var id: AnyHashable {
         base
     }

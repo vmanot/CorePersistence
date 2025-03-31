@@ -17,7 +17,7 @@ extension FileStorage {
         self.init(
             coordinator: try _FileStorageCoordinators.RegularFile(
                 initialValue: wrappedValue,
-                file: { FileURL(try location()) },
+                file: { AnyFileURL(try location()) },
                 coder: _AnyTopLevelFileDecoderEncoder(.topLevelDataCoder(coder, forType: UnwrappedType.self)),
                 options: options
             )
@@ -61,7 +61,7 @@ extension FileStorage {
                 initialValue: wrappedValue,
                 file: {
                     let directoryURL: URL = try location().deletingLastPathComponent()._actuallyStandardizedFileURL
-                    let url = try FileURL(location()._actuallyStandardizedFileURL)
+                    let url = try AnyFileURL(location()._actuallyStandardizedFileURL)
                     
                     try FileManager.default.createDirectory(
                         at: directoryURL,
@@ -103,7 +103,7 @@ extension FileStorage {
         self.init(
             coordinator: try _FileStorageCoordinators.RegularFile(
                 initialValue: wrappedValue,
-                file: { FileURL(try location()) },
+                file: { AnyFileURL(try location()) },
                 coder: _AnyTopLevelFileDecoderEncoder(documentType: UnwrappedType.self),
                 options: options
             )
@@ -119,7 +119,7 @@ extension FileStorage {
             coordinator: try _FileStorageCoordinators.RegularFile(
                 initialValue: wrappedValue,
                 file: {
-                    try FileURL(try location())
+                    try AnyFileURL(try location())
                 },
                 coder: _AnyTopLevelFileDecoderEncoder(documentType: UnwrappedType.self),
                 options: options
@@ -158,7 +158,7 @@ extension FileStorage {
         self.init(
             coordinator: try _FileStorageCoordinators.RegularFile(
                 initialValue: wrappedValue,
-                file: { try FileURL(location()) },
+                file: { try AnyFileURL(location()) },
                 coder: _AnyTopLevelFileDecoderEncoder(documentType: UnwrappedType.self),
                 options: options
             )
@@ -174,7 +174,7 @@ extension FileStorage {
         self.init(
             coordinator: try _FileStorageCoordinators.RegularFile(
                 initialValue: wrappedValue,
-                file: { try FileURL(location.toURL().appendingPathComponent(path, isDirectory: false)) },
+                file: { try AnyFileURL(location.toURL().appendingPathComponent(path, isDirectory: false)) },
                 coder: _AnyTopLevelFileDecoderEncoder(
                     .dataCodableType(
                         UnwrappedType.self,
@@ -229,7 +229,7 @@ extension FileStorage {
         self.init(
             coordinator: try _FileStorageCoordinators.RegularFile(
                 initialValue: wrappedValue,
-                file: { FileURL(try location()) },
+                file: { AnyFileURL(try location()) },
                 coder: _AnyTopLevelFileDecoderEncoder(coder, forUnsafelySerialized: UnwrappedType.self),
                 options: options
             )
@@ -243,9 +243,9 @@ extension FileStorage {
         coder: Coder,
         options: FileStorageOptions = nil
     ) where ValueType == _UnsafelySerialized<UnwrappedType> {
-        func getURL() throws -> FileURL {
+        func getURL() throws -> AnyFileURL {
             let directoryURL = try location().deletingLastPathComponent()
-            let url = try FileURL(location())
+            let url = try AnyFileURL(location())
             
             try FileManager.default.requestingUserGrantedAccessIfPossible(for: directoryURL, scope: .directory) {
                 try FileManager.default.createDirectory(at: $0, withIntermediateDirectories: true)
@@ -386,7 +386,7 @@ extension FileStorage where ValueType: _ObservableIdentifiedFolderContentsType {
         self.init(
             coordinator: try _FileStorageCoordinators.Directory(
                 base: _ObservableIdentifiedFolderContents(
-                    folder: FileURL(try directory()),
+                    folder: AnyFileURL(try directory()),
                     fileConfiguration: file,
                     id: { $0[keyPath: id] }
                 )
@@ -403,7 +403,7 @@ extension FileStorage where ValueType: _ObservableIdentifiedFolderContentsType {
         self.init(
             coordinator: try _FileStorageCoordinators.Directory(
                 base: _ObservableIdentifiedFolderContents(
-                    folder: FileURL(try directory()),
+                    folder: AnyFileURL(try directory()),
                     fileConfiguration: file,
                     id: nil
                 )
@@ -422,7 +422,7 @@ extension FileStorage where ValueType: _ObservableIdentifiedFolderContentsType {
             directory: directory,
             file: { (element: DirectoryElement) -> _RelativeFileConfiguration<Item> in
                 try _RelativeFileConfiguration(
-                    fileURL: FileURL(try element.id.unwrap()),
+                    fileURL: AnyFileURL(try element.id.unwrap()),
                     contentType: nil,
                     coder: coder,
                     readWriteOptions: options,
@@ -458,7 +458,7 @@ extension FileStorage where ValueType: _ObservableIdentifiedFolderContentsType {
         self.init(
             coordinator: try _FileStorageCoordinators.Directory(
                 base: _ObservableIdentifiedFolderContents(
-                    folder: FileURL(try directory()),
+                    folder: AnyFileURL(try directory()),
                     fileConfiguration: { (element: _ObservableIdentifiedFolderContentsElement) in
                         switch element.value {
                             case .url(let fileURL):

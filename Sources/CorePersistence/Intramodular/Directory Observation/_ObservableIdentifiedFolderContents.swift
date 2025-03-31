@@ -161,7 +161,7 @@ public final class _ObservableIdentifiedFolderContents<Item, ID: Hashable, Wrapp
     
     private func _revertFromDisk() {
         #try(.optimistic) {
-            let value: WrappedValue = try _readFromDisk()
+            let value: WrappedValue = try self._readFromDisk()
             
             self._resolvedWrappedValue = value
         }

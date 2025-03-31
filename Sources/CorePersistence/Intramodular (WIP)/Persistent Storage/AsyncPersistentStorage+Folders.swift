@@ -60,9 +60,9 @@ public struct AsyncFolderStorageConfiguration<Item: Codable> {
     
     func _makeAsyncPersistentStorageBase() throws -> _ConcreteFolderAsyncPersistentStorageBase<_AsyncFileResourceCoordinator<Item>> {
         try .init(
-            directory: FileURL(directoryURL),
+            directory: AnyFileURL(directoryURL),
             resource: { file -> _AsyncFileResourceCoordinator<Item>? in
-                if let url = (file as? FileURL)?.base {
+                if let url = (file as? AnyFileURL)?.base {
                     if filter(url) {
                         return .init(
                             file: file,

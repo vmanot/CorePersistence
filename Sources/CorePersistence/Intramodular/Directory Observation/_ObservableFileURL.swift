@@ -79,7 +79,7 @@ public final class _ObservableFileURL: ObservableObject, URLConvertible, @unchec
     @MainActor
     private func _fileDidUpdate() {
         #try(.optimistic) {
-            let fileDescriptor = try observation.fileDescriptor.unwrap()
+            let fileDescriptor = try self.observation.fileDescriptor.unwrap()
             
             var buffer = [UInt8](repeating: 0, count: Int(PATH_MAX))
             
@@ -87,7 +87,7 @@ public final class _ObservableFileURL: ObservableObject, URLConvertible, @unchec
                 let path = String(cString: buffer)
                 
                 self.bookmark = try URL.Bookmark(for: URL(fileURLWithPath: path))
-                self.url = try bookmark.toURL()
+                self.url = try self.bookmark.toURL()
             }
         }
     }

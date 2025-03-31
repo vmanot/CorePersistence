@@ -65,7 +65,7 @@ final class _KeyedFileBundleChildren<Key: StringRepresentable, Value, WrappedVal
             }
             
             #try(.optimistic) {
-                try _removeFileWrapperFromParent(forReplacementWith: newValue)
+                try self._removeFileWrapperFromParent(forReplacementWith: newValue)
             }
         } didSet {
             guard oldValue != fileWrapper else {
@@ -73,7 +73,7 @@ final class _KeyedFileBundleChildren<Key: StringRepresentable, Value, WrappedVal
             }
             
             #try(.optimistic) {
-                try _addFileWrapperToParent()
+                try self._addFileWrapperToParent()
             }
         }
     }
@@ -140,14 +140,14 @@ final class _KeyedFileBundleChildren<Key: StringRepresentable, Value, WrappedVal
             
             #try(.optimistic) {
                 do {
-                    if let child = try configuration.makeChild(childParameters) {
+                    if let child = try self.configuration.makeChild(childParameters) {
                         let key = try Key(stringValue: child.key).unwrap()
                         
                         if key.stringValue != child.key {
                             assertionFailure()
                         }
                         
-                        children[key] = child
+                        self.children[key] = child
                     } else {
                         fileWrapper.removeFileWrapper(childFileWrapper)
                     }

@@ -48,7 +48,7 @@ extension _FileStorageCoordinators {
             self.base = base
             
             let url = try FileManager.default.requestingUserGrantedAccessIfPossible(for: base.directoryURL) { url in
-                FileURL(url)
+                AnyFileURL(url)
             }
             
             try super.init(

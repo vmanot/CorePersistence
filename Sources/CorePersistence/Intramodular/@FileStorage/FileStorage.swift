@@ -54,11 +54,11 @@ public final class FileStorage<ValueType, UnwrappedType>: Logging {
         if Thread.isMainThread {
             try MainActor.unsafeAssumeIsolated {
                 try FileManager.default.withUserGrantedAccess(to: url) { url in
-                    coordinator.setFileSystemResource(FileURL(url))
+                    coordinator.setFileSystemResource(AnyFileURL(url))
                 }
             }
         } else {
-            coordinator.setFileSystemResource(FileURL(url))
+            coordinator.setFileSystemResource(AnyFileURL(url))
         }
     }
     
