@@ -305,7 +305,7 @@ extension Decodable where Self: Encodable {
     fileprivate func _opaque_encode(
         toJSONCodingDocument document: inout PersistentFileDocument
     ) throws {
-        try _tryAssert(document is _JSONCodingDocument<Self> || document is _FileWrapperDocument)
+        try #assert(document is _JSONCodingDocument<Self> || document is _FileWrapperDocument)
         
         document = _JSONCodingDocument(value: self)
     }

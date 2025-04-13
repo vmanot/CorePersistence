@@ -6,6 +6,7 @@ import Diagnostics
 import Combine
 import Foundation
 import Swallow
+import SwallowMacrosClient
 
 extension Decodable {
     public typealias TypeDiscriminated<D: TypeDiscriminator> = _TypeDiscriminatedCoding<D>
@@ -47,7 +48,7 @@ public struct _TypeDiscriminatedCoding<Discriminator: TypeDiscriminator>: Proper
             if let discriminatorType = Discriminator.self as? any CaseIterable.Type {
                 let allCases = try (discriminatorType.allCases as any Collection).map({ try cast($0, to: Discriminator.self) })
                 
-                try allCases.forEach({ try _tryAssert(try $0.resolveType() is Codable.Type) })
+                try allCases.forEach({ try #assert(try $0.resolveType() is Codable.Type) })
             }
             
             return _EncodeDecodeImpl(
@@ -59,7 +60,7 @@ public struct _TypeDiscriminatedCoding<Discriminator: TypeDiscriminator>: Proper
                         )
                         .encode(to: encoder)
                     } else {
-                        throw _PlaceholderError()
+                        #throw
                     }
                 },
                 decode: { decoder in
@@ -67,7 +68,7 @@ public struct _TypeDiscriminatedCoding<Discriminator: TypeDiscriminator>: Proper
                 }
             )
         } else {
-            throw _PlaceholderError()
+            #throw
         }
     }
 }

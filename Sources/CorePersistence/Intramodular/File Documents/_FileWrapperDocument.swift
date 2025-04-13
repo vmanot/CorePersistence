@@ -33,7 +33,7 @@ public struct _FileWrapperDocument: PersistentFileDocument {
 extension _FileWrapperDocument {
     public var regularFileContents: Data {
         get throws {
-            try _tryAssert(!fileWrapper.isDirectory)
+            try #assert(!fileWrapper.isDirectory)
             
             return try fileWrapper.regularFileContents.unwrap()
         }

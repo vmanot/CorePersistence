@@ -4,6 +4,7 @@
 
 import FoundationX
 import Swallow
+import SwallowMacrosClient
 
 extension FileWrapper {
     public convenience init(

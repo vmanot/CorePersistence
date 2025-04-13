@@ -30,7 +30,7 @@ extension _ObservableFileDirectoryType where Self: _ObservableFileDirectory {
         replaceExisting: Bool
     ) throws where T.Element: URLConvertible {
         try url.withResolvedURL { url in
-            try _tryAssert(cocoaFileManager.isDirectory(at: url))
+            try #assert(cocoaFileManager.isDirectory(at: url))
             
             return try copy(keyPath, to: url, replaceExisting: replaceExisting)
         }

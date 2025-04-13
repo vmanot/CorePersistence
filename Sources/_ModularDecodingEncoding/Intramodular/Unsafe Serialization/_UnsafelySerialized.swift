@@ -5,6 +5,7 @@
 import Diagnostics
 import Runtime
 import Swallow
+import SwallowMacrosClient
 
 public typealias _UnsafelySerializedAny = _UnsafelySerialized<Any>
 
@@ -264,7 +265,7 @@ extension _UnsafelySerialized {
                     .map(_CodableSwiftType.init(_fromUnwrappedType:))
                 
                 if value == nil {
-                    try _tryAssert(_isTypeOptionalType(Value.self))
+                    try #assert(_isTypeOptionalType(Value.self))
                 }
                 
                 self = .metatype(value)

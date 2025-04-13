@@ -6,6 +6,7 @@ import Diagnostics
 import FoundationX
 import Runtime
 import Swallow
+import SwallowMacrosClient
 
 extension TypeMetadata {
     fileprivate struct JSONSchemaConversionContext {
@@ -75,8 +76,8 @@ extension TypeMetadata {
     ) throws -> JSONSchema {
         assert(context.type == self)
         
-        try _tryAssert(base is Codable.Type)
-        try _tryAssert(base is any Hashable.Type)
+        try #assert(base is Codable.Type)
+        try #assert(base is any Hashable.Type)
         
         let base = _getUnwrappedType(from: base)
         

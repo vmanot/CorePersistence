@@ -31,7 +31,7 @@ public struct XcodeDerivedDataPathHasher: PersistentHasher {
     public mutating func combine<H: Codable>(
         _ value: H
     ) throws {
-        try _tryAssert(data == nil)
+        try #assert(data == nil)
     
         assert(data == nil)
         

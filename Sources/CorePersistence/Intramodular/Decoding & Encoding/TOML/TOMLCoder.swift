@@ -104,7 +104,7 @@ extension _RawTOMLDecoderEncoder {
         }
         
         if result.isEmpty {
-            try _tryAssert(tomlString.trimmingWhitespaceAndNewlines().isEmpty)
+            try #assert(tomlString.trimmingWhitespaceAndNewlines().isEmpty)
         }
         
         return result

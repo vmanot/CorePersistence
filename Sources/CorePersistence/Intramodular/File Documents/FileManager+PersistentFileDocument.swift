@@ -12,9 +12,9 @@ extension FileManager {
         at url: URL
     ) throws {
         if fileExists(at: url) {
-            try _tryAssert(try isFileOfType(type.writableContentTypes, at: url))
+            try #assert(try isFileOfType(type.writableContentTypes, at: url))
         } else {
-            try _tryAssert(isReadableAndWritable(at: url))
+            try #assert(isReadableAndWritable(at: url))
         }
     }
     
@@ -58,7 +58,7 @@ extension FileManager {
             }
         }
         
-        try _tryAssert(isDirectory(at: url))
+        try #assert(isDirectory(at: url))
         
         return result
     }

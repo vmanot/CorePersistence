@@ -27,7 +27,7 @@ public final class _ObservableFileURL: ObservableObject, URLConvertible, @unchec
         if let bookmark {
             _bookmark = bookmark
         } else {
-            try _tryAssert(FileManager.default.fileExists(at: url))
+            try #assert(FileManager.default.fileExists(at: url))
             
             if Thread.isMainThread {
                 try MainActor.unsafeAssumeIsolated {
@@ -45,7 +45,7 @@ public final class _ObservableFileURL: ObservableObject, URLConvertible, @unchec
             let bookmarkFileIdentifier = try FileSystemIdentifier(bookmark: _bookmark)
             
             #try(.optimistic) {
-                try _tryAssert(fileIdentifier == bookmarkFileIdentifier)
+                try #assert(fileIdentifier == bookmarkFileIdentifier)
             }
         }
         
@@ -56,7 +56,7 @@ public final class _ObservableFileURL: ObservableObject, URLConvertible, @unchec
         self.fileIdentifier = try FileSystemIdentifier(url: fileURL)
         
         if let existingFileIdentifier {
-            try _tryAssert(self.fileIdentifier == existingFileIdentifier)
+            try #assert(self.fileIdentifier == existingFileIdentifier)
         }
         
         observation = try DispatchSourceFileSystemObjectObservation(

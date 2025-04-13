@@ -34,7 +34,7 @@ public final class _FileBundle_KeyedChildrenProperty<Key: StringRepresentable, V
                 
                 try base.setContents(newValue)
                 
-                try _tryAssert(base.contents.count == newValue.count)
+                try #assert(base.contents.count == newValue.count)
             }
         }
     }

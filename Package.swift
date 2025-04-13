@@ -15,6 +15,7 @@ let package = Package(
         .library(
             name: "CorePersistence",
             targets: [
+                "_AEXML",
                 "_CoreIdentity",
                 "_CSV",
                 "_JSON",
@@ -24,6 +25,12 @@ let package = Package(
                 "_XMLCoder",
                 "Proquint",
                 "CorePersistence"
+            ]
+        ),
+        .library(
+            name: "FileProviderKit",
+            targets: [
+                "FileProviderKit"
             ]
         ),
         .library(
@@ -38,6 +45,14 @@ let package = Package(
         .package(url: "https://github.com/vmanot/Swallow.git", branch: "master")
     ],
     targets: [
+        .target(
+            name: "_AEXML",
+            dependencies: [
+                "Swallow"
+            ],
+            path: "Sources/_AEXML",
+            swiftSettings: []
+        ),
         .target(
             name: "_ModularDecodingEncoding",
             dependencies: [
@@ -111,6 +126,12 @@ let package = Package(
             swiftSettings: [
                 .enableExperimentalFeature("AccessLevelOnImport"),
                 .unsafeFlags([])
+            ]
+        ),
+        .target(
+            name: "FileProviderKit",
+            dependencies: [
+                "CorePersistence",
             ]
         ),
         .target(

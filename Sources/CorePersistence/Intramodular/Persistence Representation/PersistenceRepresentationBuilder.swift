@@ -115,7 +115,7 @@ extension PersistenceRepresentation {
         } else if let `self` = self as? PersistenceRepresentationBuilder.Accumulated {
             try self._resolve(into: &representation, context: context)
         } else {
-            try _tryAssert(Body.self != Never.self)
+            try #assert(Body.self != Never.self)
             
             try self.body._recursivelyResolve(into: &representation, context: context)
         }

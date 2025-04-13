@@ -234,7 +234,7 @@ final class _KeyedFileBundleChildren<Key: StringRepresentable, Value, WrappedVal
             
             let child = try children[key].unwrap()
             
-            try _tryAssert(Key(stringValue: child.key).unwrap() == key)
+            try #assert(Key(stringValue: child.key).unwrap() == key)
             
             child.stateFlags.insert(.deletedByParent)
             
@@ -293,7 +293,7 @@ final class _KeyedFileBundleChildren<Key: StringRepresentable, Value, WrappedVal
                     )
                 )
                 
-                try _tryAssert(initialized)
+                try #assert(initialized)
                 
                 newChildren[key] = try cast(newChild)
             } else if let child = try configuration.makeChild(childParameters) {

@@ -4,6 +4,7 @@
 
 import Diagnostics
 import Swallow
+import SwallowMacrosClient
 
 @resultBuilder
 public struct CodingRepresentationBuilder<ItemType: Codable> {
@@ -52,7 +53,7 @@ extension CodingRepresentationBuilder {
                 try _forceCast($0, to: (any _PrimitiveCodingRepresentation).self).__conversion()
             })
             
-            try _tryAssert(primitives.allSatisfy({ $0.itemType == ItemType.self }))
+            try #assert(primitives.allSatisfy({ $0.itemType == ItemType.self }))
             
             return _ResolvedCodingRepresentation(
                 itemType: ItemType.self,

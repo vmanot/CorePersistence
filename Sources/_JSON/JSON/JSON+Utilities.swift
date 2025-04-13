@@ -3,6 +3,7 @@
 //
 
 import Swallow
+import SwallowMacrosClient
 
 extension JSON {
     public static func _extractJSONStrings(
@@ -36,7 +37,7 @@ extension JSON {
         }
         
         if depth != 0 {
-            throw _PlaceholderError()
+            #throw
         }
         
         return possibleJSONStrings.compactMap {

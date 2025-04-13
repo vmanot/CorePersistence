@@ -78,7 +78,7 @@ extension _KeyedFileBundleChild {
         } else {
             if let existingWrapper = parentFileWrapper.fileWrappers?[_fileName] {
                 do {
-                    try _tryAssert(existingWrapper === replacement)
+                    try #assert(existingWrapper === replacement)
                 } catch {
                     if existingWrapper.isDirectory, replacement == nil {
                         return // forgive and forget
