@@ -120,7 +120,7 @@ let package = Package(
                 "Merge",
                 "Swallow",
             ],
-            path: "Sources/_SwiftFileSystem",
+            path: "Sources/_SwiftFileSystem"
         ),
         .target(
             name: "SwiftDocuments",
