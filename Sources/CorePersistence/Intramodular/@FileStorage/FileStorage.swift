@@ -2,18 +2,11 @@
 // Copyright (c) Vatsal Manot
 //
 
+import _SwiftFileSystem
 import FoundationX
 @_spi(Internal) import Merge
 import Runtime
 import Swallow
-
-/// The strategy used to recover from a read error.
-public enum _FileStorageReadErrorRecoveryStrategy: String, Codable, Hashable, Sendable {
-    /// Halt the execution of the app.
-    case fatalError
-    /// Discard existing data (if any) and reset with the initial value.
-    case discardAndReset
-}
 
 /// A property wrapper type that reflects data stored in a file on the disk.
 ///
@@ -209,20 +202,4 @@ extension FileStorage: Hashable where UnwrappedType: Hashable {
 
 extension FileStorage {
     public typealias ReadErrorRecoveryStrategy = _FileStorageReadErrorRecoveryStrategy
-}
-
-public struct FileStorageOptions: Codable, ExpressibleByNilLiteral, Hashable {
-    public typealias ReadErrorRecoveryStrategy = _FileStorageReadErrorRecoveryStrategy
-    
-    public var readErrorRecoveryStrategy: ReadErrorRecoveryStrategy?
-    
-    public init(
-        readErrorRecoveryStrategy: ReadErrorRecoveryStrategy?
-    ) {
-        self.readErrorRecoveryStrategy = readErrorRecoveryStrategy
-    }
-    
-    public init(nilLiteral: ()) {
-        self.readErrorRecoveryStrategy = nil
-    }
 }

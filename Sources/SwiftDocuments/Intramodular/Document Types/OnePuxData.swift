@@ -2,6 +2,7 @@
 // Copyright (c) Vatsal Manot
 //
 
+import _SwiftFileSystem
 import FoundationX
 import Combine
 import Swallow

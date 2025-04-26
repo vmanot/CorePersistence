@@ -29,7 +29,7 @@ extension PersistentFileDocument {
 }
 
 extension PersistentFileDocument {
-    static func _opaque_fileWrapper(
+    public static func _opaque_fileWrapper(
         for value: Any,
         configuration: PersistentFileDocumentWriteConfiguration
     ) throws -> FileWrapper {

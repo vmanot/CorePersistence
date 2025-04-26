@@ -72,14 +72,13 @@ extension _FileOrFolderRepresenting {
         return try cast(contents, to: T.self)
     }
     
-    @_spi(Internal)
     @available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *)
     public func observeFilesystemChildrenAsynchronously() throws -> AsyncThrowingStream<AnyAsyncSequence<FilesystemChild>, Error> {
         throw Never.Reason.unimplemented
     }
 }
 
-extension FileWrapper: CorePersistence._FileOrFolderRepresenting {
+extension FileWrapper: _SwiftFileSystem._FileOrFolderRepresenting {
     public func withResolvedURL<R>(
         perform operation: (URL) throws -> R
     ) throws -> R {

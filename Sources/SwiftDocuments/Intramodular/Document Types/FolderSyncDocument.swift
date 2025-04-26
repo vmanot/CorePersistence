@@ -4,6 +4,7 @@
 
 #if !os(tvOS) && !os(watchOS)
 
+import _SwiftFileSystem
 import FoundationX
 import Runtime
 import SwiftUI

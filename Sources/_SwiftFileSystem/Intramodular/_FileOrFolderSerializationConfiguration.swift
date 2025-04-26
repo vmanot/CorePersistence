@@ -2,17 +2,18 @@
 // Copyright (c) Vatsal Manot
 //
 
+import _ModularDecodingEncoding
 import Foundation
 import Swallow
 import UniformTypeIdentifiers
 
 public struct _FileOrFolderSerializationConfiguration<Value> {
-    let contentType: UTType?
-    let coder: any _TopLevelFileDecoderEncoder
+    public let contentType: UTType?
+    public let coder: any _TopLevelFileDecoderEncoder
     @ReferenceBox
-    var initialValue: _ThrowingMaybeLazy<Value?>
+    package var initialValue: _ThrowingMaybeLazy<Value?>
     
-    init(
+    public init(
         contentType: UTType?,
         coder: any _TopLevelFileDecoderEncoder,
         initialValue: @escaping () throws -> Value
@@ -22,7 +23,7 @@ public struct _FileOrFolderSerializationConfiguration<Value> {
         self._initialValue = .init(.init(initialValue))
     }
     
-    init(
+    public init(
         contentType: UTType?,
         coder: any _TopLevelFileDecoderEncoder,
         initialValue: @escaping () throws -> Value?
@@ -32,7 +33,7 @@ public struct _FileOrFolderSerializationConfiguration<Value> {
         self._initialValue = .init(.init(initialValue))
     }
     
-    init(
+    public init(
         contentType: UTType?,
         coder: any _TopLevelFileDecoderEncoder,
         initialValue: Value?

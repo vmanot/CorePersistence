@@ -12,11 +12,13 @@
 @_exported import _JSON
 @_exported import _JSONSchema
 @_exported import _ModularDecodingEncoding
+@_exported import _SwiftFileSystem
+@_exported import SwiftDocuments
 
-public enum _module {
-    private static var isInitialized: Bool = false
+#module {
+    var isInitialized: Bool = false
     
-    public static func initialize() {
+    func initialize() {
         guard !isInitialized else {
             return
         }

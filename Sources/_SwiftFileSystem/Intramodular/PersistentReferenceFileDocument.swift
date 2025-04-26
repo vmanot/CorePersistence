@@ -5,6 +5,7 @@
 import Foundation
 import Swift
 import UniformTypeIdentifiers
+import Swallow
 import SwiftUI
 
 public struct ReferenceFileDocumentSnapshotConfiguration {
@@ -55,7 +56,7 @@ extension PersistentReferenceFileDocument {
 // MARK: - Internal
 
 extension PersistentReferenceFileDocument {
-    func _opaque_fileWrapper(
+    public func _opaque_fileWrapper(
         snapshot: Any,
         configuration: WriteConfiguration
     ) throws -> FileWrapper {

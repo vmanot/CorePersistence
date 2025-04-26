@@ -23,7 +23,9 @@ let package = Package(
                 "_ModularDecodingEncoding",
                 "_SWXMLHash",
                 "_XMLCoder",
+                "_SwiftFileSystem",
                 "Proquint",
+                "SwiftDocuments",
                 "CorePersistence"
             ]
         ),
@@ -112,14 +114,40 @@ let package = Package(
             swiftSettings: []
         ),
         .target(
+            name: "_SwiftFileSystem",
+            dependencies: [
+                "_ModularDecodingEncoding",
+                "Merge",
+                "Swallow",
+            ],
+            path: "Sources/_SwiftFileSystem",
+        ),
+        .target(
+            name: "SwiftDocuments",
+            dependencies: [
+                "_CoreIdentity",
+                "_ModularDecodingEncoding",
+                "_SwiftFileSystem",
+                "Merge",
+                "Swallow",
+                .product(name: "SwallowMacrosClient", package: "Swallow"),
+            ],
+            swiftSettings: [
+                .enableExperimentalFeature("AccessLevelOnImport"),
+                .unsafeFlags([])
+            ]
+        ),
+        .target(
             name: "CorePersistence",
             dependencies: [
                 "_CoreIdentity",
                 "_JSON",
                 "_JSONSchema",
                 "_ModularDecodingEncoding",
+                "_SwiftFileSystem",
                 "Merge",
                 "Proquint",
+                "SwiftDocuments",
                 "Swallow",
                 .product(name: "SwallowMacrosClient", package: "Swallow"),
             ],

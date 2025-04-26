@@ -4,6 +4,7 @@
 
 #if canImport(PDFKit)
 
+import _SwiftFileSystem
 import PDFKit
 import Swallow
 import SwiftUI
