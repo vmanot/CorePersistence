@@ -3,6 +3,7 @@
 //
 
 import _SwiftFileSystem
+import Foundation
 import SwallowMacrosClient
 
 #module {
