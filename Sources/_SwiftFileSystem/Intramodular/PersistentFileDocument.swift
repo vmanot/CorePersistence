@@ -2,6 +2,7 @@
 // Copyright (c) Vatsal Manot
 //
 
+import FoundationX
 import Merge
 import Swallow
 import SwiftUI
@@ -17,6 +18,18 @@ public protocol PersistentFileDocument {
     init(configuration: ReadConfiguration) throws
     
     func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper
+}
+
+extension PersistentFileDocument {
+    public init(url: some URLConvertible) throws {
+        self = try url.withResolvedURL { (url: URL) in
+            try Self(
+                configuration: PersistentFileDocumentReadConfiguration(
+                    url: url
+                )
+            )
+        }
+    }
 }
 
 extension PersistentFileDocument {

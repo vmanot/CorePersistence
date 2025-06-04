@@ -18,7 +18,7 @@ public struct ReferenceFileDocumentSnapshotConfiguration {
     }
 }
 
-public protocol PersistentReferenceFileDocument {
+public protocol PersistentReferenceFileDocument: AnyObject {
     associatedtype Snapshot
     
     typealias ReadConfiguration = PersistentFileDocumentReadConfiguration
