@@ -7,7 +7,7 @@ let package = Package(
     name: "CorePersistence",
     platforms: [
         .iOS(.v14),
-        .macOS(.v12),
+        .macOS(.v13),
         .tvOS(.v14),
         .watchOS(.v7)
     ],
