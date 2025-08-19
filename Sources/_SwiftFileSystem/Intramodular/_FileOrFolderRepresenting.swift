@@ -8,8 +8,8 @@ import Swallow
 import System
 
 /// A type that represents a file or folder.
-public protocol _FileOrFolderRepresenting: Identifiable {
-    associatedtype FilesystemChild: _FileOrFolderRepresenting = AnyFileURL
+public protocol _FileOrFolderRepresenting {
+    associatedtype FilesystemChild: _FileOrFolderRepresenting & Identifiable = AnyFileURL
     
     func withResolvedURL<R>(
         perform operation: (URL) throws -> R
@@ -36,11 +36,11 @@ public protocol _FileOrFolderRepresenting: Identifiable {
 
 extension _FileOrFolderRepresenting {
     @available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *)
-    public func _opaque_observeFilesystemChildrenAsynchronously() throws -> AsyncThrowingStream<AnyAsyncSequence<any _FileOrFolderRepresenting>, Error> {
+    public func _opaque_observeFilesystemChildrenAsynchronously() throws -> AsyncThrowingStream<AnyAsyncSequence<any _FileOrFolderRepresenting & Identifiable>, Error> {
         try observeFilesystemChildrenAsynchronously().map { sequence in
             sequence
                 .map {
-                    $0 as (any _FileOrFolderRepresenting)
+                    $0 as (any _FileOrFolderRepresenting & Identifiable)
                 }
                 .eraseToAnyAsyncSequence()
         }

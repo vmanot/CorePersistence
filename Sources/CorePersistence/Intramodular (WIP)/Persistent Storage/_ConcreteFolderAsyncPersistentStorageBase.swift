@@ -11,10 +11,10 @@ import Swallow
 final class _ConcreteFolderAsyncPersistentStorageBase<Resource: _AsyncPersistentResourceCoordinator>: _AsyncPersistentStorageBase {
     public typealias WrappedValue = [Resource.Value]
     public typealias ProjectedValue = [Resource.Value]
-    public typealias ResourceAccessor = (any _FileOrFolderRepresenting) async throws -> Resource?
+    public typealias ResourceAccessor = (any _FileOrFolderRepresenting & Identifiable) async throws -> Resource?
     
     private let directory: any _FileOrFolderRepresenting
-    private let resource: (any _FileOrFolderRepresenting) async throws -> Resource?
+    private let resource: (any _FileOrFolderRepresenting & Identifiable) async throws -> Resource?
     
     private var base: _SyncedAsyncPersistentResources<AnyAsyncSequence<Resource>>
     
@@ -31,7 +31,7 @@ final class _ConcreteFolderAsyncPersistentStorageBase<Resource: _AsyncPersistent
     }
     
     init(
-        directory: any _FileOrFolderRepresenting,
+        directory: any _FileOrFolderRepresenting & Identifiable,
         resource: @escaping ResourceAccessor
     ) throws {
         #try(.optimistic) {
@@ -69,7 +69,7 @@ final class _ConcreteFolderAsyncPersistentStorageBase<Resource: _AsyncPersistent
 public class _AsyncFileResourceCoordinator<Value>: _MutableAsyncPersistentResourceCoordinator {
     private let lock = OSUnfairLock()
     
-    var file: any _FileOrFolderRepresenting
+    var file: any _FileOrFolderRepresenting & Identifiable
     
     let coder: any _TopLevelFileDecoderEncoder
     
@@ -77,7 +77,10 @@ public class _AsyncFileResourceCoordinator<Value>: _MutableAsyncPersistentResour
         file.id.erasedAsAnyHashable
     }
     
-    init(file: any _FileOrFolderRepresenting, coder: any _TopLevelFileDecoderEncoder) {
+    init(
+        file: any _FileOrFolderRepresenting & Identifiable,
+        coder: any _TopLevelFileDecoderEncoder
+    ) {
         self.file = file
         self.coder = coder
     }

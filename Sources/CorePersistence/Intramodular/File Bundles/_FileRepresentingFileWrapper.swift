@@ -5,7 +5,7 @@
 import FoundationX
 import Swallow
 
-public struct _FileRepresentingFileWrapper<ID: Hashable>: _FileOrFolderRepresenting {
+public struct _FileRepresentingFileWrapper<ID: Hashable>: _FileOrFolderRepresenting, Identifiable {
     public typealias Child = _FileRepresentingFileWrapper
     
     public private(set) var base: _AsyncFileWrapper

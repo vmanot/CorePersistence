@@ -14,7 +14,7 @@ import Swallow
 ///
 /// Writing is done asynchronously on a high-priority background thread, and synchronously on the deinitialization of the internal storage of this property wrapper.
 @propertyWrapper
-public final class FileStorage<ValueType, UnwrappedType>: Logging {
+public final class FileStorage<ValueType, UnwrappedType>: Identifiable, Logging {
     public typealias Coordinator = _AnyFileStorageCoordinator<ValueType, UnwrappedType>
     
     private var makeCoordinator: () throws -> Coordinator

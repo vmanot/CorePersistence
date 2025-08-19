@@ -6,7 +6,7 @@ import FoundationX
 import Swift
 import System
 
-extension FilePath: FoundationX.URLRepresentable {
+extension FilePath: FoundationX.URLConvertible, FoundationX.URLRepresentable {
     public var url: URL {
         get {
             URL(fileURLWithPath: standardized.stringValue)
