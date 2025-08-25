@@ -8,7 +8,10 @@ import Merge
 import Swallow
 import System
 
-public final class _DirectoryEventPublisher: Cancellable, ConnectablePublisher {
+@available(*, deprecated, renamed: "_DirectoryOrFileEventPublisher", message: "_DirectoryEventPublisher has been renamed to _DirectoryOrFileEventPublisher")
+public typealias _DirectoryEventPublisher = _DirectoryOrFileEventPublisher
+
+public final class _DirectoryOrFileEventPublisher: Cancellable, ConnectablePublisher {
     public typealias Output = Void
     public typealias Failure = Error
 
@@ -19,7 +22,15 @@ public final class _DirectoryEventPublisher: Cancellable, ConnectablePublisher {
     private let eventsPublisher = PassthroughSubject<Void, Error>()
     private var fileDescriptor: FileDescriptor?
     private var source: DispatchSourceProtocol?
+    
     private var lastContentsSnapshot: Set<URL>?
+    private var lastFileModificationDate: Date?
+    private var lastFileSize: UInt64?
+
+    
+    private var isDirectory: Bool {
+        return FileManager.default.isDirectory(at: url)
+    }
     
     public init(url: URL, queue: DispatchQueue?) throws {
         self.url = url
@@ -45,7 +56,7 @@ public final class _DirectoryEventPublisher: Cancellable, ConnectablePublisher {
         
         let source = DispatchSource.makeFileSystemObjectSource(
             fileDescriptor: fileDescriptor.rawValue,
-            eventMask: .write,
+            eventMask: [.write, .rename, .delete],
             queue: queue
         )
         
@@ -93,21 +104,39 @@ public final class _DirectoryEventPublisher: Cancellable, ConnectablePublisher {
     }
     
     private func refreshSnapshot() {
-        do {
-            lastContentsSnapshot = try Set(FileManager.default.contentsOfDirectory(at: url))
-        } catch {
-            lastContentsSnapshot = nil
-            
-            assertionFailure(error)
+        if isDirectory {
+            do {
+                lastContentsSnapshot = try Set(FileManager.default.contentsOfDirectory(at: url))
+            } catch {
+                assertionFailure(error)
+                lastContentsSnapshot = nil
+            }
+        } else {
+            do {
+                let attributes = try FileManager.default.attributesOfItem(atPath: url.path)
+                lastFileModificationDate = attributes[.modificationDate] as? Date
+                lastFileSize = attributes[.size] as? UInt64
+            } catch {
+                lastFileModificationDate = nil
+                lastFileSize = nil
+            }
         }
     }
+
     
     private func contentsAreDirty() -> Bool {
+        
         let lastSnapshot = lastContentsSnapshot
+        let lastModificationDate = lastFileModificationDate
+        let lastSize = lastFileSize
         
         refreshSnapshot()
         
-        return lastSnapshot != self.lastContentsSnapshot
+        if isDirectory {
+            return lastSnapshot != lastContentsSnapshot
+        } else {
+            return lastModificationDate != lastFileModificationDate || lastSize != lastFileSize
+        }
     }
 
     public func receive<S: Subscriber>(

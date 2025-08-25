@@ -66,7 +66,7 @@ extension AnyFileURL: _FileOrFolderRepresenting {
     @_spi(Internal)
     @available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *)
     public func observeFilesystemChildrenAsynchronously() throws -> AsyncThrowingStream<AnyAsyncSequence<FilesystemChild>, Error> {
-        try _DirectoryEventPublisher(url: base, queue: nil)
+        try _DirectoryOrFileEventPublisher(url: base, queue: nil)
             .autoconnect()
             .prepend(())
             .values
