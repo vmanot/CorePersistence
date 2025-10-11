@@ -6,7 +6,7 @@ import Foundation
 import Swallow
 import System
 
-extension FilePath: StringRepresentable {
+extension FilePath: @retroactive StringRepresentable {
     public var stringValue: String {
         withCString(String.init(cString:))
     }
