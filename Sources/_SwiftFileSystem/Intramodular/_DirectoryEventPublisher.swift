@@ -8,10 +8,7 @@ import Merge
 import Swallow
 import System
 
-@available(*, deprecated, renamed: "_DirectoryOrFileEventPublisher", message: "_DirectoryEventPublisher has been renamed to _DirectoryOrFileEventPublisher")
-public typealias _DirectoryEventPublisher = _DirectoryOrFileEventPublisher
-
-public final class _DirectoryOrFileEventPublisher: Cancellable, ConnectablePublisher {
+public final class _DirectoryEventPublisher: Cancellable, ConnectablePublisher {
     public typealias Output = Void
     public typealias Failure = Error
 
@@ -26,7 +23,6 @@ public final class _DirectoryOrFileEventPublisher: Cancellable, ConnectablePubli
     private var lastContentsSnapshot: Set<URL>?
     private var lastFileModificationDate: Date?
     private var lastFileSize: UInt64?
-
     
     private var isDirectory: Bool {
         return FileManager.default.isDirectory(at: url)
@@ -114,6 +110,7 @@ public final class _DirectoryOrFileEventPublisher: Cancellable, ConnectablePubli
         } else {
             do {
                 let attributes = try FileManager.default.attributesOfItem(atPath: url.path)
+                
                 lastFileModificationDate = attributes[.modificationDate] as? Date
                 lastFileSize = attributes[.size] as? UInt64
             } catch {
@@ -122,10 +119,8 @@ public final class _DirectoryOrFileEventPublisher: Cancellable, ConnectablePubli
             }
         }
     }
-
     
     private func contentsAreDirty() -> Bool {
-        
         let lastSnapshot = lastContentsSnapshot
         let lastModificationDate = lastFileModificationDate
         let lastSize = lastFileSize

@@ -141,6 +141,7 @@ let package = Package(
             name: "CorePersistence",
             dependencies: [
                 "_CoreIdentity",
+                "_CSV",
                 "_JSON",
                 "_JSONSchema",
                 "_ModularDecodingEncoding",
