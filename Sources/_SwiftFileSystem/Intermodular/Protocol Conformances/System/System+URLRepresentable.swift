@@ -27,3 +27,15 @@ extension FilePath: FoundationX.URLConvertible, FoundationX.URLRepresentable {
         self.init(url: url)!
     }
 }
+
+extension FilePath: @retroactive URLConvertible {
+    
+}
+
+extension FilePath: @retroactive URLInitiable {
+    
+}
+
+extension FilePath: @retroactive URLResolvable {
+    
+}
