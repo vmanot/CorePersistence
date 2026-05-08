@@ -64,7 +64,7 @@ public struct FolderSyncDocument: Codable, Hashable, Identifiable, FileDocument 
 
 extension FileWrapper {
     @nonobjc fileprivate var _contentsURL: URL? {
-        self[instanceVariableNamed: "_contentsURL"] as? URL
+        _contentsURLInstanceVariableValue
     }
 }
 

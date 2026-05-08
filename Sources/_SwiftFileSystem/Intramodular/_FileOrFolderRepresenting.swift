@@ -78,7 +78,7 @@ extension _FileOrFolderRepresenting {
     }
 }
 
-extension FileWrapper: @retroactive _SwiftFileSystem._FileOrFolderRepresenting {
+extension FileWrapper: _SwiftFileSystem._FileOrFolderRepresenting {
     public func withResolvedURL<R>(
         perform operation: (URL) throws -> R
     ) throws -> R {
@@ -118,6 +118,6 @@ extension FileWrapper: @retroactive _SwiftFileSystem._FileOrFolderRepresenting {
 
 extension FileWrapper {
     @nonobjc fileprivate var _contentsURL: URL? {
-        self[instanceVariableNamed: "_contentsURL"] as? URL
+        _contentsURLInstanceVariableValue
     }
 }

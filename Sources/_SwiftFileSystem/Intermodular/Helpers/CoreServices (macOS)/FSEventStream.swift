@@ -29,7 +29,7 @@ public struct FSEventStream {
 #if os(macOS)
 
 extension FSEventStream {
-    public var dispatchQueue: DispatchQueue {
+    public var dispatchQueue: DispatchQueue? {
         get {
             Never.materialize(reason: .impossible)
         } nonmutating set {
@@ -48,11 +48,11 @@ extension FSEventStream {
 
 extension FSEventStream {
     public func schedule(with runLoop: RunLoop, runLoopMode: CFRunLoopMode) {
-        FSEventStreamScheduleWithRunLoop(rawValue, runLoop.getCFRunLoop(), runLoopMode.rawValue)
+        dispatchQueue = .main
     }
     
     public func unschedule(from runLoop: RunLoop, runLoopMode: CFRunLoopMode) {
-        FSEventStreamUnscheduleFromRunLoop(rawValue, runLoop.getCFRunLoop(), runLoopMode.rawValue)
+        dispatchQueue = nil
     }
 }
 
