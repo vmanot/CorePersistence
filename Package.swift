@@ -183,9 +183,14 @@ let package = Package(
                 "_JSONSchema",
                 "CorePersistence"
             ],
-            sources: [
-                "CorePersistence"
-            ]
+            path: "Tests/CorePersistence"
+        ),
+        .testTarget(
+            name: "_SwiftFileSystemTests",
+            dependencies: [
+                "_SwiftFileSystem",
+            ],
+            path: "Tests/_SwiftFileSystem"
         ),
     ]
 )

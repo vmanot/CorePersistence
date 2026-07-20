@@ -22,21 +22,22 @@ public final class DispatchSourceFileSystemObjectObservation {
     
     public init(
         filePath: String,
+        queue: DispatchQueue = .main,
         onEvent: ((DispatchSource.FileSystemEvent) -> Void)? = nil
     ) throws {
         self.filePath = filePath
         self.onEvent = onEvent
         
-        try _start()
+        try _start(queue: queue)
     }
     
-    private func _start() throws {
+    private func _start(queue: DispatchQueue) throws {
         let fileDescriptor = try _openFileDescriptor()
         
         let source = DispatchSource.makeFileSystemObjectSource(
             fileDescriptor: fileDescriptor,
             eventMask: [.write, .rename, .delete, .extend, .attrib],
-            queue: DispatchQueue.global()
+            queue: queue
         )
         
         source.setEventHandler { [weak self] in
