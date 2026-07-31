@@ -4,7 +4,7 @@
 
 import CorePersistence
 import FoundationX
-import XCTest
+import Testing
 
 /// lamuf-dosih-fipus-fatut
 /// lolam-lomup-hinop-muvot
@@ -14,7 +14,9 @@ import XCTest
 /// giloj-mogud-gozir-tatom
 /// fobat-nisuk-vivol-komav
 /// viluh-tobom-sijis-sovul
-final class _MetatypeCodingPluginTests: XCTestCase {
+@Suite
+struct _MetatypeCodingPluginTests {
+    @Test
     func test() throws {
         var coder = JSONCoder()._modular()
         
@@ -23,6 +25,11 @@ final class _MetatypeCodingPluginTests: XCTestCase {
         let testData = SomeMetatypeContainer(type: SomeType.self)
         let encodedTestData = try coder.encode(testData)
         let decodedTestData = try coder.decode(SomeMetatypeContainer.self, from: encodedTestData)
+
+        #expect(
+            ObjectIdentifier(decodedTestData.type)
+                == ObjectIdentifier(SomeType.self)
+        )
     }
 }
 

@@ -78,8 +78,6 @@ extension _ModularDecoder.KeyedContainer {
             }
         } catch let error as DecodingError {
             switch error {
-                case .typeMismatch:
-                    fallthrough
                 case .keyNotFound:
                     return try _attemptToRecover(
                         fromKeyNotFoundError: error,
@@ -87,10 +85,8 @@ extension _ModularDecoder.KeyedContainer {
                         key: key
                     )
                 default:
-                    break
+                    throw error
             }
-            
-            throw error
         }
     }
             
@@ -202,6 +198,24 @@ extension _ModularDecoder.KeyedContainer {
         type: T.Type,
         key: Key
     ) throws -> T {
+        guard let error = _ModularDecodingError(error) else {
+            throw error
+        }
+
+        guard case .keyNotFound(let missingKey, _, _) = error else {
+            throw error
+        }
+
+        guard missingKey == AnyCodingKey(erasing: key) else {
+            throw error
+        }
+
+        let errorCodingPath: [AnyCodingKey] = try error.context?.codingPath.map({ try $0.key.unwrap() }) ?? []
+
+        guard errorCodingPath == self.codingPath.map({ AnyCodingKey(erasing: $0) }) else {
+            throw error
+        }
+
         if let subjectType = decoder.context.type as? any _CodingRepresentationProvider.Type, let type = type as? Decodable.Type {
             let codingRepresentation = _ResolvedCodingRepresentation._for(subjectType)
             
@@ -212,16 +226,6 @@ extension _ModularDecoder.KeyedContainer {
             if let result {
                 return try cast(result)
             }
-        }
-        
-        guard let error = _ModularDecodingError(error) else {
-            throw error
-        }
-        
-        let errorCodingPath: [AnyCodingKey] = try error.context?.codingPath.map({ try $0.key.unwrap() }) ?? []
-        
-        guard errorCodingPath == self.codingPath.map({ AnyCodingKey(erasing: $0) }) else {
-            throw error
         }
         
         guard self.decoder.configuration.plugins.contains(where: { $0 is _KeyNotFoundRecoveryPlugin }) else {

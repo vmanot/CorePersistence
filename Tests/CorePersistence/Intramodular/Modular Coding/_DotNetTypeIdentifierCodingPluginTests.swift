@@ -6,9 +6,11 @@
 
 import Diagnostics
 import FoundationX
-import XCTest
+import Testing
 
-final class ModularCodingTests: XCTestCase {
+@Suite
+struct ModularCodingTests {
+    @Test
     func test() throws {
         var coder = JSONCoder(outputFormatting: [.prettyPrinted, .sortedKeys])._modular()
         
@@ -32,15 +34,34 @@ final class ModularCodingTests: XCTestCase {
         
         let encodedData = try coder.encode(data)
         
-        print(try String(data: encodedData, using: .init(encoding: .utf8)))
-        XCTAssertNoThrow(try JSONDecoder().decode(AnyCodable.self, from: encodedData))
+        _ = try JSONDecoder().decode(AnyCodable.self, from: encodedData)
         
         let decoded = try coder.decode([Any].self, from: encodedData)
         
-        let equatableData = try data.map({ AnyEquatable(erasing: try cast($0, to: (any Equatable).self)) })
-        let equatableDecodedData = try decoded.map({ AnyEquatable(erasing: try cast($0, to: (any Equatable).self)) })
+        guard decoded.count == 3 else {
+            Issue.record("Expected three decoded values, received \(decoded.count)")
+
+            return
+        }
+
+        let decodedFoo = try #require(decoded[0] as? TestTypes.Foo)
+        let decodedBar = try #require(decoded[1] as? TestTypes.Bar)
+        let decodedBaz = try #require(decoded[2] as? TestTypes.Baz)
+
+        #expect(decodedFoo == TestTypes.Foo(x: 69, y: nil))
+        #expect(decodedBar == TestTypes.Bar(x: 6.9, y: 9.6))
+
+        guard decodedBaz.children.count == 2 else {
+            Issue.record("Expected two decoded children, received \(decodedBaz.children.count)")
+
+            return
+        }
+
+        let decodedChildFoo = try #require(decodedBaz.children[0] as? TestTypes.Foo)
+        let decodedChildBar = try #require(decodedBaz.children[1] as? TestTypes.Bar)
         
-        XCTAssert(equatableData == equatableDecodedData)
+        #expect(decodedChildFoo == TestTypes.Foo(x: 42, y: nil))
+        #expect(decodedChildBar == TestTypes.Bar(x: 4.2, y: nil))
     }
 }
 

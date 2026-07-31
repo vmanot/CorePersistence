@@ -6,9 +6,11 @@
 
 import Diagnostics
 import FoundationX
-import XCTest
+import Testing
 
-final class TypeDiscriminatedCodingTests: XCTestCase {
+@Suite
+struct TypeDiscriminatedCodingTests {
+    @Test
     func test() throws {
         let coder = JSONCoder(outputFormatting: [.prettyPrinted, .sortedKeys])._modular()
         
@@ -19,12 +21,11 @@ final class TypeDiscriminatedCodingTests: XCTestCase {
         
         let encodedData = try coder.encode(data)
         
-        print(try String(data: encodedData, using: .init(encoding: .utf8)))
-        XCTAssertNoThrow(try JSONDecoder().decode(AnyCodable.self, from: encodedData))
+        _ = try JSONDecoder().decode(AnyCodable.self, from: encodedData)
         
         let decoded = try coder.decode(Baz.self, from: encodedData)
         
-        assert(data == decoded)
+        #expect(data == decoded)
     }
 }
 
