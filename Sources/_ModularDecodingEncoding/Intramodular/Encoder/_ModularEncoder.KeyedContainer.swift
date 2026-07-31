@@ -40,7 +40,9 @@ extension _ModularEncoder.KeyedContainer: KeyedEncodingContainerProtocol {
         _ value: T,
         forKey key: Key
     ) throws {
-        if let value = value as? (any CoderPrimitive) {
+        if _requiresDirectCodingWithUnderlyingCoder(T.self) {
+            try base.encode(value, forKey: key)
+        } else if let value = value as? (any CoderPrimitive) {
             try base._encode(primitive: value, forKey: key)
         } else {
             let _value = _ModularEncoder.TopLevelProxyEncodable(

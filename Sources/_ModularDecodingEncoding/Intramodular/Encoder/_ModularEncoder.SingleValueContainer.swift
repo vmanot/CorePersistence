@@ -28,7 +28,9 @@ extension _ModularEncoder {
         }
         
         mutating func encode<T: Encodable>(_ value: T) throws  {
-            if let value = value as? (any CoderPrimitive) {
+            if _requiresDirectCodingWithUnderlyingCoder(T.self) {
+                try base.encode(value)
+            } else if let value = value as? (any CoderPrimitive) {
                 try self.encode(value)
             } else {
                 try base.encode(TopLevelProxyEncodable(base: value, encoderConfiguration: parent.configuration))

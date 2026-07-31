@@ -45,7 +45,12 @@ public struct _ModularTopLevelDecoder<Input>: TopLevelDecoder, @unchecked Sendab
     ) throws -> T {
         try _ModularDecoder.TaskLocalValues.$configuration.withValue(configuration) {
             do {
-                if let type = type as? _ModularTopLevelProxyDecodableType.Type {
+                if
+                    _requiresDirectCodingWithUnderlyingCoder(type),
+                    let type = type as? any Decodable.Type
+                {
+                    return try cast(base.decode(type, from: input), to: T.self)
+                } else if let type = type as? _ModularTopLevelProxyDecodableType.Type {
                     return try cast(base.decode(type, from: input), to: T.self)
                 } else {
                     return try base.decode(
@@ -195,6 +200,8 @@ extension _ModularDecoder.TopLevelProxyDecodable {
                 let value: T = try cast(type.init(from: decoder), to: T.self)
                 
                 return try cast(value, to: T.self)
+            } catch let error as _ModularDecoder.NonRetryableDecodingError {
+                throw error.underlyingError
             } catch {
                 if let value: T = try cast(decoder.singleValueContainer().decode(type)) {
                     return value

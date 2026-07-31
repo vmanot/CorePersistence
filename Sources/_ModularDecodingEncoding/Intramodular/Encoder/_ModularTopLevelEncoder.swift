@@ -41,6 +41,10 @@ public struct _ModularTopLevelEncoder<Output>: _TopLevelDecoderOrEncoderWithUser
     public func encode<T>(_ value: T) throws -> Output  {
         if let value = value as? _ModularTopLevelProxyEncodableType {
             return try base.encode(value)
+        } else if _requiresDirectCodingWithUnderlyingCoder(T.self) {
+            return try base.encode(
+                cast(value, to: (any Encodable).self)
+            )
         } else {
             return try base.encode(
                 _ModularEncoder.TopLevelProxyEncodable<T>(

@@ -43,7 +43,9 @@ extension _ModularDecoder {
         }
         
         mutating func decode<T: Decodable>(_ type: T.Type) throws -> T {
-            if let type = type as? any CoderPrimitive.Type {
+            if _requiresDirectCodingWithUnderlyingCoder(type) {
+                return try base.decode(type)
+            } else if let type = type as? any CoderPrimitive.Type {
                 return try cast(base._decodePrimitive(type), to: T.self)
             } else {
                 do {
@@ -67,7 +69,11 @@ extension _ModularDecoder {
         }
         
         mutating func decodeIfPresent<T: Decodable>(_ type: T.Type) throws -> T? {
-            try base.decodeIfPresent(UnkeyedContainerProxyDecodable<T>.self)?.value
+            if _requiresDirectCodingWithUnderlyingCoder(type) {
+                return try base.decodeIfPresent(type)
+            } else {
+                return try base.decodeIfPresent(UnkeyedContainerProxyDecodable<T>.self)?.value
+            }
         }
         
         mutating func nestedContainer<NestedKey: CodingKey>(

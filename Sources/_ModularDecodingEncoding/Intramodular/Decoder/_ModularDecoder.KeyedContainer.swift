@@ -41,7 +41,16 @@ extension _ModularDecoder.KeyedContainer {
         _ type: T.Type,
         forKey key: Key
     ) throws -> T {
-        try base._decodePrimitive(type, forKey: key)
+        if decoder.configuration.hides(key, at: base.codingPath) {
+            throw _ModularDecodingError.keyForbidden(
+                AnyCodingKey(erasing: key),
+                _ModularDecodingError.Context(type: type, codingPath: self.codingPath)
+            )
+        }
+
+        return try _decodeRecoveringMissingKey(type, forKey: key) {
+            try base._decodePrimitive(type, forKey: key)
+        }
     }
     
     func decode<T: Decodable>(
@@ -55,37 +64,13 @@ extension _ModularDecoder.KeyedContainer {
             )
         }
 
-        do {
+        return try _decodeRecoveringMissingKey(type, forKey: key) {
             if let result: T = try _primitiveDecode(type, forKey: key) {
                 return result
             } else if T.self == _CodableSwiftType.self {
                 return try base.decode(T.self, forKey: key)
             } else {
                 return try base.decode(_ModularDecoder.KeyedContainerProxyDecodable<T>.self, forKey: key).value
-            }
-        } catch let error as _ModularDecodingError {
-            switch error {
-                case .typeMismatch:
-                    throw error
-                case .keyNotFound:
-                    return try _attemptToRecover(
-                        fromKeyNotFoundError: error,
-                        type: type,
-                        key: key
-                    )
-                default:
-                    throw error
-            }
-        } catch let error as DecodingError {
-            switch error {
-                case .keyNotFound:
-                    return try _attemptToRecover(
-                        fromKeyNotFoundError: error,
-                        type: type,
-                        key: key
-                    )
-                default:
-                    throw error
             }
         }
     }
@@ -98,6 +83,14 @@ extension _ModularDecoder.KeyedContainer {
             return nil
         }
 
+        if !base.contains(key) {
+            let aliasedValue = try _decodeAliasedValueIfPresent(type, forKey: key)
+
+            if aliasedValue.wasFound {
+                return aliasedValue.value
+            }
+        }
+
         if let result: T = try _primitiveDecodeIfPresent(type, forKey: key) {
             return result
         } else if T.self == _CodableSwiftType.self {
@@ -105,6 +98,62 @@ extension _ModularDecoder.KeyedContainer {
         } else {
             return try base.decodeIfPresent(_ModularDecoder.KeyedContainerProxyDecodable<T>.self, forKey: key)?.value
         }
+    }
+
+    func decodeIfPresent(_ type: Bool.Type, forKey key: Key) throws -> Bool? {
+        try _decodePrimitiveIfPresent(type, forKey: key)
+    }
+
+    func decodeIfPresent(_ type: String.Type, forKey key: Key) throws -> String? {
+        try _decodePrimitiveIfPresent(type, forKey: key)
+    }
+
+    func decodeIfPresent(_ type: Double.Type, forKey key: Key) throws -> Double? {
+        try _decodePrimitiveIfPresent(type, forKey: key)
+    }
+
+    func decodeIfPresent(_ type: Float.Type, forKey key: Key) throws -> Float? {
+        try _decodePrimitiveIfPresent(type, forKey: key)
+    }
+
+    func decodeIfPresent(_ type: Int.Type, forKey key: Key) throws -> Int? {
+        try _decodePrimitiveIfPresent(type, forKey: key)
+    }
+
+    func decodeIfPresent(_ type: Int8.Type, forKey key: Key) throws -> Int8? {
+        try _decodePrimitiveIfPresent(type, forKey: key)
+    }
+
+    func decodeIfPresent(_ type: Int16.Type, forKey key: Key) throws -> Int16? {
+        try _decodePrimitiveIfPresent(type, forKey: key)
+    }
+
+    func decodeIfPresent(_ type: Int32.Type, forKey key: Key) throws -> Int32? {
+        try _decodePrimitiveIfPresent(type, forKey: key)
+    }
+
+    func decodeIfPresent(_ type: Int64.Type, forKey key: Key) throws -> Int64? {
+        try _decodePrimitiveIfPresent(type, forKey: key)
+    }
+
+    func decodeIfPresent(_ type: UInt.Type, forKey key: Key) throws -> UInt? {
+        try _decodePrimitiveIfPresent(type, forKey: key)
+    }
+
+    func decodeIfPresent(_ type: UInt8.Type, forKey key: Key) throws -> UInt8? {
+        try _decodePrimitiveIfPresent(type, forKey: key)
+    }
+
+    func decodeIfPresent(_ type: UInt16.Type, forKey key: Key) throws -> UInt16? {
+        try _decodePrimitiveIfPresent(type, forKey: key)
+    }
+
+    func decodeIfPresent(_ type: UInt32.Type, forKey key: Key) throws -> UInt32? {
+        try _decodePrimitiveIfPresent(type, forKey: key)
+    }
+
+    func decodeIfPresent(_ type: UInt64.Type, forKey key: Key) throws -> UInt64? {
+        try _decodePrimitiveIfPresent(type, forKey: key)
     }
     
     func nestedContainer<NestedKey: CodingKey>(
@@ -148,19 +197,7 @@ extension _ModularDecoder.KeyedContainer {
         _ type: T.Type,
         forKey key: Key
     ) throws -> T? {
-        guard !(type is Date.Type) else {
-            return try base.decode(T.self, forKey: key)
-        }
-        
-        guard !(type is Optional<Date>.Type) else {
-            return try base.decode(T.self, forKey: key)
-        }
-        
-        guard !(type is URL.Type) else {
-            return try base.decode(T.self, forKey: key)
-        }
-        
-        guard !(type is Optional<URL>.Type) else {
+        if _requiresDirectCodingWithUnderlyingCoder(type) {
             return try base.decode(T.self, forKey: key)
         }
         
@@ -171,29 +208,143 @@ extension _ModularDecoder.KeyedContainer {
         _ type: T.Type,
         forKey key: Key
     ) throws -> T? {
-        guard !(type is Date.Type) else {
-            return try base.decodeIfPresent(T.self, forKey: key)
-        }
-        
-        guard !(type is Optional<Date>.Type) else {
-            return try base.decodeIfPresent(T.self, forKey: key)
-        }
-        
-        guard !(type is URL.Type) else {
-            return try base.decodeIfPresent(T.self, forKey: key)
-        }
-        
-        guard !(type is Optional<URL>.Type) else {
+        if _requiresDirectCodingWithUnderlyingCoder(type) {
             return try base.decodeIfPresent(T.self, forKey: key)
         }
         
         return nil
     }
+
+    private func _decodePrimitiveIfPresent<T: CoderPrimitive>(
+        _ type: T.Type,
+        forKey key: Key
+    ) throws -> T? {
+        if decoder.configuration.hides(key, at: base.codingPath) {
+            return nil
+        }
+
+        if !base.contains(key) {
+            let aliasedValue = try _decodeAliasedValueIfPresent(type, forKey: key)
+
+            if aliasedValue.wasFound {
+                return aliasedValue.value
+            }
+        }
+
+        return try base.decodeIfPresent(type, forKey: key)
+    }
+
+    private func _decodeRecoveringMissingKey<T: Decodable>(
+        _ type: T.Type,
+        forKey key: Key,
+        operation: () throws -> T
+    ) throws -> T {
+        do {
+            return try operation()
+        } catch let error as _ModularDecodingError {
+            guard case .keyNotFound = error else {
+                throw error
+            }
+
+            return try _attemptToRecover(
+                fromKeyNotFoundError: error,
+                type: type,
+                key: key
+            )
+        } catch let error as DecodingError {
+            guard case .keyNotFound = error else {
+                throw error
+            }
+
+            return try _attemptToRecover(
+                fromKeyNotFoundError: error,
+                type: type,
+                key: key
+            )
+        }
+    }
+
+    private func _codingKeyAliases(
+        for key: Key
+    ) -> [AnyCodingKey] {
+        guard let subjectType = decoder.context.type as? any _CodingRepresentationProvider.Type else {
+            return []
+        }
+
+        return _ResolvedCodingRepresentation
+            ._for(subjectType)
+            .keysToKeyAliases[AnyCodingKey(erasing: key), default: []]
+            .map({ $0 })
+    }
+
+    private func _decodeAliasedValue<T: Decodable>(
+        _ type: T.Type,
+        forKey key: Key
+    ) throws -> T? {
+        let aliases = _codingKeyAliases(for: key)
+
+        guard !aliases.isEmpty else {
+            return nil
+        }
+
+        let container = try decoder.base.container(keyedBy: AnyCodingKey.self)
+        var firstAliasError: Error?
+
+        for alias in aliases where container.contains(alias) {
+            do {
+                return try container.decode(type, forKey: alias)
+            } catch {
+                if firstAliasError == nil {
+                    firstAliasError = error
+                }
+            }
+        }
+
+        if let firstAliasError {
+            throw _ModularDecoder.NonRetryableDecodingError(
+                underlyingError: firstAliasError
+            )
+        }
+
+        return nil
+    }
+
+    private func _decodeAliasedValueIfPresent<T: Decodable>(
+        _ type: T.Type,
+        forKey key: Key
+    ) throws -> (wasFound: Bool, value: T?) {
+        let aliases = _codingKeyAliases(for: key)
+
+        guard !aliases.isEmpty else {
+            return (false, nil)
+        }
+
+        let container = try decoder.base.container(keyedBy: AnyCodingKey.self)
+        var firstAliasError: Error?
+
+        for alias in aliases where container.contains(alias) {
+            do {
+                return (true, try container.decodeIfPresent(type, forKey: alias))
+            } catch {
+                if firstAliasError == nil {
+                    firstAliasError = error
+                }
+            }
+        }
+
+        if let firstAliasError {
+            throw _ModularDecoder.NonRetryableDecodingError(
+                underlyingError: firstAliasError
+            )
+        }
+
+        return (false, nil)
+    }
     
     /// Attempts to recover from a `.keyNotFound` error.
     ///
     /// Only proceeds if a recovery plugin is explicitly specified, the default behavior of `Codable` is to throw an error for a missing key.
-    private func _attemptToRecover<T>(
+    private func _attemptToRecover<T: Decodable>(
         fromKeyNotFoundError error: Error,
         type: T.Type,
         key: Key
@@ -216,16 +367,8 @@ extension _ModularDecoder.KeyedContainer {
             throw error
         }
 
-        if let subjectType = decoder.context.type as? any _CodingRepresentationProvider.Type, let type = type as? Decodable.Type {
-            let codingRepresentation = _ResolvedCodingRepresentation._for(subjectType)
-            
-            let result = codingRepresentation.keysToKeyAliases[AnyCodingKey(erasing: key), default: []].first(byUnwrapping: {
-                return try? decoder.base.decode(type, forKey: $0)
-            })
-            
-            if let result {
-                return try cast(result)
-            }
+        if let result = try _decodeAliasedValue(type, forKey: key) {
+            return result
         }
         
         guard self.decoder.configuration.plugins.contains(where: { $0 is _KeyNotFoundRecoveryPlugin }) else {

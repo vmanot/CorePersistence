@@ -125,6 +125,12 @@ extension _ModularDecoder {
     public struct Context {
         let type: Any.Type?
     }
+
+    /// Prevents the historical single-value recursion retry from
+    /// reinterpreting a known-present malformed value as missing.
+    struct NonRetryableDecodingError: Error {
+        let underlyingError: Error
+    }
 }
 
 extension Decoder {
