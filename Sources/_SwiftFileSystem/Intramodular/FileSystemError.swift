@@ -7,7 +7,7 @@ import Foundation
 import Swallow
 import System
 
-public enum FileSystemError: _ErrorX {
+public enum FileSystemError: Swift.Error {
     case couldNotAccessWithSecureScope(URL)
     case fileNotFound(URL)
     case invalidPathAppend(FilePath)
