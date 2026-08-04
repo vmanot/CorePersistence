@@ -42,8 +42,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/preternatural-fork/swift-subprocess.git",
       "state" : {
-        "revision" : "82b2f88c77a035f387364ccd3f531225f24a75cd",
-        "version" : "0.4.2"
+        "revision" : "e92bb56482477df404384cfa0e11b70832e46ab5",
+        "version" : "0.4.3"
       }
     },
     {
@@ -58,9 +58,9 @@
     {
       "identity" : "swift-system",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/swift-precompiled/swift-system.git",
+      "location" : "https://github.com/apple/swift-system.git",
       "state" : {
-        "revision" : "b8aec3a9b6f845f311317d8576bfa5d0763f0aa1",
+        "revision" : "50688cacbd41d547e9eb9f7a213542340b7c442b",
         "version" : "1.7.5"
       }
     }
