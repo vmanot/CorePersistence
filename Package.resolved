@@ -7,7 +7,7 @@
       "location" : "https://github.com/vmanot/Merge.git",
       "state" : {
         "branch" : "master",
-        "revision" : "ba5746f3ca618f6579e904017a3245f33e2a4227"
+        "revision" : "31e1acc68a860f6c5bb8eb8b2befb27fa5656d9d"
       }
     },
     {
@@ -16,7 +16,7 @@
       "location" : "https://github.com/vmanot/Swallow.git",
       "state" : {
         "branch" : "master",
-        "revision" : "a4cc6db40aecacf7de767bdb800567cb5fcb3064"
+        "revision" : "7a1b723dcdad1a288b9152492c84178817674327"
       }
     },
     {
@@ -42,8 +42,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/preternatural-fork/swift-subprocess.git",
       "state" : {
-        "revision" : "45581612c9a4e2a982065d1e1ee11f1d2399aa4c",
-        "version" : "0.4.1"
+        "revision" : "82b2f88c77a035f387364ccd3f531225f24a75cd",
+        "version" : "0.4.2"
       }
     },
     {
@@ -51,16 +51,16 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/swiftlang/swift-syntax.git",
       "state" : {
-        "revision" : "f99ae8aa18f0cf0d53481901f88a0991dc3bd4a2",
-        "version" : "601.0.1"
+        "revision" : "79e4b74a295b6eb74a8b585e3a39d29e70c1dbd1",
+        "version" : "603.0.2"
       }
     },
     {
       "identity" : "swift-system",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/apple/swift-system",
+      "location" : "https://github.com/swift-precompiled/swift-system.git",
       "state" : {
-        "revision" : "50688cacbd41d547e9eb9f7a213542340b7c442b",
+        "revision" : "b8aec3a9b6f845f311317d8576bfa5d0763f0aa1",
         "version" : "1.7.5"
       }
     }
