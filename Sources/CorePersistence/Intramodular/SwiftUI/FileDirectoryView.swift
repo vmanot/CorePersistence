@@ -10,7 +10,6 @@ import SwiftUI
 import System
 
 @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
-@available(iOS 14.0, *)
 public struct FileDirectoryView: FileLocationInitiable, View {
     public let location: BookmarkedURL
     
