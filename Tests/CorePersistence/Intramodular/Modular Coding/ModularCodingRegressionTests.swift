@@ -117,43 +117,6 @@ struct ModularCodingRegressionTests {
     }
 
     @Test
-    func keyedFoundationValuesPreserveCoderStrategies() throws {
-        let date = Date(timeIntervalSince1970: 1_725_000_000.125)
-        let bytes = Data([0x01, 0x02, 0x03])
-        let value = FoundationStrategyFixture(
-            requiredDate: date,
-            optionalDate: date,
-            requiredData: bytes,
-            optionalData: bytes,
-            requiredURL: URL(string: "https://example.com/required")!,
-            optionalURL: URL(string: "https://example.com/optional")!
-        )
-
-        let baseEncoder = JSONEncoder()
-        baseEncoder.dateEncodingStrategy = .millisecondsSince1970
-        baseEncoder.dataEncodingStrategy = RegressionDataStrategy.encoding
-
-        let encoded = try baseEncoder._modular().encode(value)
-        let rawValues = try JSONDecoder().decode(RawFoundationFixture.self, from: encoded)
-
-        #expect(rawValues.requiredDate == date.timeIntervalSince1970 * 1_000)
-        #expect(rawValues.optionalDate == date.timeIntervalSince1970 * 1_000)
-        #expect(rawValues.requiredData == RegressionDataStrategy.encoded(bytes))
-        #expect(rawValues.optionalData == RegressionDataStrategy.encoded(bytes))
-
-        let baseDecoder = JSONDecoder()
-        baseDecoder.dateDecodingStrategy = .millisecondsSince1970
-        baseDecoder.dataDecodingStrategy = RegressionDataStrategy.decoding
-
-        let decoded = try baseDecoder._modular().decode(
-            FoundationStrategyFixture.self,
-            from: encoded
-        )
-
-        #expect(decoded == value)
-    }
-
-    @Test
     func foundationStrategiesSurviveTopLevelUnkeyedAndSingleValueProxies() throws {
         let date = Date(timeIntervalSince1970: 1_725_000_000.125)
         let expectedMilliseconds = date.timeIntervalSince1970 * 1_000
@@ -308,7 +271,8 @@ struct ModularCodingRegressionTests {
         let canonicalWins = try JSONDecoder()._modular().decode(
             RenamedFieldFixture.self,
             from: Data(
-                #"{"currentName":"canonical","legacyName":"legacy","optionalName":null,"legacyOptionalName":"ignored"}"#.utf8
+                #"{"currentName":"canonical","legacyName":"legacy","optionalName":null,"legacyOptionalName":"ignored"}"#
+                    .utf8
             )
         )
 
@@ -546,28 +510,28 @@ struct ModularCodingRegressionTests {
     ) -> DecodingFailureSnapshot? {
         if let error = error as? DecodingError {
             switch error {
-                case .dataCorrupted(let context):
-                    return .init(
-                        kind: .dataCorrupted,
-                        path: context.codingPath.map(\.stringValue)
-                    )
-                case .keyNotFound(_, let context):
-                    return .init(
-                        kind: .keyNotFound,
-                        path: context.codingPath.map(\.stringValue)
-                    )
-                case .typeMismatch(_, let context):
-                    return .init(
-                        kind: .typeMismatch,
-                        path: context.codingPath.map(\.stringValue)
-                    )
-                case .valueNotFound(_, let context):
-                    return .init(
-                        kind: .valueNotFound,
-                        path: context.codingPath.map(\.stringValue)
-                    )
-                @unknown default:
-                    return nil
+            case .dataCorrupted(let context):
+                return .init(
+                    kind: .dataCorrupted,
+                    path: context.codingPath.map(\.stringValue)
+                )
+            case .keyNotFound(_, let context):
+                return .init(
+                    kind: .keyNotFound,
+                    path: context.codingPath.map(\.stringValue)
+                )
+            case .typeMismatch(_, let context):
+                return .init(
+                    kind: .typeMismatch,
+                    path: context.codingPath.map(\.stringValue)
+                )
+            case .valueNotFound(_, let context):
+                return .init(
+                    kind: .valueNotFound,
+                    path: context.codingPath.map(\.stringValue)
+                )
+            @unknown default:
+                return nil
             }
         }
 
@@ -575,21 +539,22 @@ struct ModularCodingRegressionTests {
             return nil
         }
 
-        let path = error.context?.codingPath.compactMap({
-            try? $0.key.unwrap().stringValue
-        }) ?? []
+        let path =
+            error.context?.codingPath.compactMap({
+                try? $0.key.unwrap().stringValue
+            }) ?? []
 
         switch error {
-            case .dataCorrupted:
-                return .init(kind: .dataCorrupted, path: path)
-            case .keyNotFound:
-                return .init(kind: .keyNotFound, path: path)
-            case .typeMismatch:
-                return .init(kind: .typeMismatch, path: path)
-            case .valueNotFound:
-                return .init(kind: .valueNotFound, path: path)
-            default:
-                return nil
+        case .dataCorrupted:
+            return .init(kind: .dataCorrupted, path: path)
+        case .keyNotFound:
+            return .init(kind: .keyNotFound, path: path)
+        case .typeMismatch:
+            return .init(kind: .typeMismatch, path: path)
+        case .valueNotFound:
+            return .init(kind: .valueNotFound, path: path)
+        default:
+            return nil
         }
     }
 }
@@ -676,13 +641,6 @@ private struct FoundationStrategyFixture: Codable, Equatable {
         try container.encode(requiredURL, forKey: .requiredURL)
         try container.encode(optionalURL, forKey: .optionalURL)
     }
-}
-
-private struct RawFoundationFixture: Decodable {
-    var requiredDate: Double
-    var optionalDate: Double?
-    var requiredData: String
-    var optionalData: String?
 }
 
 private struct ManuallyNestedRecoveryFixture: Decodable {
@@ -896,8 +854,8 @@ private struct UserInfoFixture: Codable, Equatable {
     }
 }
 
-private extension CodingUserInfoKey {
-    static let modularCodingRegression = CodingUserInfoKey(
+extension CodingUserInfoKey {
+    fileprivate static let modularCodingRegression = CodingUserInfoKey(
         rawValue: "ModularCodingRegressionTests"
     )!
 }

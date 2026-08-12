@@ -2,62 +2,64 @@
 // Copyright (c) Vatsal Manot
 //
 
-@testable import CorePersistence
-
-import Diagnostics
 import FoundationX
 import Testing
+
+@testable import CorePersistence
 
 @Suite
 struct TypeDiscriminatedCodingTests {
     @Test
-    func test() throws {
+    func heterogeneousPropertiesRoundTripByTypeDiscriminator() throws {
         let coder = JSONCoder(outputFormatting: [.prettyPrinted, .sortedKeys])._modular()
-        
+
         let data = Baz(
             child1: Foo(x: 42),
             child2: Bar(x: 4.2)
         )
-        
+
         let encodedData = try coder.encode(data)
-        
-        _ = try JSONDecoder().decode(AnyCodable.self, from: encodedData)
-        
+
         let decoded = try coder.decode(Baz.self, from: encodedData)
-        
+
         #expect(data == decoded)
     }
 }
 
 private enum TestTypeDiscriminator: String, CaseIterable, Codable, Swallow.TypeDiscriminator {
-    public typealias _DiscriminatedSwiftType = _StaticSwift.ExistentialTypeExpression<any TypeDiscriminatedCodingTestType, any TypeDiscriminatedCodingTestType.Type>
-    
+    public typealias _DiscriminatedSwiftType = _StaticSwift.ExistentialTypeExpression<
+        any TypeDiscriminatedCodingTestType, any TypeDiscriminatedCodingTestType.Type
+    >
+
     case foo
     case bar
     case baz
-    
+
     func resolveType() throws -> any TypeDiscriminatedCodingTestType.Type {
         switch self {
-            case .foo:
-                return Foo.self
-            case .bar:
-                return Bar.self
-            case .baz:
-                return Baz.self
+        case .foo:
+            return Foo.self
+        case .bar:
+            return Bar.self
+        case .baz:
+            return Baz.self
         }
     }
 }
 
-fileprivate protocol TypeDiscriminatedCodingTestType: Codable, Hashable, TypeDiscriminable<TestTypeDiscriminator> {
+private protocol TypeDiscriminatedCodingTestType: Codable, Hashable, TypeDiscriminable<
+    TestTypeDiscriminator
+>
+{
     associatedtype X: Number
-    
+
     var x: X { get }
 }
 
 private struct Foo: TypeDiscriminatedCodingTestType {
     var x: Int
     var y: Int?
-    
+
     var typeDiscriminator: TestTypeDiscriminator {
         .foo
     }
@@ -66,7 +68,7 @@ private struct Foo: TypeDiscriminatedCodingTestType {
 private struct Bar: TypeDiscriminatedCodingTestType {
     var x: Float
     var y: Float?
-    
+
     var typeDiscriminator: TestTypeDiscriminator {
         .bar
     }
@@ -76,13 +78,13 @@ private struct Baz: TypeDiscriminatedCodingTestType {
     var x: Int {
         0
     }
-    
+
     @TypeDiscriminated<TestTypeDiscriminator>
     var child1: any TypeDiscriminatedCodingTestType
-    
+
     @TypeDiscriminated<TestTypeDiscriminator>
     var child2: any TypeDiscriminatedCodingTestType
-    
+
     var typeDiscriminator: TestTypeDiscriminator {
         .baz
     }

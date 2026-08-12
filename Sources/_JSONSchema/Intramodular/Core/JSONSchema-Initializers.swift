@@ -5,10 +5,25 @@
 import Swift
 
 extension JSONSchema {
+    /// A schema that accepts every JSON instance.
+    public static var any: JSONSchema {
+        JSONSchema(booleanValue: true)
+    }
+
+    /// A schema that rejects every JSON instance.
+    public static var never: JSONSchema {
+        JSONSchema(booleanValue: false)
+    }
+
+    public init(booleanValue: Bool) {
+        self.init()
+        self.booleanValue = booleanValue
+    }
+
     public static var integer: JSONSchema {
         JSONSchema(type: .integer)
     }
-    
+
     public static var number: JSONSchema {
         JSONSchema(type: .number)
     }
@@ -16,19 +31,19 @@ extension JSONSchema {
     public static var string: JSONSchema {
         JSONSchema(type: .string)
     }
-        
+
     public static func array(
         _ schema: JSONSchema
     ) -> JSONSchema {
         JSONSchema(type: .array, items: schema)
     }
-    
+
     public static func array(
         _ schema: () throws -> JSONSchema
     ) rethrows -> JSONSchema {
         JSONSchema(type: .array, items: try schema())
     }
-    
+
     public static func object(
         properties: [String: JSONSchema]
     ) -> JSONSchema {
@@ -61,7 +76,7 @@ extension JSONSchema {
         self.anyOf = nil
         self.oneOf = nil
     }
-    
+
     public init(
         type: SchemaType?,
         description: String? = nil,
@@ -74,7 +89,9 @@ extension JSONSchema {
         self.title = nil
         self.description = description
         self.properties = properties
-        self.additionalProperties = additionalProperties.map({ JSONSchema.AdditionalProperties.schema($0) })
+        self.additionalProperties = additionalProperties.map({
+            JSONSchema.AdditionalProperties.schema($0)
+        })
         self.required = required ? (properties?.keys).map({ Array($0) }) : nil
         self.type = type
         self.enum = nil

@@ -1,5 +1,5 @@
 {
-  "originHash" : "d22b9bf46e79497857cea3d006605c53f607fde0727013ecf8105786abc599a3",
+  "originHash" : "1a1cf26acc75cfe268e2f57785d8c2685917432b4bab913a1dab8837c0588138",
   "pins" : [
     {
       "identity" : "merge",
@@ -7,7 +7,7 @@
       "location" : "https://github.com/vmanot/Merge.git",
       "state" : {
         "branch" : "master",
-        "revision" : "812efec67def4bf917eb48536719ed4d097e923e"
+        "revision" : "71d1e97ce6cc0243378349651707bc6b9edbb1ee"
       }
     },
     {
@@ -16,7 +16,7 @@
       "location" : "https://github.com/vmanot/Swallow.git",
       "state" : {
         "branch" : "master",
-        "revision" : "6ba39ad9dd35a4f092ffa9cbb69723c4c628bfb3"
+        "revision" : "d8e3297029f267e591e80d33ff5eb2291afa8c18"
       }
     },
     {
@@ -35,6 +35,15 @@
       "state" : {
         "revision" : "a0cb0954ecb21e4e31b0070e6ed5674e8556685a",
         "version" : "1.6.0"
+      }
+    },
+    {
+      "identity" : "swift-log",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-log.git",
+      "state" : {
+        "revision" : "3ffafb9722d5d918c614feb496c8789a3b59d222",
+        "version" : "1.15.0"
       }
     },
     {
@@ -58,10 +67,10 @@
     {
       "identity" : "swift-system",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/apple/swift-system.git",
+      "location" : "https://github.com/apple/swift-system",
       "state" : {
-        "revision" : "50688cacbd41d547e9eb9f7a213542340b7c442b",
-        "version" : "1.7.5"
+        "revision" : "704705c5c51156ede21172a38654d522ce487074",
+        "version" : "1.8.0"
       }
     }
   ],

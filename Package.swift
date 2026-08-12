@@ -1,7 +1,19 @@
 // swift-tools-version:5.10
 
 import CompilerPluginSupport
+import Foundation
 import PackageDescription
+
+let useLocalDependencyCheckouts = ProcessInfo.processInfo.environment[
+    "CORE_PERSISTENCE_USE_LOCAL_DEPENDENCIES"
+] == "1"
+
+let mergeDependency: Package.Dependency = useLocalDependencyCheckouts
+    ? .package(path: "../Merge")
+    : .package(url: "https://github.com/vmanot/Merge.git", branch: "master")
+let swallowDependency: Package.Dependency = useLocalDependencyCheckouts
+    ? .package(path: "../Swallow")
+    : .package(url: "https://github.com/vmanot/Swallow.git", branch: "master")
 
 let package = Package(
     name: "CorePersistence",
@@ -12,6 +24,10 @@ let package = Package(
         .watchOS(.v7)
     ],
     products: [
+        .library(
+            name: "JSONSchema",
+            targets: ["JSONSchema"]
+        ),
         .library(
             name: "CorePersistence",
             targets: [
@@ -43,8 +59,8 @@ let package = Package(
         )
     ],
     dependencies: [
-        .package(url: "https://github.com/vmanot/Merge.git", branch: "master"),
-        .package(url: "https://github.com/vmanot/Swallow.git", branch: "master")
+        mergeDependency,
+        swallowDependency,
     ],
     targets: [
         .target(
@@ -100,6 +116,11 @@ let package = Package(
             ],
             path: "Sources/_JSONSchema",
             swiftSettings: []
+        ),
+        .target(
+            name: "JSONSchema",
+            dependencies: ["_JSONSchema"],
+            path: "Sources/JSONSchema"
         ),
         .target(
             name: "_SWXMLHash",
@@ -180,7 +201,7 @@ let package = Package(
             name: "CorePersistenceTests",
             dependencies: [
                 "_JSON",
-                "_JSONSchema",
+                "JSONSchema",
                 "CorePersistence"
             ],
             path: "Tests/CorePersistence"

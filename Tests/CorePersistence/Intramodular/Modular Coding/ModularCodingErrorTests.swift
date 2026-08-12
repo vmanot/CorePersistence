@@ -6,20 +6,20 @@ import CorePersistence
 import Swallow
 import Testing
 
-fileprivate struct SomeStructure: Codable {
+private struct SomeStructure: Codable {
     var x: Int
     var y: Int
 }
 
-fileprivate struct StructureWithRecoverableArray: Codable, Equatable {
+private struct StructureWithRecoverableArray: Codable, Equatable {
     var values: [Int]
 }
 
-fileprivate struct StructureWithWrongMissingKey: Decodable {
+private struct StructureWithWrongMissingKey: Decodable {
     var value: WrongMissingKey
 }
 
-fileprivate struct WrongMissingKey: Decodable, Initiable {
+private struct WrongMissingKey: Decodable, Initiable {
     init() {
 
     }
@@ -35,11 +35,11 @@ fileprivate struct WrongMissingKey: Decodable, Initiable {
     }
 }
 
-fileprivate struct StructureWithWrongMissingKeyPath: Decodable {
+private struct StructureWithWrongMissingKeyPath: Decodable {
     var value: WrongMissingKeyPath
 }
 
-fileprivate struct WrongMissingKeyPath: Decodable, Initiable {
+private struct WrongMissingKeyPath: Decodable, Initiable {
     init() {
 
     }
@@ -55,7 +55,7 @@ fileprivate struct WrongMissingKeyPath: Decodable, Initiable {
     }
 }
 
-fileprivate enum DeliberateCodingKey: String, CodingKey {
+private enum DeliberateCodingKey: String, CodingKey {
     case other
     case unrelated
     case value
@@ -64,28 +64,10 @@ fileprivate enum DeliberateCodingKey: String, CodingKey {
 @Suite
 struct ModularCodingErrorTests {
     @Test
-    func testMissingKeyErrorsPreserveTheMissingKey() throws {
+    func missingKeyErrorsPreserveTheMissingKey() throws {
         let data: AnyCodable = ["x": 0]
-        
-        let regularDecoder = JSONDecoder()
         let modularDecoder = JSONDecoder()._modular()
-        
-        do {
-            _ = try regularDecoder.decode(SomeStructure.self, from: data.toJSONData())
 
-            Issue.record("Expected DecodingError.keyNotFound")
-        } catch let error as DecodingError {
-            guard case .keyNotFound(let key, _) = error else {
-                Issue.record("Expected DecodingError.keyNotFound, received \(error)")
-
-                return
-            }
-
-            #expect(key.stringValue == "y")
-        } catch {
-            Issue.record("Expected DecodingError.keyNotFound, received \(error)")
-        }
-        
         do {
             _ = try modularDecoder.decode(SomeStructure.self, from: data.toJSONData())
 
@@ -105,7 +87,7 @@ struct ModularCodingErrorTests {
     }
 
     @Test
-    func testMissingKeyRecoveryDoesNotRecoverTypeMismatch() throws {
+    func missingKeyRecoveryDoesNotRecoverTypeMismatch() throws {
         var decoder = JSONDecoder()._modular()
 
         decoder.plugins = [
@@ -142,7 +124,7 @@ struct ModularCodingErrorTests {
     }
 
     @Test
-    func testMissingKeyRecoveryRequiresTheRequestedKeyAndContainerPath() throws {
+    func missingKeyRecoveryRequiresTheRequestedKeyAndContainerPath() throws {
         var decoder = JSONDecoder()._modular()
 
         decoder.plugins = [

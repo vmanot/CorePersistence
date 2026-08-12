@@ -23,8 +23,21 @@ Examples:
 - [@HadeanIdentifier](#hadeanidentifier)
 
 ## JSONSchema
-Broad description of the JSON schema. It is agnostic and independent of any programming language.
-Based on: [https://json-schema.org/draft/2019-09/json-schema-core.html](https://json-schema.org/draft/2019-09/json-schema-core) it implements only concepts used in the `rum-events-format` schemas.
+
+The `JSONSchema` product provides a language-independent representation of the
+commonly used JSON Schema Draft 2020-12 core, applicator, validation, and
+metadata vocabulary. It preserves Boolean schemas, `$schema`, `$id`, `$defs`,
+single and union `type` declarations, object/array/string/number constraints,
+and schema composition and conditionals during `Codable` round trips.
+
+```swift
+import JSONSchema
+```
+
+`JSONSchema.validate(_:)` validates `Codable` values or CorePersistence's
+`JSON` representation. It resolves local `#/$defs/...` references. Schema
+retrieval for external references and assertion of annotation-only keywords
+such as `format`, `readOnly`, and `writeOnly` are deliberately left to callers.
 
 ```swift
 let restaurantBookingSchema = JSONSchema(
