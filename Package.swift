@@ -25,6 +25,10 @@ let package = Package(
     ],
     products: [
         .library(
+            name: "_AEXML",
+            targets: ["_AEXML"]
+        ),
+        .library(
             name: "JSONSchema",
             targets: ["JSONSchema"]
         ),
@@ -65,9 +69,6 @@ let package = Package(
     targets: [
         .target(
             name: "_AEXML",
-            dependencies: [
-                "Swallow"
-            ],
             path: "Sources/_AEXML",
             swiftSettings: []
         ),
