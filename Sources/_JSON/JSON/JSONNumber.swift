@@ -61,7 +61,7 @@ public struct JSONNumber: Codable, Sendable {
             if case let .int(result) = storage {
                 return result
             } else {
-                return approximateDoubleValue.isInteger ? .init(approximateDoubleValue) : nil
+                return Int(exactly: approximateDoubleValue)
             }
         }
         
@@ -204,7 +204,7 @@ extension JSONNumber: ExpressibleByIntegerLiteral {
 
 extension JSONNumber: Hashable {
     public func hash(into hasher: inout Hasher) {
-        hasher.combine(storage)
+        hasher.combine(approximateDoubleValue)
     }
 }
 
